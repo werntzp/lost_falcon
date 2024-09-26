@@ -1,0 +1,1 @@
+ /home/werntzp/working/lost_falcon/.dart_tool/flutter_build/5e06a82a1d31ac7d2a8dca06a076d7b8/native_assets.yaml: 
