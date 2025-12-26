@@ -1,26 +1,25 @@
 import 'package:flutter/material.dart';
-import 'package:flutter/rendering.dart';
 import 'package:hexagon/hexagon.dart';
 import 'package:lost_falcon/const.dart';
-import 'allocation_screen.dart';
-import 'die_roll_screen.dart';
 import '../models/map_model.dart';
 import 'dart:math';
-import "package:shared_preferences/shared_preferences.dart";
+import 'dart:async';
 
-int _turn = 1;
+int _round = 1;
 int _proximity = 6;
 int _health = 6;
 int _endurance = 6;
 int _move = 0;
 int _stealth = 0;
 int _rest = 0;
+int _dice = _endurance; 
 EnumPhase _phase = EnumPhase.mapping;
 EnumEncounter _encounter = EnumEncounter.none;
 List<MapHex> _map = [];
 bool _moveAllowed = false;
 List<int> _hexesTraveled = [];
 
+// extension used to capitalize the first letter of a word 
 extension StringExtension on String {
   String capitalizeFirstLetter() {
     if (isEmpty) {
@@ -30,6 +29,8 @@ extension StringExtension on String {
   }
 }
 
+bool _overlayShowing = false; 
+
 class GameScreen extends StatefulWidget {
   const GameScreen({super.key});
 
@@ -38,10 +39,418 @@ class GameScreen extends StatefulWidget {
 }
 
 class _GameScreenState extends State<GameScreen> {
+
+  OverlayEntry? _overlayEntry;
+  Completer<void>? _completer; 
+
   @override
   void initState() {
     super.initState();
+    // reset all values
     _newGame();
+    // show initial hexes near player start 
+    _doMappingPhase();
+    // show initial overlay
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _diceAllocationOverlay();
+    });
+
+  }
+
+  // *********************************************
+  // finished allocatiing dice
+  // *********************************************
+  void _closeDiceAllocationOverlay() {
+      _overlayEntry?.remove(); 
+      _completer?.complete(); 
+      _overlayEntry = null; 
+      _completer = null; 
+      _overlayShowing = false; 
+      setState(() {
+        _phase = EnumPhase.move;
+      });
+  }
+
+  // *********************************************
+  // display overlay to get dice allocation
+  // *********************************************
+  Future<void> _diceAllocationOverlay() async {
+
+    _dice = _endurance; 
+
+    _completer = Completer<void>();
+
+    if (_overlayEntry != null) return; // Prevent stacking
+
+    _overlayShowing = true; 
+    _overlayEntry = OverlayEntry(
+      builder: (context) => Stack(
+        children: [
+          Positioned.fill(
+            child: Container(
+              color: Colors.black.withAlpha((0.4*255).toInt()) // adjustable darkness
+            ),
+          ),
+        Positioned(
+        top: 200,
+        left: 50,
+        right: 50,
+        child: Material(
+          elevation: 8.0,
+          color: Colors.transparent,
+          child: Container(
+            padding: const EdgeInsets.all(12),
+            decoration: BoxDecoration(
+              color: Colors.black,
+              borderRadius: BorderRadius.circular(12),
+            ),
+            child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              const SizedBox(height: 12),
+              Text(
+                "$constDiceAllocationMessage1 $_dice $constDiceAllocationMessage2",
+                style: const TextStyle(color: Colors.white, fontFamily: constAppTextFont, fontSize: 15),
+                textAlign: TextAlign.center,
+              ),
+              const Padding(
+                padding: EdgeInsets.all(10.0),
+              ),
+              Column(crossAxisAlignment: CrossAxisAlignment.start,
+                children: <Widget>[
+                  GestureDetector(
+                    onTap: () { _incrementMove(); },
+                    onLongPress: () { _decrementMove(); },
+                    child: Row(children: <Widget>[
+                      const SizedBox(width: 75),
+                      Image(
+                          image: _moveImage(),
+                          width: 80.0,
+                          height: 18.0,
+                          fit: BoxFit.fill,
+                        ),
+                      const SizedBox(width: 5), // spacing column                        
+                      const Text(constMoveText,
+                          textAlign: TextAlign.center,
+                          style: TextStyle(
+                              color: Colors.white,  
+                              fontWeight: FontWeight.bold,
+                              fontFamily: constAppTextFont,
+                              fontSize: 18.0)),
+                    ],),
+                  ),
+                  const SizedBox(height: 5),
+                  GestureDetector(
+                    onTap: () { _incrementStealth(); },
+                    onLongPress: () { _decrementStealth(); },
+                    child: Row(children: <Widget>[
+                      const SizedBox(width: 75),
+                      Image(
+                          image: _stealthImage(),
+                          width: 80.0,
+                          height: 18.0,
+                          fit: BoxFit.fill,
+                        ),
+                      const SizedBox(width: 5), // spacing column                        
+                      const Text(constStealthText,
+                          textAlign: TextAlign.center,
+                          style: TextStyle(
+                              color: Colors.white,  
+                              fontWeight: FontWeight.bold,
+                              fontFamily: constAppTextFont,
+                              fontSize: 18.0)),
+                    ],),
+                  ),
+                  const SizedBox(height: 5),
+                  GestureDetector(
+                    onTap: () { _incrementRest(); },
+                    onLongPress: () { _decrementRest(); },
+                    child: Row(children: <Widget>[
+                      const SizedBox(width: 75),
+                      Image(
+                          image: _restImage(),
+                          width: 80.0,
+                          height: 18.0,
+                          fit: BoxFit.fill,
+                        ),
+                      const SizedBox(width: 5), // spacing column                        
+                      const Text(constRestText,
+                          textAlign: TextAlign.center,
+                          style: TextStyle(
+                              color: Colors.white,  
+                              fontWeight: FontWeight.bold,
+                              fontFamily: constAppTextFont,
+                              fontSize: 18.0)),
+                    ],),
+                  ),
+                ],),
+              const Padding(
+                padding: EdgeInsets.all(10.0),
+              ),
+              SizedBox(
+                width: 160.0,
+                height: 55.0,
+                child: OutlinedButton(
+                  style: OutlinedButton.styleFrom(
+                    foregroundColor: Colors.black, // Text and icon color
+                    backgroundColor: Colors.white, // Background color
+                    overlayColor: Colors.blueAccent.withValues(), // pressed ripple
+                    side: const BorderSide(color: Colors.black,   width: 3.0,), // Border color
+                  ),   
+                  child: const Align(
+                      alignment: Alignment.center,
+                      child: Text(
+                        constOKText,
+                        style: TextStyle(
+                            fontFamily: constAppTextFont,
+                            color: Colors.black,
+                            fontSize: 18.0),
+                      )),
+                  onPressed:  () { _closeDiceAllocationOverlay(); },
+                ),
+              ),
+            ],
+          ),
+        ),
+        ),
+    )
+    ],
+    ));
+
+    Overlay.of(context).insert(_overlayEntry!);
+
+  }
+
+  // *********************************************
+  // display overlay for rolling and choosing dice 
+  // *********************************************
+  Future<void> _diceRollOverlay(EnumPhase phase, int rollToBeat, int numDice) async {
+
+    _completer = Completer<void>();
+
+    if (_overlayEntry != null) return; // Prevent stacking
+
+    _overlayShowing = true; 
+    _overlayEntry = OverlayEntry(
+      builder: (context) => Stack(
+        children: [
+          Positioned.fill(
+            child: Container(
+              color: Colors.black.withAlpha((0.4*255).toInt()) // adjustable darkness
+            ),
+          ),
+        Positioned(
+        top: 200,
+        left: 50,
+        right: 50,
+        child: Material(
+          elevation: 8.0,
+          color: Colors.transparent,
+          child: Container(
+            padding: const EdgeInsets.all(12),
+            decoration: BoxDecoration(
+              color: Colors.black,
+              borderRadius: BorderRadius.circular(12),
+            ),
+            child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              const SizedBox(height: 12),
+              Text(
+                "$constDiceAllocationMessage1 $_dice $constDiceAllocationMessage2",
+                style: const TextStyle(color: Colors.white, fontFamily: constAppTextFont, fontSize: 15),
+                textAlign: TextAlign.center,
+              ),
+              const Padding(
+                padding: EdgeInsets.all(10.0),
+              ),
+              Column(crossAxisAlignment: CrossAxisAlignment.start,
+                children: <Widget>[
+                  GestureDetector(
+                    onTap: () { _incrementMove(); },
+                    onLongPress: () { _decrementMove(); },
+                    child: Row(children: <Widget>[
+                      const SizedBox(width: 75),
+                      Image(
+                          image: _moveImage(),
+                          width: 80.0,
+                          height: 18.0,
+                          fit: BoxFit.fill,
+                        ),
+                      const SizedBox(width: 5), // spacing column                        
+                      const Text(constMoveText,
+                          textAlign: TextAlign.center,
+                          style: TextStyle(
+                              color: Colors.white,  
+                              fontWeight: FontWeight.bold,
+                              fontFamily: constAppTextFont,
+                              fontSize: 18.0)),
+                    ],),
+                  ),
+                  const SizedBox(height: 5),
+                  GestureDetector(
+                    onTap: () { _incrementStealth(); },
+                    onLongPress: () { _decrementStealth(); },
+                    child: Row(children: <Widget>[
+                      const SizedBox(width: 75),
+                      Image(
+                          image: _stealthImage(),
+                          width: 80.0,
+                          height: 18.0,
+                          fit: BoxFit.fill,
+                        ),
+                      const SizedBox(width: 5), // spacing column                        
+                      const Text(constStealthText,
+                          textAlign: TextAlign.center,
+                          style: TextStyle(
+                              color: Colors.white,  
+                              fontWeight: FontWeight.bold,
+                              fontFamily: constAppTextFont,
+                              fontSize: 18.0)),
+                    ],),
+                  ),
+                  const SizedBox(height: 5),
+                  GestureDetector(
+                    onTap: () { _incrementRest(); },
+                    onLongPress: () { _decrementRest(); },
+                    child: Row(children: <Widget>[
+                      const SizedBox(width: 75),
+                      Image(
+                          image: _restImage(),
+                          width: 80.0,
+                          height: 18.0,
+                          fit: BoxFit.fill,
+                        ),
+                      const SizedBox(width: 5), // spacing column                        
+                      const Text(constRestText,
+                          textAlign: TextAlign.center,
+                          style: TextStyle(
+                              color: Colors.white,  
+                              fontWeight: FontWeight.bold,
+                              fontFamily: constAppTextFont,
+                              fontSize: 18.0)),
+                    ],),
+                  ),
+                ],),
+              const Padding(
+                padding: EdgeInsets.all(10.0),
+              ),
+              SizedBox(
+                width: 160.0,
+                height: 55.0,
+                child: OutlinedButton(
+                  style: OutlinedButton.styleFrom(
+                    foregroundColor: Colors.black, // Text and icon color
+                    backgroundColor: Colors.white, // Background color
+                    overlayColor: Colors.blueAccent.withValues(), // pressed ripple
+                    side: const BorderSide(color: Colors.black,   width: 3.0,), // Border color
+                  ),   
+                  child: const Align(
+                      alignment: Alignment.center,
+                      child: Text(
+                        constOKText,
+                        style: TextStyle(
+                            fontFamily: constAppTextFont,
+                            color: Colors.black,
+                            fontSize: 18.0),
+                      )),
+                  onPressed:  () { _closeDiceAllocationOverlay(); },
+                ),
+              ),
+            ],
+          ),
+        ),
+        ),
+    )
+    ],
+    ));
+
+    Overlay.of(context).insert(_overlayEntry!);
+
+  }
+
+  // ************************
+  // _incrementMove
+  // ************************
+  void _incrementMove() {
+    // if there are points available, add
+    if (_dice > 0) {
+      setState(() {
+        _dice--;
+        _move++;
+        _overlayEntry?.markNeedsBuild();
+      });
+    }
+  }
+
+  // ************************
+  // _decrementMove
+  // ************************
+  void _decrementMove() {
+    // if there are any move points assigned, remove
+    if (_move > 0) {
+      setState(() {
+        _dice++;
+        _move--;
+        _overlayEntry?.markNeedsBuild();
+      });
+    }
+  }
+
+  // ************************
+  // _incrementStealth
+  // ************************
+  void _incrementStealth() {
+    // if there are points available, add
+    if (_dice > 0) {
+      setState(() {
+        _dice--;
+        _stealth++;
+        _overlayEntry?.markNeedsBuild();
+      });
+    }
+  }
+
+  // ************************
+  // _decrementStealth
+  // ************************
+  void _decrementStealth() {
+    // if there are stealth points assigned, remove
+    if (_stealth > 0) {
+      setState(() {
+        _dice++;
+        _stealth--;
+        _overlayEntry?.markNeedsBuild();
+      });
+    }
+  }
+
+  // ************************
+  // _incrementRest
+  // ************************
+  void _incrementRest() {
+    // if there are points available, add
+    if (_dice > 0) {
+      setState(() {
+        _dice--;
+        _rest++;
+        _overlayEntry?.markNeedsBuild();
+      });
+    }
+  }
+
+  // ************************
+  // _decrementRest
+  // ************************
+  void _decrementRest() {
+    // if there are any rest points assigned, remove
+    if (_rest > 0) {
+      setState(() {
+        _dice++;
+        _rest--;
+        _overlayEntry?.markNeedsBuild();
+      });
+    }
   }
 
   // ************************
@@ -78,21 +487,20 @@ class _GameScreenState extends State<GameScreen> {
   // _newGame
   // ************************
   void _newGame() async {
+
     // set up the map
     _initMap();
 
     // initial values
-    _turn = 1;
+    _round = 1;
     _proximity = 6;
     _health = 6;
     _endurance = 6;
     _move = 0;
     _stealth = 0;
     _rest = 0;
-    _phase = EnumPhase.mapping;
+    _phase = EnumPhase.allocate;
 
-    // go to button press
-    _continueButtonPress();
   }
 
   // ************************
@@ -250,8 +658,8 @@ class _GameScreenState extends State<GameScreen> {
   // ************************
   // _displayTurn
   // ************************
-  String _displayTurn() {
-    return _turn.toString();
+  String _displayRound() {
+    return _round.toString();
   }
 
   // ************************
@@ -416,6 +824,9 @@ class _GameScreenState extends State<GameScreen> {
     }
   }
 
+  // ************************
+  // _doMappingPhase
+  // ************************
   void _doMappingPhase() {
     int die = Random().nextInt(6) + 1;
     EnumTerrain hex1;
@@ -591,12 +1002,12 @@ class _GameScreenState extends State<GameScreen> {
       _phase = EnumPhase.mapping;
       // and increment the turn
       setState(() {
-        _turn++;
+        _round++;
       });
     }
 
     // special case -- for turn 1, do initial mapping, skip encounter, and go right to allocation
-    if ((_turn == 1) && (_phase == EnumPhase.encounter)) {
+    if ((_round == 1) && (_phase == EnumPhase.encounter)) {
       _doMappingPhase();
       _phase = EnumPhase.allocate;
     }
@@ -615,24 +1026,10 @@ class _GameScreenState extends State<GameScreen> {
     // if allocate phase, bring up allocation dialog
     if (_phase == EnumPhase.allocate) {
       // send the number of dice available to allocate
-      SharedPreferences prefs = await SharedPreferences.getInstance();
-      prefs.setInt("endurance", _endurance);
-
-      final result = await Navigator.push(
-        context,
-        MaterialPageRoute(builder: (context) => AllocationScreen()),
-      );
-      // if they allocated, update the values
-      if (result != null) {
-        setState(() {
-          _move = (prefs.getInt("move") ?? 0);
-          _stealth = (prefs.getInt("stealth") ?? 0);
-          _rest = (prefs.getInt("rest") ?? 0);
-        });
-      }
+      //await _diceAllocationOverlay(); 
     }
 
-    // if move phase, see if they are able to move out of the current hex based on die/point allocation
+    // if move phase, see if they a re able to move out of the current hex based on die/point allocation
     if (_phase == EnumPhase.move) {
       // set flag that allows a move (so they only do it once per turn)
       _moveAllowed = true;
@@ -717,15 +1114,16 @@ class _GameScreenState extends State<GameScreen> {
   // _getMapHexPadding
   // ************************
   double _getMapHexPadding(int row, int col) {
-    int id = _getIdFromColRow(col, row);
+    return 1.0; 
 
+    /*
+    int id = _getIdFromColRow(col, row);
     // if they've traveled through a hex, give it more padding
     if (_hexesTraveled.contains(id)) {
       return 5.0;
     } else {
       return 1.0;
     }
-    /*
     if (_map[id].current) {
       return 5.0;
     } else {
@@ -740,52 +1138,47 @@ class _GameScreenState extends State<GameScreen> {
   String _getMapHexGraphic(int row, int col) {
     EnumTerrain enumTerrain = _map[_getIdFromColRow(col, row)].terrain;
     String asset;
-    bool isCurrentPlayerLocation = _map[_getIdFromColRow(col, row)].current;
     int id = _getIdFromColRow(col, row);
 
-    if (isCurrentPlayerLocation) {
-      asset = constImagePlayerLocation;
-    } else {
-      if (enumTerrain == EnumTerrain.scrub) {
-        // decide whether they've been here before (color vs b&w)
-        if (_hexesTraveled.contains(id)) {
-          asset = constImageScrub;
-        } else {
-          asset = constImageScrubGrey;
-        }
-      } else if (enumTerrain == EnumTerrain.brush) {
-        // decide whether they've been here before (color vs b&w)
-        if (_hexesTraveled.contains(id)) {
-          asset = constImageBrush;
-        } else {
-          asset = constImageBrushGrey;
-        }
-      } else if (enumTerrain == EnumTerrain.hills) {
-        // decide whether they've been here before (color vs b&w)
-        if (_hexesTraveled.contains(id)) {
-          asset = constImageHills;
-        } else {
-          asset = constImageHillsGrey;
-        }
-      } else if (enumTerrain == EnumTerrain.rough) {
-        // decide whether they've been here before (color vs b&w)
-        if (_hexesTraveled.contains(id)) {
-          asset = constImageRough;
-        } else {
-          asset = constImageRoughGrey;
-        }
-      } else if (enumTerrain == EnumTerrain.village) {
-        // decide whether they've been here before (color vs b&w)
-        if (_hexesTraveled.contains(id)) {
-          asset = constImageVillage;
-        } else {
-          asset = constImageVillageGrey;
-        }
-      } else if (enumTerrain == EnumTerrain.rescue) {
-        asset = constImageRescue;
+    if (enumTerrain == EnumTerrain.scrub) {
+      // decide whether they've been here before (color vs b&w)
+      if (_hexesTraveled.contains(id)) {
+        asset = constImageScrub;
       } else {
-        asset = constImageUnknown;
+        asset = constImageScrubGrey;
       }
+    } else if (enumTerrain == EnumTerrain.brush) {
+      // decide whether they've been here before (color vs b&w)
+      if (_hexesTraveled.contains(id)) {
+        asset = constImageBrush;
+      } else {
+        asset = constImageBrushGrey;
+      }
+    } else if (enumTerrain == EnumTerrain.hills) {
+      // decide whether they've been here before (color vs b&w)
+      if (_hexesTraveled.contains(id)) {
+        asset = constImageHills;
+      } else {
+        asset = constImageHillsGrey;
+      }
+    } else if (enumTerrain == EnumTerrain.rough) {
+      // decide whether they've been here before (color vs b&w)
+      if (_hexesTraveled.contains(id)) {
+        asset = constImageRough;
+      } else {
+        asset = constImageRoughGrey;
+      }
+    } else if (enumTerrain == EnumTerrain.village) {
+      // decide whether they've been here before (color vs b&w)
+      if (_hexesTraveled.contains(id)) {
+        asset = constImageVillage;
+      } else {
+        asset = constImageVillageGrey;
+      }
+    } else if (enumTerrain == EnumTerrain.rescue) {
+      asset = constImageRescue;
+    } else {
+      asset = constImageUnknown;
     }
 
     return asset;
@@ -892,58 +1285,46 @@ class _GameScreenState extends State<GameScreen> {
 
     // if this is move phase, do all the logic
     if ((_phase == EnumPhase.move) && (_moveAllowed)) {
-      // if they have allocated move points, see if they have enough to move out of current hex
+      // what is the move cost?
+      if (h.terrain == EnumTerrain.scrub) {
+        moveCost = constScrubMoveCost;
+      } else if (h.terrain == EnumTerrain.brush) {
+        moveCost = constBrushMoveCost;
+      } else if (h.terrain == EnumTerrain.hills) {
+        moveCost = constHillsMoveCost;
+      } else if (h.terrain == EnumTerrain.village) {
+        moveCost = constVillageMoveCost;
+      } else if (h.terrain == EnumTerrain.rough) {
+        moveCost = constRoughMoveCost;
+      }
+
+      // if they have dice assigned to move, bring up the overlay to pick from the die roll
       if (_move > 0) {
-        // what is the move cost?
-        if (h.terrain == EnumTerrain.scrub) {
-          moveCost = constScrubMoveCost;
-        } else if (h.terrain == EnumTerrain.brush) {
-          moveCost = constBrushMoveCost;
-        } else if (h.terrain == EnumTerrain.hills) {
-          moveCost = constHillsMoveCost;
-        } else if (h.terrain == EnumTerrain.village) {
-          moveCost = constVillageMoveCost;
-        } else if (h.terrain == EnumTerrain.rough) {
-          moveCost = constRoughMoveCost;
+        // bring up overlay 
+        await _diceRollOverlay(EnumPhase.move, moveCost, _move);
+        /*
+        if (playerMoved) {
+          setState(() {
+            // clear all hexes
+            for (MapHex hex in _map) {
+              hex.current = false;
+            }
+            // set this one assuming it isn't same as the old and add it to the list traveled
+            if (selected != old) {
+              _map[selected].current = true;
+              _hexesTraveled.add(selected);
+            }
+            // map out next hexes
+            _doMappingPhase();
+          });
+
+          */
+          // regardless of whether succesful or not, no more moves
+          _moveAllowed = false;
+
+        } else {
+          _showAlertDialog(context, constMoveFailed);
         }
-
-        // go to the die result screen
-        SharedPreferences prefs = await SharedPreferences.getInstance();
-        prefs.setInt("die", _move);
-        prefs.setInt("success", moveCost);
-        final result = await Navigator.push(
-          context,
-          MaterialPageRoute(builder: (context) => DieRollScreen()),
-        );
-
-        // what did we get back?
-        if (result != null) {
-          playerMoved = (prefs.getBool("success") ?? false);
-        }
-      } else {
-        _showAlertDialog(context, constNoMovePoints);
-      }
-
-      // if they moved, update screen, otherwise let them know what happened
-      if (playerMoved) {
-        setState(() {
-          // clear all hexes
-          for (MapHex hex in _map) {
-            hex.current = false;
-          }
-          // set this one assuming it isn't same as the old and add it to the list traveled
-          if (selected != old) {
-            _map[selected].current = true;
-            _hexesTraveled.add(selected);
-          }
-          // map out next hexes
-          _doMappingPhase();
-        });
-      } else {
-        _showAlertDialog(context, constMoveFailed);
-      }
-      // regardless of whether succesful or not, no more moves
-      _moveAllowed = false;
     }
   }
 
@@ -956,198 +1337,94 @@ class _GameScreenState extends State<GameScreen> {
   }
 
   // ************************
+  // _showMapHexExtras
+  // ************************
+  Widget _showMapHexExtras(int row, int col) {
+    int id = _getIdFromColRow(col, row);
+    bool isCurrentPlayerLocation = _map[id].current;
+
+    // if player in current hex, show american flag 
+    if (isCurrentPlayerLocation) {
+      return Positioned(
+        top: 30,
+        left: 35, 
+        child: Container(
+            height: 35,
+            width: 45, 
+            decoration: BoxDecoration(
+              border: Border.all(
+              color: Colors.black,
+              width: 2, // thin border
+              ),
+            ),
+            child: Image.asset(constImagePlayerLocation, fit: BoxFit.cover))
+          );
+    }
+    // else if player traveled through hex, show person icon
+    else if (_hexesTraveled.contains(id)) {
+      return const Positioned(
+        top: 30,
+        left: 35, 
+        child: Icon(Icons.hiking, color: Colors.black)
+          );      
+    }
+    // else, just an empty container
+    else {
+      return Container(); 
+    }
+  }
+
+
+  // ************************
   // build
   // ************************
   @override
   Widget build(BuildContext context) {
     return SafeArea(
         child: Scaffold(
-            backgroundColor: const Color(0xffd3d3d3),
+            backgroundColor: const Color.fromARGB(255, 173, 147, 62),
             body: Column(
                 crossAxisAlignment: CrossAxisAlignment.center,
                 children: <Widget>[
                   const Padding(
-                    padding: EdgeInsets.all(3.0),
+                    padding: EdgeInsets.all(1.0),
                   ),
-                  Row(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: <Widget>[
-                        Expanded(
-                            child: Column(
-                                crossAxisAlignment: CrossAxisAlignment.end,
-                                children: <Widget>[
-                              const Text("Health",
-                                  textAlign: TextAlign.center,
-                                  style: TextStyle(
-                                      fontWeight: FontWeight.bold,
-                                      fontFamily: 'LumanosimoRegular',
-                                      fontSize: 15.0)),
-                              Image(
-                                image: _healthImage(),
-                                width: 60.0,
-                                height: 15.0,
-                                fit: BoxFit.fill,
-                              ),
-                              const Padding(
-                                padding: EdgeInsets.all(1.0),
-                              ),
-                              const Text("Proximity",
-                                  textAlign: TextAlign.center,
-                                  style: TextStyle(
-                                      fontWeight: FontWeight.bold,
-                                      fontFamily: 'LumanosimoRegular',
-                                      fontSize: 15.0)),
-                              Image(
-                                image: _proximityImage(),
-                                width: 60.0,
-                                height: 15.0,
-                                fit: BoxFit.fill,
-                              ),
-                              const Padding(
-                                padding: EdgeInsets.all(1.0),
-                              ),
-                              const Text("Endurance",
-                                  textAlign: TextAlign.center,
-                                  style: TextStyle(
-                                      fontWeight: FontWeight.bold,
-                                      fontFamily: 'LumanosimoRegular',
-                                      fontSize: 15.0)),
-                              Image(
-                                image: _enduranceImage(),
-                                width: 60.0,
-                                height: 15.0,
-                                fit: BoxFit.fill,
-                              ),
-                              const Padding(
-                                padding: EdgeInsets.all(1.0),
-                              ),
-                            ])),
-                        Expanded(
-                            child: Column(
-                          children: [
-                            Column(
-                              crossAxisAlignment: CrossAxisAlignment.end,
-                              children: [
-                                const Text("Move",
-                                    textAlign: TextAlign.center,
-                                    style: TextStyle(
-                                        fontWeight: FontWeight.bold,
-                                        fontFamily: 'LumanosimoRegular',
-                                        fontSize: 15.0)),
-                                Image(
-                                  image: _moveImage(),
-                                  width: 60.0,
-                                  height: 15.0,
-                                  fit: BoxFit.fill,
-                                ),
-                                const Padding(
-                                  padding: EdgeInsets.all(1.0),
-                                ),
-                                const Text("Stealth",
-                                    textAlign: TextAlign.center,
-                                    style: TextStyle(
-                                        fontWeight: FontWeight.bold,
-                                        fontFamily: 'LumanosimoRegular',
-                                        fontSize: 15.0)),
-                                Image(
-                                  image: _stealthImage(),
-                                  width: 60.0,
-                                  height: 15.0,
-                                  fit: BoxFit.fill,
-                                ),
-                                const Padding(
-                                  padding: EdgeInsets.all(1.0),
-                                ),
-                                const Text("Rest",
-                                    textAlign: TextAlign.center,
-                                    style: TextStyle(
-                                        fontWeight: FontWeight.bold,
-                                        fontFamily: 'LumanosimoRegular',
-                                        fontSize: 15.0)),
-                                Image(
-                                  image: _restImage(),
-                                  width: 60.0,
-                                  height: 15.0,
-                                  fit: BoxFit.fill,
-                                ),
-                                const Padding(
-                                  padding: EdgeInsets.all(1.0),
-                                ),
-                              ],
-                            )
-                          ],
-                        )),
-                        Expanded(
-                            child: Column(
-                                crossAxisAlignment: CrossAxisAlignment.center,
-                                children: <Widget>[
-                              const Text("Turn",
-                                  textAlign: TextAlign.center,
-                                  style: TextStyle(
-                                      fontWeight: FontWeight.bold,
-                                      fontFamily: 'LumanosimoRegular',
-                                      fontSize: 25.0)),
-                              const Padding(
-                                padding: EdgeInsets.all(1.0),
-                              ),
-                              Text(_displayTurn(),
-                                  textAlign: TextAlign.center,
-                                  style: const TextStyle(
-                                      fontWeight: FontWeight.bold,
-                                      fontFamily: 'LumanosimoRegular',
-                                      fontSize: 22.0)),
-                              const Padding(
-                                padding: EdgeInsets.all(1.0),
-                              ),
-                              Text(_displayPhase(false),
-                                  textAlign: TextAlign.center,
-                                  style: const TextStyle(
-                                      fontWeight: FontWeight.bold,
-                                      fontFamily: 'LumanosimoRegular',
-                                      fontSize: 22.0)),
-                            ])),
-                      ]),
-                  const Padding(
-                    padding: EdgeInsets.all(2.0),
+                  const Text(appTitle,
+                    style: TextStyle(fontFamily: constAppTextFont, fontSize: 50)),
+                  const Padding(padding: EdgeInsets.all(0.0),),
+                  Center(
+                    child: RichText(
+                      textAlign: TextAlign.center, 
+                      text: TextSpan(
+                        children: [
+                          const TextSpan(text: constRoundText,
+                              style: TextStyle(fontFamily: constAppTextFont, fontSize: 19, color: Colors.black),              
+                          ),
+                          const TextSpan(
+                            text: ' ',
+                            style: TextStyle(fontFamily: constAppTextFont, fontSize: 19, color: Colors.black),
+                          ),                
+                          TextSpan(
+                            text: _displayRound(),
+                            style: const TextStyle(fontFamily: constAppTextFont, fontSize: 19, color: Colors.black),
+                          ),
+                          const TextSpan(
+                            text: ' - ',
+                            style: TextStyle(fontFamily: constAppTextFont, fontSize: 19, color: Colors.black),
+                          ),                
+                          TextSpan(text: _displayPhase(false),
+                              style: const TextStyle(fontFamily: constAppTextFont, fontSize: 19, color: Colors.black),              
+                          ),
+                      ],
+                      ),
+                    ),
                   ),
-                  Row(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: <Widget>[
-                        OutlinedButton(
-                          style: OutlinedButton.styleFrom(
-                              backgroundColor: Colors.black45),
-                          onPressed: () {
-                            debugPrint('Received click');
-                          },
-                          child: const Text('Inventory',
-                              style: TextStyle(
-                                  color: Colors.white,
-                                  fontWeight: FontWeight.bold,
-                                  fontFamily: 'LumanosimoRegular',
-                                  fontSize: 15.0)),
-                        ),
-                        const SizedBox(width: 15),
-                        OutlinedButton(
-                          style: OutlinedButton.styleFrom(
-                              backgroundColor: Colors.black45),
-                          onPressed: () {
-                            debugPrint('Received click');
-                          },
-                          child: const Text('Ailments',
-                              style: TextStyle(
-                                  color: Colors.white,
-                                  fontWeight: FontWeight.bold,
-                                  fontFamily: 'LumanosimoRegular',
-                                  fontSize: 15.0)),
-                        ),
-                      ]),
-                  Expanded(
-                      child: SingleChildScrollView(
+                  Expanded(child: SingleChildScrollView(
                     scrollDirection: Axis.horizontal,
                     child: HexagonOffsetGrid.evenFlat(
-                      color: Colors.black54,
+                      color: const Color.fromARGB(255, 173, 147, 62),
                       padding: const EdgeInsets.symmetric(
-                          horizontal: 20.0, vertical: 35.0),
+                          horizontal: 10.0, vertical: 10.0),
                       columns: constMapCols,
                       rows: constMapRows,
                       buildTile: (col, row) => HexagonWidgetBuilder(
@@ -1159,11 +1436,7 @@ class _GameScreenState extends State<GameScreen> {
                         //child: Text("$row, $col"),
                         child: GestureDetector(
                             onTap: () {
-                              debugPrint("row: " +
-                                  row.toString() +
-                                  ", col: " +
-                                  col.toString());
-
+                              debugPrint("row: $row.toString(), col: $col.toString()");
                               // do something if we're in the move phase
                               if (_phase == EnumPhase.move) {
                                 _selectMapHex(row, col);
@@ -1172,33 +1445,223 @@ class _GameScreenState extends State<GameScreen> {
                             onLongPress: () {
                               _showMapHexInfo(row, col);
                             },
-                            child: AspectRatio(
-                                aspectRatio: HexagonType.FLAT.ratio,
-                                child: Image.asset(
-                                  _getMapHexGraphic(row, col),
-                                  fit: BoxFit.cover,
-                                ))), // put image here wrapped in a gesture detector
+                            child: Stack(
+                                children: [
+                                  AspectRatio(
+                                  aspectRatio: HexagonType.FLAT.ratio,
+                                  child: Image.asset(
+                                    _getMapHexGraphic(row, col),
+                                    fit: BoxFit.cover,
+                                  )),
+                                  _showMapHexExtras(row, col), 
+                                ]
+                            ),
+                          ), // put image here wrapped in a gesture detector
                       ),
                     ),
                   )),
                   Row(
-                      mainAxisAlignment: MainAxisAlignment.end,
-                      children: <Widget>[
-                        OutlinedButton(
-                          style: OutlinedButton.styleFrom(
-                              backgroundColor: Colors.black45),
-                          onPressed: () {
-                            _continueButtonPress();
-                          },
-                          child: Text(
-                              "Continue to ${_displayPhase(true)} phase",
-                              style: const TextStyle(
-                                  color: Colors.white,
-                                  fontWeight: FontWeight.bold,
-                                  fontFamily: 'LumanosimoRegular',
-                                  fontSize: 15.0)),
+                    mainAxisAlignment: MainAxisAlignment.start,
+                    children: [
+                      const SizedBox(width: 35), // spacing column
+                      Image(
+                        image: _healthImage(),
+                        width: 80.0,
+                        height: 18.0,
+                        fit: BoxFit.fill,
+                      ),                     
+                      const SizedBox(width: 5), // spacing column
+                      const Text(constHealthText,
+                          textAlign: TextAlign.center,
+                          style: TextStyle(
+                              fontWeight: FontWeight.bold,
+                              fontFamily: constAppTextFont,
+                              fontSize: 12.0)),
+                      const SizedBox(width: 72), // flexible spacing column
+                      Image(
+                          image: _moveImage(),
+                          width: 80.0,
+                          height: 18.0,
+                          fit: BoxFit.fill,
                         ),
-                      ]),
+                      const SizedBox(width: 5), // spacing column                        
+                      const Text(constMoveText,
+                          textAlign: TextAlign.center,
+                          style: TextStyle(
+                              fontWeight: FontWeight.bold,
+                              fontFamily: constAppTextFont,
+                              fontSize: 12.0)),
+
+                    ],
+                  ),
+                  const Padding(
+                    padding: EdgeInsets.all(2.0),
+                  ),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.start,
+                    children: [
+                      const SizedBox(width: 35), // spacing column
+                      Image(
+                        image: _proximityImage(),
+                        width: 80.0,
+                        height: 18.0,
+                        fit: BoxFit.fill,
+                      ),                     
+                      const SizedBox(width: 5), // spacing column
+                      const Text(constProximityText,
+                          textAlign: TextAlign.center,
+                          style: TextStyle(
+                              fontWeight: FontWeight.bold,
+                              fontFamily: constAppTextFont,
+                              fontSize: 12.0)),
+                      const SizedBox(width: 50), // middle spacing column
+                      Image(
+                          image: _stealthImage(),
+                          width: 80.0,
+                          height: 18.0,
+                          fit: BoxFit.fill,
+                        ),
+                      const SizedBox(width: 5), // spacing column                        
+                      const Text(constStealthText,
+                          textAlign: TextAlign.center,
+                          style: TextStyle(
+                              fontWeight: FontWeight.bold,
+                              fontFamily: constAppTextFont,
+                              fontSize: 12.0)),
+
+                    ],
+                  ),
+                  const Padding(
+                    padding: EdgeInsets.all(2.0),
+                  ),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.start,
+                    children: [
+                      const SizedBox(width: 35), // spacing column
+                      Image(
+                        image: _enduranceImage(),
+                        width: 80.0,
+                        height: 18.0,
+                        fit: BoxFit.fill,
+                      ),                     
+                      const SizedBox(width: 5), // spacing column
+                      const Text(constEnduranceText,
+                          textAlign: TextAlign.center,
+                          style: TextStyle(
+                              fontWeight: FontWeight.bold,
+                              fontFamily: constAppTextFont,
+                              fontSize: 12.0)),
+                      const SizedBox(width: 43), // middle spacing column
+                      Image(
+                          image: _restImage(),
+                          width: 80.0,
+                          height: 18.0,
+                          fit: BoxFit.fill,
+                        ),
+                      const SizedBox(width: 5), // spacing column                        
+                      const Text(constRestText,
+                          textAlign: TextAlign.center,
+                          style: TextStyle(
+                                fontWeight: FontWeight.bold,
+                              fontFamily: constAppTextFont,
+                              fontSize: 12.0)),
+
+                    ],
+                  ),
+                  const Padding(
+                    padding: EdgeInsets.all(8.0),
+                  ),
+                  const Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Icon(Icons.hiking, size: 30, color: Colors.black),
+                      SizedBox(width: 1), // spacing column
+                      Text(constInventoryText,
+                          textAlign: TextAlign.center,
+                          style: TextStyle(
+                              fontWeight: FontWeight.bold,
+                              fontFamily: constAppTextFont,
+                              fontSize: 15.0)),
+                      SizedBox(width: 25), // middle spacing column
+                      Icon(Icons.healing, size: 30, color: Colors.black),
+                      SizedBox(width: 1), // spacing column                        
+                      Text(constAilmentsText,
+                          textAlign: TextAlign.center,
+                          style: TextStyle(
+                                fontWeight: FontWeight.bold,
+                              fontFamily: constAppTextFont,
+                              fontSize: 15.0)),
+                    ],
+                  ),
+                  const Padding(
+                    padding: EdgeInsets.all(8.0),
+                  ),                  
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    crossAxisAlignment: CrossAxisAlignment.center,
+                    children: <Widget>[
+                  Column(
+                    children: [SizedBox(
+                    width: 160.0,
+                    height: 55.0,
+                    child: OutlinedButton(
+                      style: OutlinedButton.styleFrom(
+                        foregroundColor: Colors.black, // Text and icon color
+                        backgroundColor: Colors.white, // Background color
+                        overlayColor: Colors.blueAccent.withValues(), // pressed ripple
+                        side: const BorderSide(color: Colors.black,   width: 3.0,), // Border color
+                      ),   
+                      child: const Align(
+                          alignment: Alignment.center,
+                          child: Text(
+                            constContinueText,
+                            style: TextStyle(
+                                fontFamily: constAppTextFont,
+                                color: Colors.black,
+                                fontWeight: FontWeight.bold,
+                                fontSize: 18.0),
+                          )),
+                      onPressed:  () {
+                        // TBD
+                      },  
+                    ),
+                  )]),
+                    const SizedBox(
+                      width: 15.0,
+                      height: 5.0),
+                    Column(
+                      children: [SizedBox(
+                      width: 160.0,
+                      height: 55.0,
+                      child: OutlinedButton(
+                        style: OutlinedButton.styleFrom(
+                          foregroundColor: Colors.black, // Text and icon color
+                          backgroundColor: Colors.white, // Background color
+                          overlayColor: Colors.blueAccent.withValues(), // pressed ripple
+                          side: const BorderSide(color: Colors.black,   width: 3.0,), // Border color
+                        ),   
+                        child: const Align(
+                            alignment: Alignment.center,
+                            child: Text(
+                              constQuitText,
+                              style: const TextStyle(
+                                  fontFamily: constAppTextFont,
+                                  color: Colors.black,
+                                  fontWeight: FontWeight.bold,
+                                  fontSize: 18.0),
+                            )),
+                        onPressed:  () {
+                          // TBD
+                        },  
+                      ),
+                    )]),
+                  ],
+ 
+                     
+                  ),
+                    const Padding(
+                    padding: EdgeInsets.all(12.0),
+                  ),
                 ])));
   }
 }

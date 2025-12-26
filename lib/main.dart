@@ -55,7 +55,7 @@ class LostFalconHome extends StatelessWidget {
             child: Text(
               "  $appTitleWWord1\r\n$appTitleWWord2",
               style: TextStyle(
-                  fontFamily: 'LumanosimoRegular',
+                  fontFamily: constAppTextFont,
                   fontWeight: FontWeight.bold,
                   color: Colors.black,
                   fontSize: 82.0),
@@ -104,7 +104,7 @@ class LostFalconHome extends StatelessWidget {
                         child: Text(
                           "Play",
                           style: TextStyle(
-                              fontFamily: 'LumanosimoRegular',
+                              fontFamily: constAppTextFont,
                               fontWeight: FontWeight.bold,
                               color: Colors.black,
                               fontSize: 30.0),
@@ -132,7 +132,7 @@ class LostFalconHome extends StatelessWidget {
                         child: Text(
                           "Help",
                           style: TextStyle(
-                              fontFamily: 'LumanosimoRegular',
+                              fontFamily: constAppTextFont,
                               fontWeight: FontWeight.bold,
                               color: Colors.black,
                               fontSize: 30.0),

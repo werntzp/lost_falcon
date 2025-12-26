@@ -80,6 +80,10 @@ flutter:
       fonts:
         - asset: assets/fonts/LumanosimoRegular.ttf
 
+    - family: Lemonada
+      fonts:
+        - asset: assets/fonts/Lemonada-VariableFont_wght.ttf
+
   #   - family: Trajan Pro
   #     fonts:
   #       - asset: fonts/TrajanPro.ttf

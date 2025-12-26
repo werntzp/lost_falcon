@@ -4,7 +4,9 @@ const appTitleWWord2 = "Falcon";
 const appSplashGraphic = "assets/images/falcon_jet_splash_logo.jpg";
 const appVersion = "Version 1.0, February 2026";
 const sdsLogo = "assets/images/sds_logo.png";
+const constAppTextFont = "Lemonada";
 
+// images
 const constImageDie6 = "assets/images/lf_die_6.png";
 const constImageDie5 = "assets/images/lf_die_5.png";
 const constImageDie4 = "assets/images/lf_die_4.png";
@@ -30,13 +32,42 @@ const constImageRoughGrey = "assets/images/lf_terrain_rocky_grey.jpg";
 const constImageHillsGrey = "assets/images/lf_terrain_hills_grey.jpg";
 const constImageVillageGrey = "assets/images/lf_terrain_village_grey.jpg";
 const constImageRescue = "assets/images/lf_rescue.jpg";
-const constImagePlayerLocation = "assets/images/lf_american_flag_transparent.gif";
+const constImagePlayerLocation = "assets/images/lf_american_flag_small.gif";
 const constImageUnknown = "assets/images/lf_terrain_unknown.jpg";
+const constImageWhiteDieFace6 = "assets/images/dice_face_white_6.png";
+const constImageWhiteDieFace5 = "assets/images/dice_face_white_5.png";
+const constImageWhiteDieFace4 = "assets/images/dice_face_white_4.png";
+const constImageWhiteDieFace3 = "assets/images/dice_face_white_3.png";
+const constImageWhiteDieFace2 = "assets/images/dice_face_white_2.png";
+const constImageWhiteDieFace1 = "assets/images/dice_face_white_1.png";
+const constImageWhiteRedFace6 = "assets/images/dice_face_red_6.png";
+const constImageWhiteRedFace5 = "assets/images/dice_face_red_5.png";
+const constImageWhiteRedFace4 = "assets/images/dice_face_red_4.png";
+const constImageWhiteRedFace3 = "assets/images/dice_face_red_3.png";
+const constImageWhiteRedFace2 = "assets/images/dice_face_red_2.png";
+const constImageWhiteRedFace1 = "assets/images/dice_face_red_1.png";
 
+// messages
 const constNoMovePoints =
     "You are unable to move this phase as you allocated no move points.";
 const constMoveFailed =
     "You were unable to move from your current location thus turn.";
+const constDiceAllocationMessage1 = "You have";
+const constDiceAllocationMessage2 = "dice to allocate. Tap once to increment, and long press to decrement.";
+const constDiceRollMoveMessage = "You can move into the new hex by choosing a die over";
+
+const constMoveText = "Move";
+const constStealthText = "Stealth";
+const constRestText = "Rest";
+const constHealthText = "Health";
+const constProximityText = "Proximity";
+const constEnduranceText = "Endurance";
+const constRoundText = "Round";
+const constInventoryText = "Inventory";
+const constAilmentsText = "Ailments";
+const constQuitText = "Quit";
+const constContinueText = "Continue";
+const constOKText = "OK";
 
 const constMapRows = 5;
 const constMapCols = 15;
