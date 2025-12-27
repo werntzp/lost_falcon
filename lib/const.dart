@@ -36,10 +36,10 @@ const constImagePlayerLocation = "assets/images/lf_american_flag_small.gif";
 const constImageUnknown = "assets/images/lf_terrain_unknown.jpg";
 
 // messages
-const constNoMovePoints =
-    "You are unable to move this phase as you allocated no move points.";
-const constMoveFailed =
-    "You were unable to move from your current location thus turn.";
+const constNoDiceAllocatedForMoveMessage =
+    "You are unable to move as you allocated no dice.";
+const constMoveFailedMessage =
+    "You failed in the attempt to move from your current location.";
 const constDiceAllocationMessage1 = "You have";
 const constDiceAllocationMessage2 = "dice to allocate. Tap once to increment, and long press to decrement.";
 const constDiceRollMoveMessage1 = "You need to roll over a";

@@ -13,6 +13,8 @@ int _move = 0;
 int _stealth = 0;
 int _rest = 0;
 int _dice = _endurance; 
+int _oldHex = 0;
+int _selectedHex = 0;
 EnumPhase _phase = EnumPhase.mapping;
 EnumEncounter _encounter = EnumEncounter.none;
 List<MapHex> _map = [];
@@ -50,9 +52,9 @@ class _GameScreenState extends State<GameScreen> {
     super.initState();
     // reset all values
     _newGame();
-    // show initial hexes near player start 
+    // do our round 1 mapping
     _doMappingPhase();
-    // show initial overlay
+    // show initial overlay for allocation phase
     WidgetsBinding.instance.addPostFrameCallback((_) {
       _diceAllocationOverlay();
     });
@@ -69,8 +71,7 @@ class _GameScreenState extends State<GameScreen> {
       _completer = null; 
       _overlayShowing = false; 
       setState(() {
-        _moveAllowed = true; 
-        _phase = EnumPhase.move;
+        // do nothing 
       });
   }
 
@@ -240,18 +241,37 @@ class _GameScreenState extends State<GameScreen> {
   // *********************************************
   // user selected a die
   // *********************************************
-  void _tapDice(int value, int target) {
+  void _tapDice(int value, int target) async {
 
     // get rid of the overlay (either way)
     _closeDiceRollingOverlay();
 
     // if the number on the die is greater than the target, do the move,
     // otherwise give them a failed message 
+    if (value >= target) {
+
+      // clear all hexes
+      for (MapHex hex in _map) {
+        hex.current = false;
+      }
+
+      // set this one assuming it isn't same as the old and add it to the list traveled
+      if (_selectedHex != _oldHex) {
+        _map[_selectedHex].current = true;
+        _hexesTraveled.add(_selectedHex);
+      }
+
+      // map out next hexes
+      _doMappingPhase();
+
+    }
+    else {
+      await _moveOverlayMessage(constMoveFailedMessage);
+    }
 
     // update ui 
     setState(() {
       _moveAllowed = false; 
-      _phase = EnumPhase.stealth;
     });
 
   }
@@ -315,7 +335,6 @@ class _GameScreenState extends State<GameScreen> {
   Future<void> _diceRollOverlay(EnumPhase phase, int rollToBeat, int numDice) async {
 
     _completer = Completer<void>();
-
     if (_overlayEntry != null) return; // Prevent stacking
 
     _overlayShowing = true; 
@@ -368,6 +387,44 @@ class _GameScreenState extends State<GameScreen> {
 
     // start the timer to roll dice 
     _startRolling();
+
+  }
+
+  // *********************************************
+  // failed to move overlay
+  // *********************************************
+  Future<void> _moveOverlayMessage(String message) async {
+
+    _completer = Completer<void>();
+    if (_overlayEntry != null) return; // Prevent stacking
+
+    _overlayShowing = true;
+    _overlayEntry = OverlayEntry(
+      builder: (context) => Stack(
+        children: [
+          Align(alignment: Alignment.center,
+            child: Card(
+              elevation: 8.0,              
+              color: Colors.black,
+              child: Padding(
+              padding: const EdgeInsets.all(10.0),
+              child: Text(
+                message,
+                style: const TextStyle(fontFamily: constAppTextFont, fontSize: 18, fontWeight: FontWeight.bold, color: Colors.white),
+                textAlign: TextAlign.center))))]));
+
+    Overlay.of(context).insert(_overlayEntry!);
+
+    // Remove after 1 second
+    Future.delayed(const Duration(seconds: 2), () {
+      _overlayEntry?.remove(); 
+      _completer?.complete(); 
+      _overlayEntry = null; 
+      _completer = null; 
+      _overlayShowing = false;
+    });
+
+    await _completer!.future; 
 
   }
 
@@ -993,7 +1050,7 @@ class _GameScreenState extends State<GameScreen> {
   }
 
   // ************************
-  // _continueButtonPress
+  // _ uttonPress
   // ************************
   void _continueButtonPress() async {
     // increment the phase from current one since they moved to the next
@@ -1008,17 +1065,10 @@ class _GameScreenState extends State<GameScreen> {
       });
     }
 
-    // special case -- for turn 1, do initial mapping, skip encounter, and go right to allocation
-    if ((_round == 1) && (_phase == EnumPhase.encounter)) {
-      _doMappingPhase();
-      _phase = EnumPhase.allocate;
-    }
-
     // if mapping phase, populate next three hexes
     if (_phase == EnumPhase.mapping) {
       _doMappingPhase();
     }
-    // if map phase, then we're going to the encounter phase
 
     // if encounter phase, decide if they had an encounter
     if (_phase == EnumPhase.encounter) {
@@ -1028,7 +1078,7 @@ class _GameScreenState extends State<GameScreen> {
     // if allocate phase, bring up allocation dialog
     if (_phase == EnumPhase.allocate) {
       // send the number of dice available to allocate
-      //await _diceAllocationOverlay(); 
+      await _diceAllocationOverlay(); 
     }
 
     // if move phase, see if they a re able to move out of the current hex based on die/point allocation
@@ -1281,9 +1331,9 @@ class _GameScreenState extends State<GameScreen> {
     // get current hex
     MapHex h = _getCurrentHex();
     // save that for the moment
-    int old = h.id;
+    _oldHex = h.id;
     // get the id of the hex they selected
-    int selected = _getIdFromColRow(col, row);
+    _selectedHex = _getIdFromColRow(col, row);
 
     // if this is move phase, do all the logic
     if ((_phase == EnumPhase.move) && (_moveAllowed)) {
@@ -1304,34 +1354,12 @@ class _GameScreenState extends State<GameScreen> {
       if (_move > 0) {
         // bring up overlay 
         await _diceRollOverlay(EnumPhase.move, moveCost, _move);
-        /*
-        if (playerMoved) {
-          setState(() {
-            // clear all hexes
-            for (MapHex hex in _map) {
-              hex.current = false;
-            }
-            // set this one assuming it isn't same as the old and add it to the list traveled
-            if (selected != old) {
-              _map[selected].current = true;
-              _hexesTraveled.add(selected);
-            }
-            // map out next hexes
-            _doMappingPhase();
-          });
-
-          */
-          // regardless of whether succesful or not, no more moves
-          _moveAllowed = false;
-
-        } else {
-          _showAlertDialog(context, constMoveFailed);
-        }
+      } else {
+        await _moveOverlayMessage(constNoDiceAllocatedForMoveMessage);
+      }
     }
   }
-
-  // ************************
-  // _showMapHexInfo
+ 
   // ************************
   void _showMapHexInfo(int row, int col) {
     // show pop-up with terrain info or anything else
@@ -1365,9 +1393,9 @@ class _GameScreenState extends State<GameScreen> {
     // else if player traveled through hex, show person icon
     else if (_hexesTraveled.contains(id)) {
       return const Positioned(
-        top: 30,
-        left: 35, 
-        child: Icon(Icons.hiking, color: Colors.black)
+        top: 25,
+        left: 32, 
+        child: Icon(Icons.directions_run, color: Colors.black, size: 50)
           );      
     }
     // else, just an empty container
@@ -1624,7 +1652,7 @@ class _GameScreenState extends State<GameScreen> {
                                 fontSize: 18.0),
                           )),
                       onPressed:  () {
-                        // TBD
+                        _continueButtonPress(); 
                       },  
                     ),
                   )]),
