@@ -34,18 +34,6 @@ const constImageVillageGrey = "assets/images/lf_terrain_village_grey.jpg";
 const constImageRescue = "assets/images/lf_rescue.jpg";
 const constImagePlayerLocation = "assets/images/lf_american_flag_small.gif";
 const constImageUnknown = "assets/images/lf_terrain_unknown.jpg";
-const constImageWhiteDieFace6 = "assets/images/dice_face_white_6.png";
-const constImageWhiteDieFace5 = "assets/images/dice_face_white_5.png";
-const constImageWhiteDieFace4 = "assets/images/dice_face_white_4.png";
-const constImageWhiteDieFace3 = "assets/images/dice_face_white_3.png";
-const constImageWhiteDieFace2 = "assets/images/dice_face_white_2.png";
-const constImageWhiteDieFace1 = "assets/images/dice_face_white_1.png";
-const constImageWhiteRedFace6 = "assets/images/dice_face_red_6.png";
-const constImageWhiteRedFace5 = "assets/images/dice_face_red_5.png";
-const constImageWhiteRedFace4 = "assets/images/dice_face_red_4.png";
-const constImageWhiteRedFace3 = "assets/images/dice_face_red_3.png";
-const constImageWhiteRedFace2 = "assets/images/dice_face_red_2.png";
-const constImageWhiteRedFace1 = "assets/images/dice_face_red_1.png";
 
 // messages
 const constNoMovePoints =
@@ -54,8 +42,10 @@ const constMoveFailed =
     "You were unable to move from your current location thus turn.";
 const constDiceAllocationMessage1 = "You have";
 const constDiceAllocationMessage2 = "dice to allocate. Tap once to increment, and long press to decrement.";
-const constDiceRollMoveMessage = "You can move into the new hex by choosing a die over";
-
+const constDiceRollMoveMessage1 = "You need to roll over a";
+const constDiceRollMoveMessage2 = "to move into a new hex.";
+const constDiceRollMoveMessage3 = "However, if you choose a 6, your Health is reduced by one point.";
+const constDiceRollMoveMessage4 = "Moving out of the hex successfully, allows you to re-roll one die during the Stealth phase.";
 const constMoveText = "Move";
 const constStealthText = "Stealth";
 const constRestText = "Rest";

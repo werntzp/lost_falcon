@@ -18,6 +18,8 @@ EnumEncounter _encounter = EnumEncounter.none;
 List<MapHex> _map = [];
 bool _moveAllowed = false;
 List<int> _hexesTraveled = [];
+List<int> _rollingDice = []; 
+Timer? _rollTimer; 
 
 // extension used to capitalize the first letter of a word 
 extension StringExtension on String {
@@ -67,6 +69,7 @@ class _GameScreenState extends State<GameScreen> {
       _completer = null; 
       _overlayShowing = false; 
       setState(() {
+        _moveAllowed = true; 
         _phase = EnumPhase.move;
       });
   }
@@ -222,6 +225,91 @@ class _GameScreenState extends State<GameScreen> {
   }
 
   // *********************************************
+  // close out overlay 
+  // *********************************************
+  void _closeDiceRollingOverlay() {
+
+      _overlayEntry?.remove(); 
+      _completer?.complete(); 
+      _overlayEntry = null; 
+      _completer = null; 
+      _overlayShowing = false; 
+
+  }
+
+  // *********************************************
+  // user selected a die
+  // *********************************************
+  void _tapDice(int value, int target) {
+
+    // get rid of the overlay (either way)
+    _closeDiceRollingOverlay();
+
+    // if the number on the die is greater than the target, do the move,
+    // otherwise give them a failed message 
+
+    // update ui 
+    setState(() {
+      _moveAllowed = false; 
+      _phase = EnumPhase.stealth;
+    });
+
+  }
+
+  // *********************************************
+  // give dice new values  
+  // *********************************************
+  void _rollDice() {
+    setState(() {
+      _rollingDice = _rollingDice.map((_) => Random().nextInt(6) + 1).toList();
+    });
+
+  }
+
+  // *********************************************
+  // draw the dice 
+  // *********************************************
+  List<Widget> _drawDice(int count, int target) {
+
+    // set number of dice based on how many allocated  
+    _rollingDice = List.generate(count, (_) => Random().nextInt(6) + 1);
+
+    // set each one    
+    return _rollingDice.map((value) {
+      return GestureDetector(
+        onTap: () {
+          _tapDice(value, target);
+        },
+        child: Image.asset(
+          'assets/images/dice_face_white_$value.jpg',
+          width: 64,
+          height: 64,
+      ));
+    }).toList();
+    
+  }
+
+  // *********************************************
+  // start a timer to roll the dice  
+  // *********************************************
+  void _startRolling() {
+    // Cancel any previous timer
+    _rollTimer?.cancel();
+
+    // Start a new timer that fires repeatedly
+    _rollTimer = Timer.periodic(const Duration(milliseconds: 60), (_) {
+      _rollDice(); // your existing method that randomizes all dice
+    _overlayEntry?.markNeedsBuild(); // forces overlay to redraw
+    });
+
+    // Stop the rolling after 1 second
+    Future.delayed(const Duration(seconds: 2), () {
+      _rollTimer?.cancel();
+    });
+
+  }
+
+  // *********************************************
   // display overlay for rolling and choosing dice 
   // *********************************************
   Future<void> _diceRollOverlay(EnumPhase phase, int rollToBeat, int numDice) async {
@@ -257,7 +345,7 @@ class _GameScreenState extends State<GameScreen> {
             children: [
               const SizedBox(height: 12),
               Text(
-                "$constDiceAllocationMessage1 $_dice $constDiceAllocationMessage2",
+                "$constDiceRollMoveMessage1 $rollToBeat $constDiceRollMoveMessage2 $constDiceRollMoveMessage3 $constDiceRollMoveMessage4",
                 style: const TextStyle(color: Colors.white, fontFamily: constAppTextFont, fontSize: 15),
                 textAlign: TextAlign.center,
               ),
@@ -266,106 +354,20 @@ class _GameScreenState extends State<GameScreen> {
               ),
               Column(crossAxisAlignment: CrossAxisAlignment.start,
                 children: <Widget>[
-                  GestureDetector(
-                    onTap: () { _incrementMove(); },
-                    onLongPress: () { _decrementMove(); },
-                    child: Row(children: <Widget>[
-                      const SizedBox(width: 75),
-                      Image(
-                          image: _moveImage(),
-                          width: 80.0,
-                          height: 18.0,
-                          fit: BoxFit.fill,
-                        ),
-                      const SizedBox(width: 5), // spacing column                        
-                      const Text(constMoveText,
-                          textAlign: TextAlign.center,
-                          style: TextStyle(
-                              color: Colors.white,  
-                              fontWeight: FontWeight.bold,
-                              fontFamily: constAppTextFont,
-                              fontSize: 18.0)),
-                    ],),
-                  ),
-                  const SizedBox(height: 5),
-                  GestureDetector(
-                    onTap: () { _incrementStealth(); },
-                    onLongPress: () { _decrementStealth(); },
-                    child: Row(children: <Widget>[
-                      const SizedBox(width: 75),
-                      Image(
-                          image: _stealthImage(),
-                          width: 80.0,
-                          height: 18.0,
-                          fit: BoxFit.fill,
-                        ),
-                      const SizedBox(width: 5), // spacing column                        
-                      const Text(constStealthText,
-                          textAlign: TextAlign.center,
-                          style: TextStyle(
-                              color: Colors.white,  
-                              fontWeight: FontWeight.bold,
-                              fontFamily: constAppTextFont,
-                              fontSize: 18.0)),
-                    ],),
-                  ),
-                  const SizedBox(height: 5),
-                  GestureDetector(
-                    onTap: () { _incrementRest(); },
-                    onLongPress: () { _decrementRest(); },
-                    child: Row(children: <Widget>[
-                      const SizedBox(width: 75),
-                      Image(
-                          image: _restImage(),
-                          width: 80.0,
-                          height: 18.0,
-                          fit: BoxFit.fill,
-                        ),
-                      const SizedBox(width: 5), // spacing column                        
-                      const Text(constRestText,
-                          textAlign: TextAlign.center,
-                          style: TextStyle(
-                              color: Colors.white,  
-                              fontWeight: FontWeight.bold,
-                              fontFamily: constAppTextFont,
-                              fontSize: 18.0)),
-                    ],),
-                  ),
-                ],),
-              const Padding(
-                padding: EdgeInsets.all(10.0),
-              ),
-              SizedBox(
-                width: 160.0,
-                height: 55.0,
-                child: OutlinedButton(
-                  style: OutlinedButton.styleFrom(
-                    foregroundColor: Colors.black, // Text and icon color
-                    backgroundColor: Colors.white, // Background color
-                    overlayColor: Colors.blueAccent.withValues(), // pressed ripple
-                    side: const BorderSide(color: Colors.black,   width: 3.0,), // Border color
-                  ),   
-                  child: const Align(
-                      alignment: Alignment.center,
-                      child: Text(
-                        constOKText,
-                        style: TextStyle(
-                            fontFamily: constAppTextFont,
-                            color: Colors.black,
-                            fontSize: 18.0),
-                      )),
-                  onPressed:  () { _closeDiceAllocationOverlay(); },
-                ),
+                  Wrap(
+                    spacing: 12,
+                    runSpacing: 12,
+                    children: _drawDice(numDice, rollToBeat),
+                  )
+                ],
               ),
             ],
-          ),
-        ),
-        ),
-    )
-    ],
-    ));
-
+            ))))]));
+  
     Overlay.of(context).insert(_overlayEntry!);
+
+    // start the timer to roll dice 
+    _startRolling();
 
   }
 
