@@ -2,17 +2,16 @@ import 'package:flutter/material.dart';
 import 'package:hexagon/hexagon.dart';
 import 'package:lost_falcon/const.dart';
 import '../models/map_model.dart';
+import '../models/pilot_model.dart';
 import 'dart:math';
 import 'dart:async';
 
+Pilot _pilot = Pilot();
 int _round = 1;
-int _proximity = 6;
-int _health = 6;
-int _endurance = 6;
-int _move = 0;
-int _stealth = 0;
-int _rest = 0;
-int _dice = _endurance; 
+int _moveDice = constNoDice;
+int _stealthDice = constNoDice;
+int _restDice = constNoDice;
+int _totalDice = _pilot.getEndurance(); 
 int _oldHex = 0;
 int _selectedHex = 0;
 EnumPhase _phase = EnumPhase.mapping;
@@ -22,6 +21,7 @@ bool _moveAllowed = false;
 List<int> _hexesTraveled = [];
 List<int> _rollingDice = []; 
 Timer? _rollTimer; 
+bool _allowedToReRoll = false;
 
 // extension used to capitalize the first letter of a word 
 extension StringExtension on String {
@@ -80,7 +80,7 @@ class _GameScreenState extends State<GameScreen> {
   // *********************************************
   Future<void> _diceAllocationOverlay() async {
 
-    _dice = _endurance; 
+    _totalDice = _pilot.getEndurance(); 
 
     _completer = Completer<void>();
 
@@ -113,7 +113,7 @@ class _GameScreenState extends State<GameScreen> {
             children: [
               const SizedBox(height: 12),
               Text(
-                "$constDiceAllocationMessage1 $_dice $constDiceAllocationMessage2",
+                "$constDiceAllocationMessage1 $_totalDice $constDiceAllocationMessage2",
                 style: const TextStyle(color: Colors.white, fontFamily: constAppTextFont, fontSize: 15),
                 textAlign: TextAlign.center,
               ),
@@ -123,8 +123,8 @@ class _GameScreenState extends State<GameScreen> {
               Column(crossAxisAlignment: CrossAxisAlignment.start,
                 children: <Widget>[
                   GestureDetector(
-                    onTap: () { _incrementMove(); },
-                    onLongPress: () { _decrementMove(); },
+                    onTap: () { _changeMove(EnumDirection.increment); },
+                    onLongPress: () { _changeMove(EnumDirection.decrement); },
                     child: Row(children: <Widget>[
                       const SizedBox(width: 75),
                       Image(
@@ -145,8 +145,8 @@ class _GameScreenState extends State<GameScreen> {
                   ),
                   const SizedBox(height: 5),
                   GestureDetector(
-                    onTap: () { _incrementStealth(); },
-                    onLongPress: () { _decrementStealth(); },
+                    onTap: () { _changeStealth(EnumDirection.increment); },
+                    onLongPress: () { _changeStealth(EnumDirection.decrement); },
                     child: Row(children: <Widget>[
                       const SizedBox(width: 75),
                       Image(
@@ -167,8 +167,8 @@ class _GameScreenState extends State<GameScreen> {
                   ),
                   const SizedBox(height: 5),
                   GestureDetector(
-                    onTap: () { _incrementRest(); },
-                    onLongPress: () { _decrementRest(); },
+                    onTap: () { _changeRest(EnumDirection.increment); },
+                    onLongPress: () { _changeRest(EnumDirection.decrement); },
                     child: Row(children: <Widget>[
                       const SizedBox(width: 75),
                       Image(
@@ -241,32 +241,55 @@ class _GameScreenState extends State<GameScreen> {
   // *********************************************
   // user selected a die
   // *********************************************
-  void _tapDice(int value, int target) async {
+  void _tapDice(EnumPhase phase, int value, int target) async {
 
     // get rid of the overlay (either way)
     _closeDiceRollingOverlay();
 
-    // if the number on the die is greater than the target, do the move,
-    // otherwise give them a failed message 
-    if (value >= target) {
-
-      // clear all hexes
-      for (MapHex hex in _map) {
-        hex.current = false;
+    // decide what to do based on phase 
+    if (phase == EnumPhase.move) {
+      if (value >= target) {
+        // clear all hexes
+        for (MapHex hex in _map) {
+          hex.current = false;
+        }
+        // set this one assuming it isn't same as the old and add it to the list traveled
+        if (_selectedHex != _oldHex) {
+          _map[_selectedHex].current = true;
+          _hexesTraveled.add(_selectedHex);
+          _allowedToReRoll = true; 
+        }
+        // map out next hexes
+        _doMappingPhase();
+        // did they choose a six? 
+        if (value == 6) { _pilot.setHealth(EnumDirection.decrement); }
+      }
+      else {
+        await _failedOverlayMessage(constMoveFailedMessage);
       }
 
-      // set this one assuming it isn't same as the old and add it to the list traveled
-      if (_selectedHex != _oldHex) {
-        _map[_selectedHex].current = true;
-        _hexesTraveled.add(_selectedHex);
+    } 
+    else if (phase == EnumPhase.stealth) {
+      // for stealth phase, see if they chose a six 
+      if (value >= target) {
+        if (value == 6) { _pilot.setHealth(EnumDirection.decrement); }
       }
-
-      // map out next hexes
-      _doMappingPhase();
-
+      else {
+        _pilot.setProximity(EnumDirection.decrement); 
+        await _failedOverlayMessage(constStealthFailedMessage);
+      }
     }
-    else {
-      await _moveOverlayMessage(constMoveFailedMessage);
+    else { // rest
+      if (value >= target) {
+        _pilot.setEndurance(EnumDirection.increment); 
+        // did they choose a six? 
+        if (value == 6) { _pilot.setHealth(EnumDirection.decrement); }
+      }
+      else { 
+        _pilot.setEndurance(EnumDirection.decrement); 
+        await _failedOverlayMessage(constRestFailedMessage);
+
+      }
     }
 
     // update ui 
@@ -277,9 +300,28 @@ class _GameScreenState extends State<GameScreen> {
   }
 
   // *********************************************
+  // reroll one die
+  // *********************************************
+  void _reRoll(int index) {
+
+    // only do this if they are allowed, and then flip that flag
+    if (_allowedToReRoll) {
+
+      _allowedToReRoll = false;  
+      setState(() {
+        _rollingDice[index] = Random().nextInt(6) + 1;
+      });
+      _overlayEntry?.markNeedsBuild(); // forces overlay to redraw
+
+    }
+
+  }
+
+  // *********************************************
   // give dice new values  
   // *********************************************
   void _rollDice() {
+    
     setState(() {
       _rollingDice = _rollingDice.map((_) => Random().nextInt(6) + 1).toList();
     });
@@ -289,16 +331,19 @@ class _GameScreenState extends State<GameScreen> {
   // *********************************************
   // draw the dice 
   // *********************************************
-  List<Widget> _drawDice(int count, int target) {
-
-    // set number of dice based on how many allocated  
-    _rollingDice = List.generate(count, (_) => Random().nextInt(6) + 1);
+  List<Widget> _drawDice(EnumPhase phase, int target) {
 
     // set each one    
-    return _rollingDice.map((value) {
+    return _rollingDice.asMap().entries.map((entry) {
+      final index = entry.key; 
+      final value = entry.value; 
+
       return GestureDetector(
         onTap: () {
-          _tapDice(value, target);
+          _tapDice(phase, value, target); 
+        },
+        onDoubleTap: () {
+          _reRoll(index);
         },
         child: Image.asset(
           'assets/images/dice_face_white_$value.jpg',
@@ -333,6 +378,123 @@ class _GameScreenState extends State<GameScreen> {
   // display overlay for rolling and choosing dice 
   // *********************************************
   Future<void> _diceRollOverlay(EnumPhase phase, int rollToBeat, int numDice) async {
+    String message = ""; 
+
+    if (phase == EnumPhase.move) {
+      message = "$constDiceRollMoveMessage1 $rollToBeat $constDiceRollMoveMessage2 $constDiceRollMoveMessage3 $constDiceRollMoveMessage4";
+    }
+    else if (phase == EnumPhase.stealth) {
+      message = "$constDiceRollStealthMessage1 $rollToBeat $constDiceRollStealthMessage2 $constDiceRollStealthMessage3 ";
+      if (_allowedToReRoll) {
+        message += constDiceRollStealthMessage4;
+      }
+    }
+    else { // rest phase 
+      message = "$constDiceRollRestMessage1 $rollToBeat $constDiceRollRestMessage2 $constDiceRollRestMessage3 ";
+
+    }
+
+    // set number of dice based on how many allocated  
+    _rollingDice = List.generate(numDice, (_) => Random().nextInt(6) + 1);
+
+    _completer = Completer<void>();
+    if (_overlayEntry != null) return; // Prevent stacking
+
+    _overlayShowing = true; 
+    _overlayEntry = OverlayEntry(
+      builder: (context) => Stack(
+        children: [
+          Positioned.fill(
+            child: Container(
+              color: Colors.black.withAlpha((0.4*255).toInt()) // adjustable darkness
+            ),
+          ),
+        Positioned(
+        top: 200,
+        left: 50,
+        right: 50,
+        child: Material(
+          elevation: 8.0,
+          color: Colors.transparent,
+          child: Container(
+            padding: const EdgeInsets.all(12),
+            decoration: BoxDecoration(
+              color: Colors.black,
+              borderRadius: BorderRadius.circular(12),
+            ),
+            child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              const SizedBox(height: 12),
+              Text(
+                message,
+                style: const TextStyle(color: Colors.white, fontFamily: constAppTextFont, fontSize: 15),
+                textAlign: TextAlign.center,
+              ),
+              const Padding(
+                padding: EdgeInsets.all(10.0),
+              ),
+              Column(crossAxisAlignment: CrossAxisAlignment.start,
+                children: <Widget>[
+                  Wrap(
+                    spacing: 12,
+                    runSpacing: 12,
+                    children: _drawDice(phase, rollToBeat),
+                  )
+                ],
+              ),
+            ],
+            ))))]));
+  
+    Overlay.of(context).insert(_overlayEntry!);
+
+    // start the timer to roll dice 
+    _startRolling();
+
+  }
+
+  // *********************************************
+  // failed message overlay
+  // *********************************************
+  Future<void> _failedOverlayMessage(String message) async {
+
+    _completer = Completer<void>();
+    if (_overlayEntry != null) return; // Prevent stacking
+
+    _overlayShowing = true;
+    _overlayEntry = OverlayEntry(
+      builder: (context) => Stack(
+        children: [
+          Align(alignment: Alignment.center,
+            child: Card(
+              elevation: 8.0,              
+              color: Colors.red,
+              child: Padding(
+              padding: const EdgeInsets.all(10.0),
+              child: Text(
+                message,
+                style: const TextStyle(fontFamily: constAppTextFont, fontSize: 18, fontWeight: FontWeight.bold, color: Colors.white),
+                textAlign: TextAlign.center))))]));
+
+    Overlay.of(context).insert(_overlayEntry!);
+
+    // Remove after 1 second
+    Future.delayed(const Duration(seconds: 2), () {
+      _overlayEntry?.remove(); 
+      _completer?.complete(); 
+      _overlayEntry = null; 
+      _completer = null; 
+      _overlayShowing = false;
+    });
+
+    await _completer!.future; 
+
+  }
+
+ // *********************************************
+  // display overlay seeing what encounter (maybe) happened
+  // *********************************************
+  Future<void> _encounterOverlay(EnumPhase phase, int rollToBeat, int numDice) async {
 
     _completer = Completer<void>();
     if (_overlayEntry != null) return; // Prevent stacking
@@ -371,12 +533,12 @@ class _GameScreenState extends State<GameScreen> {
               const Padding(
                 padding: EdgeInsets.all(10.0),
               ),
-              Column(crossAxisAlignment: CrossAxisAlignment.start,
+              const Column(crossAxisAlignment: CrossAxisAlignment.start,
                 children: <Widget>[
                   Wrap(
                     spacing: 12,
                     runSpacing: 12,
-                    children: _drawDice(numDice, rollToBeat),
+                    //children: _drawDice(numDice, rollToBeat),
                   )
                 ],
               ),
@@ -390,158 +552,68 @@ class _GameScreenState extends State<GameScreen> {
 
   }
 
-  // *********************************************
-  // failed to move overlay
-  // *********************************************
-  Future<void> _moveOverlayMessage(String message) async {
+  // ************************
+  // _changeMove
+  // ************************
+  void _changeMove(EnumDirection direction) {
+    // if up, see if there are dice left 
+    if ((direction == EnumDirection.increment) && (_totalDice > 0)) {
+        _totalDice--;
+        _moveDice++;
+    }
+    else if ((direction == EnumDirection.decrement) && (_moveDice > 0)) { 
+        _totalDice++;
+        _moveDice--;
+    }
 
-    _completer = Completer<void>();
-    if (_overlayEntry != null) return; // Prevent stacking
-
-    _overlayShowing = true;
-    _overlayEntry = OverlayEntry(
-      builder: (context) => Stack(
-        children: [
-          Align(alignment: Alignment.center,
-            child: Card(
-              elevation: 8.0,              
-              color: Colors.black,
-              child: Padding(
-              padding: const EdgeInsets.all(10.0),
-              child: Text(
-                message,
-                style: const TextStyle(fontFamily: constAppTextFont, fontSize: 18, fontWeight: FontWeight.bold, color: Colors.white),
-                textAlign: TextAlign.center))))]));
-
-    Overlay.of(context).insert(_overlayEntry!);
-
-    // Remove after 1 second
-    Future.delayed(const Duration(seconds: 2), () {
-      _overlayEntry?.remove(); 
-      _completer?.complete(); 
-      _overlayEntry = null; 
-      _completer = null; 
-      _overlayShowing = false;
+    // redraw the overlay 
+    setState(() {
+      _overlayEntry?.markNeedsBuild();
     });
 
-    await _completer!.future; 
-
   }
 
   // ************************
-  // _incrementMove
+  // _changeStealth
   // ************************
-  void _incrementMove() {
-    // if there are points available, add
-    if (_dice > 0) {
-      setState(() {
-        _dice--;
-        _move++;
-        _overlayEntry?.markNeedsBuild();
-      });
+  void _changeStealth(EnumDirection direction) {
+    // if up, see if there are dice left 
+    if ((direction == EnumDirection.increment) && (_totalDice > 0)) {
+        _totalDice--;
+        _stealthDice++;
     }
-  }
-
-  // ************************
-  // _decrementMove
-  // ************************
-  void _decrementMove() {
-    // if there are any move points assigned, remove
-    if (_move > 0) {
-      setState(() {
-        _dice++;
-        _move--;
-        _overlayEntry?.markNeedsBuild();
-      });
+    else if ((direction == EnumDirection.decrement) && (_stealthDice > 0)) { 
+        _totalDice++;
+        _stealthDice--;
     }
+
+    // redraw the overlay 
+    setState(() {
+      _overlayEntry?.markNeedsBuild();
+    });
+
   }
 
   // ************************
-  // _incrementStealth
+  // _changeRest
   // ************************
-  void _incrementStealth() {
-    // if there are points available, add
-    if (_dice > 0) {
-      setState(() {
-        _dice--;
-        _stealth++;
-        _overlayEntry?.markNeedsBuild();
-      });
+  void _changeRest(EnumDirection direction) {
+    // if up, see if there are dice left 
+    if ((direction == EnumDirection.increment) && (_totalDice > 0)) {
+        _totalDice--;
+        _restDice++;
     }
-  }
-
-  // ************************
-  // _decrementStealth
-  // ************************
-  void _decrementStealth() {
-    // if there are stealth points assigned, remove
-    if (_stealth > 0) {
-      setState(() {
-        _dice++;
-        _stealth--;
-        _overlayEntry?.markNeedsBuild();
-      });
+    else if ((direction == EnumDirection.decrement) && (_restDice > 0)) { 
+        _totalDice++;
+        _restDice--;
     }
-  }
 
-  // ************************
-  // _incrementRest
-  // ************************
-  void _incrementRest() {
-    // if there are points available, add
-    if (_dice > 0) {
-      setState(() {
-        _dice--;
-        _rest++;
-        _overlayEntry?.markNeedsBuild();
-      });
-    }
-  }
+    // redraw the overlay 
+    setState(() {
+      _overlayEntry?.markNeedsBuild();
+    });
 
-  // ************************
-  // _decrementRest
-  // ************************
-  void _decrementRest() {
-    // if there are any rest points assigned, remove
-    if (_rest > 0) {
-      setState(() {
-        _dice++;
-        _rest--;
-        _overlayEntry?.markNeedsBuild();
-      });
-    }
   }
-
-  // ************************
-  // _showAlertDialog
-  // ************************
-  void _showAlertDialog(BuildContext context, String message) {
-    showDialog(
-      context: context,
-      builder: (BuildContext context) {
-        return AlertDialog(
-          content: Text(message,
-              style: const TextStyle(
-                  fontWeight: FontWeight.bold,
-                  fontFamily: 'LumanosimoRegular',
-                  fontSize: 25.0)),
-          actions: <Widget>[
-            TextButton(
-              onPressed: () {
-                Navigator.of(context).pop(); // Close the dialog
-              },
-              child: const Text('OK',
-                  style: TextStyle(
-                      fontWeight: FontWeight.bold,
-                      fontFamily: 'LumanosimoRegular',
-                      fontSize: 20.0)),
-            ),
-          ],
-        );
-      },
-    );
-  }
-
   // ************************
   // _newGame
   // ************************
@@ -552,12 +624,10 @@ class _GameScreenState extends State<GameScreen> {
 
     // initial values
     _round = 1;
-    _proximity = 6;
-    _health = 6;
-    _endurance = 6;
-    _move = 0;
-    _stealth = 0;
-    _rest = 0;
+    _pilot = Pilot(); 
+    _moveDice = constNoDice;
+    _stealthDice = constNoDice;
+    _restDice = constNoDice;
     _phase = EnumPhase.allocate;
 
   }
@@ -566,132 +636,48 @@ class _GameScreenState extends State<GameScreen> {
   // _healthImage
   // ************************
   AssetImage _healthImage() {
-    // decide which image to reutrn based on health
-    if (_health == 6) {
-      return const AssetImage(constImageStatus6);
-    } else if (_health == 5) {
-      return const AssetImage(constImageStatus5);
-    } else if (_health == 4) {
-      return const AssetImage(constImageStatus4);
-    } else if (_health == 3) {
-      return const AssetImage(constImageStatus3);
-    } else if (_health == 2) {
-      return const AssetImage(constImageStatus2);
-    } else if (_health == 1) {
-      return const AssetImage(constImageStatus1);
-    } else {
-      return const AssetImage(constImageStatus0);
-    }
+    String value = _pilot.getHealth().toString();
+    return AssetImage("$constImageStatus$value.png");
   }
 
   // ************************
   // _proximityImage
   // ************************
   AssetImage _proximityImage() {
-    // decide which image to reutrn based on health
-    if (_proximity == 6) {
-      return const AssetImage(constImageStatus6);
-    } else if (_proximity == 5) {
-      return const AssetImage(constImageStatus5);
-    } else if (_proximity == 4) {
-      return const AssetImage(constImageStatus4);
-    } else if (_proximity == 3) {
-      return const AssetImage(constImageStatus3);
-    } else if (_proximity == 2) {
-      return const AssetImage(constImageStatus2);
-    } else if (_proximity == 1) {
-      return const AssetImage(constImageStatus1);
-    } else {
-      return const AssetImage(constImageStatus0);
-    }
+    String value = _pilot.getProximity().toString();
+    return AssetImage("$constImageStatus$value.png");
   }
 
   // ************************
   // _enduranceImage
   // ************************
   AssetImage _enduranceImage() {
-    // decide which image to reutrn based on health
-    if (_endurance == 6) {
-      return const AssetImage(constImageStatus6);
-    } else if (_endurance == 5) {
-      return const AssetImage(constImageStatus5);
-    } else if (_endurance == 4) {
-      return const AssetImage(constImageStatus4);
-    } else if (_endurance == 3) {
-      return const AssetImage(constImageStatus3);
-    } else if (_endurance == 2) {
-      return const AssetImage(constImageStatus2);
-    } else if (_endurance == 1) {
-      return const AssetImage(constImageStatus1);
-    } else {
-      return const AssetImage(constImageStatus0);
-    }
+    String value = _pilot.getEndurance().toString();
+    return AssetImage("$constImageStatus$value.png");
   }
 
   // ************************
   // _moveImage
   // ************************
   AssetImage _moveImage() {
-    // decide which image to reutrn based on health
-    if (_move == 6) {
-      return const AssetImage(constImageDie6);
-    } else if (_move == 5) {
-      return const AssetImage(constImageDie5);
-    } else if (_move == 4) {
-      return const AssetImage(constImageDie4);
-    } else if (_move == 3) {
-      return const AssetImage(constImageDie3);
-    } else if (_move == 2) {
-      return const AssetImage(constImageDie2);
-    } else if (_move == 1) {
-      return const AssetImage(constImageDie1);
-    } else {
-      return const AssetImage(constImageDie0);
-    }
+    String value = _moveDice.toString();
+    return AssetImage("$constImageDie$value.png");
   }
 
   // ************************
   // _stealthImage
   // ************************
   AssetImage _stealthImage() {
-    // decide which image to reutrn based on health
-    if (_stealth == 6) {
-      return const AssetImage(constImageDie6);
-    } else if (_stealth == 5) {
-      return const AssetImage(constImageDie5);
-    } else if (_stealth == 4) {
-      return const AssetImage(constImageDie4);
-    } else if (_stealth == 3) {
-      return const AssetImage(constImageDie3);
-    } else if (_stealth == 2) {
-      return const AssetImage(constImageDie2);
-    } else if (_stealth == 1) {
-      return const AssetImage(constImageDie1);
-    } else {
-      return const AssetImage(constImageDie0);
-    }
+    String value = _stealthDice.toString();
+    return AssetImage("$constImageDie$value.png");
   }
 
   // ************************
   // _restImage
   // ************************
   AssetImage _restImage() {
-    // decide which image to reutrn based on health
-    if (_rest == 6) {
-      return const AssetImage(constImageDie6);
-    } else if (_rest == 5) {
-      return const AssetImage(constImageDie5);
-    } else if (_rest == 4) {
-      return const AssetImage(constImageDie4);
-    } else if (_rest == 3) {
-      return const AssetImage(constImageDie3);
-    } else if (_rest == 2) {
-      return const AssetImage(constImageDie2);
-    } else if (_rest == 1) {
-      return const AssetImage(constImageDie1);
-    } else {
-      return const AssetImage(constImageDie0);
-    }
+    String value = _restDice.toString();
+    return AssetImage("$constImageDie$value.png");
   }
 
   // ************************
@@ -719,168 +705,6 @@ class _GameScreenState extends State<GameScreen> {
   // ************************
   String _displayRound() {
     return _round.toString();
-  }
-
-  // ************************
-  // _doRestPhase
-  // ************************
-  void _doRestPhase() {
-    int highRoll = 0;
-    int restCost = 0;
-    bool playerRested = false;
-    bool playerHurt = false;
-    String dialogMessage = "";
-
-    // loop through dice allocated, grab top one
-    for (int i = 1; i <= _rest; i++) {
-      int roll = Random().nextInt(6) + 1;
-      if (roll > highRoll) {
-        highRoll = roll;
-      }
-    }
-
-    // then see what rest cost is for the hext they are in
-    MapHex h = _getCurrentHex();
-    if (h.terrain == EnumTerrain.scrub) {
-      restCost = constScrubStealthCost;
-    } else if (h.terrain == EnumTerrain.brush) {
-      restCost = constBrushStealthCost;
-    } else if (h.terrain == EnumTerrain.hills) {
-      restCost = constHillsStealthCost;
-    } else if (h.terrain == EnumTerrain.village) {
-      restCost = constVillageStealthCost;
-    } else if (h.terrain == EnumTerrain.rough) {
-      restCost = constRoughStealthCost;
-    }
-
-    // if die roll higher than map hex cost, they were successful,
-    // otherwise decrement endurance by one
-    if (highRoll >= restCost) {
-      playerRested = true;
-    }
-    if (highRoll == 6) {
-      playerHurt;
-    }
-
-    setState(() {
-      // if rested and less than six, get one back
-      if ((playerRested == true) && (_endurance < 6)) {
-        _endurance++;
-      }
-      // if not rested, decrement endurance
-      if (!playerRested) {
-        _endurance--;
-      }
-      // if also hurt, lose a health
-      if (playerHurt == true) {
-        _health--;
-      }
-    });
-
-    // display relevant dialog
-    if (playerRested == true) {
-      dialogMessage = "You successfully rested and kept up your endurance. ";
-    } else {
-      dialogMessage = "You were unable to rest and are getting weaker. ";
-    }
-    if (playerHurt == true) {
-      dialogMessage += "You also lost health due to a nagging injury.";
-    }
-    _showAlertDialog(context, dialogMessage);
-  }
-
-  // ************************
-  // _doStealthPhase
-  // ************************
-  void _doStealthPhase() {
-    int highRoll = 0;
-    int stealthCost = 0;
-    bool playerHid = false;
-    bool playerHurt = false;
-    String dialogMessage = "";
-
-    // loop through dice allocated, grab top one
-    for (int i = 1; i <= _stealth; i++) {
-      int roll = Random().nextInt(6) + 1;
-      if (roll > highRoll) {
-        highRoll = roll;
-      }
-    }
-
-    // then see what stealth cost is for the hext they are in
-    MapHex h = _getCurrentHex();
-    if (h.terrain == EnumTerrain.scrub) {
-      stealthCost = constScrubStealthCost;
-    } else if (h.terrain == EnumTerrain.brush) {
-      stealthCost = constBrushStealthCost;
-    } else if (h.terrain == EnumTerrain.hills) {
-      stealthCost = constHillsStealthCost;
-    } else if (h.terrain == EnumTerrain.village) {
-      stealthCost = constVillageStealthCost;
-    } else if (h.terrain == EnumTerrain.rough) {
-      stealthCost = constRoughStealthCost;
-    }
-
-    // if die roll higher than map hex cost, they were successful,
-    // otherwise decrement proximity by one
-    if (highRoll >= stealthCost) {
-      playerHid = true;
-    }
-    if (highRoll == 6) {
-      playerHurt;
-    }
-
-    setState(() {
-      if (!playerHid) {
-        _proximity--;
-      }
-      if (playerHurt == true) {
-        _health--;
-      }
-    });
-
-    // display relevant dialog
-    if (playerHid == true) {
-      dialogMessage =
-          "You successfully hid and kept your distance from pursuering forces this turn. ";
-    } else {
-      dialogMessage =
-          "You were unable to hide from your pursuers as they continue to gain on you. ";
-    }
-    if (playerHurt == true) {
-      dialogMessage += "You were injured in the process and lost health.";
-    }
-    _showAlertDialog(context, dialogMessage);
-  }
-
-  // ************************
-  // _doEncounterPhase
-  // ************************
-  void _doEncounterPhase() {
-    // roll two "dice" (tens and ones) and depending on distance from
-    // starting hex, see whether the player has an encounter
-    int tens = Random().nextInt(5) + 1;
-    int ones = Random().nextInt(5) + 1;
-    int distance = _getDistance();
-
-    // based on distance, check for encounters
-    if ((distance >= 1) && (distance <= 4)) {
-      if (tens == 1) {
-        if ((ones >= 1) && (ones <= 4)) {
-          _encounter = EnumEncounter.dust;
-        } else if (ones == 5) {
-          _encounter = EnumEncounter.chemicals;
-        } else if (ones == 6) {
-          _encounter = EnumEncounter.thorns;
-        }
-      } else if (tens == 2) {
-      } else if (tens == 5) {
-      } else if (tens == 6) {}
-    } else if ((distance >= 5) && (distance <= 9)) {
-      //
-    } else if ((distance >= 10) && (distance <= 15)) {
-      //
-    }
   }
 
   // ************************
@@ -1050,7 +874,7 @@ class _GameScreenState extends State<GameScreen> {
   }
 
   // ************************
-  // _ uttonPress
+  // _continueButtonPress
   // ************************
   void _continueButtonPress() async {
     // increment the phase from current one since they moved to the next
@@ -1058,78 +882,68 @@ class _GameScreenState extends State<GameScreen> {
       _phase = EnumPhase.values[_phase.index + 1];
     } catch (e) {
       // if we hit the end of the phases, go back to the beginning
-      _phase = EnumPhase.mapping;
+      _phase = EnumPhase.encounter;
       // and increment the turn
       setState(() {
         _round++;
       });
     }
 
+    // always set these to false to start
+    _moveAllowed = false;
+
     // if mapping phase, populate next three hexes
-    if (_phase == EnumPhase.mapping) {
-      _doMappingPhase();
-    }
+    //if (_phase == EnumPhase.mapping) {
+    //  _doMappingPhase();
+    //}
 
     // if encounter phase, decide if they had an encounter
     if (_phase == EnumPhase.encounter) {
-      _doEncounterPhase();
+      //_doEncounterPhase();
     }
 
     // if allocate phase, bring up allocation dialog
     if (_phase == EnumPhase.allocate) {
-      // send the number of dice available to allocate
+      // reset all dice allocations
+      _moveDice = 0;
+      _stealthDice = 0;
+      _restDice = 0; 
+      _totalDice = _pilot.getEndurance(); 
       await _diceAllocationOverlay(); 
     }
 
-    // if move phase, see if they a re able to move out of the current hex based on die/point allocation
+    // if move phase, just set the flag allowing them to move (when they pick a new hex)
     if (_phase == EnumPhase.move) {
       // set flag that allows a move (so they only do it once per turn)
-      _moveAllowed = true;
+      if (_moveDice > 0) { _moveAllowed = true; }
     }
 
     // if stealth phase, decide whether they successfully hid from pursuers
     if (_phase == EnumPhase.stealth) {
-      _doStealthPhase();
+      if (_stealthDice > 0) {
+        await _diceRollOverlay(EnumPhase.stealth, MapFactory.getStealthCost(_getCurrentHex().terrain), _stealthDice); 
+      }
+      else {
+        _pilot.setProximity(EnumDirection.decrement);
+        await _failedOverlayMessage(constStealthFailedMessage);
+      }
     }
 
     // if rest phase, decide whether they lose any endurance
     if (_phase == EnumPhase.rest) {
-      _doRestPhase();
+      if (_restDice > 0) {
+        await _diceRollOverlay(EnumPhase.rest, MapFactory.getStealthCost(_getCurrentHex().terrain), _restDice); 
+      }
+      else {
+        _pilot.setEndurance(EnumDirection.decrement);
+        await _failedOverlayMessage(constRestFailedMessage);
+      }
     }
 
     // finally
     setState(() {
       // nothing to do here yet
     });
-  }
-
-  // ************************
-  // _getDistance
-  // ************************
-  int _getDistance() {
-    // figure out the distance between starting hex and destination (current one)
-    MapHex startHex = MapHex(constFakeHex, constStartRow, constStartCol);
-    MapHex destHex = _getCurrentHex();
-    int distance = 0;
-
-    if (startHex.row == destHex.row) {
-      // if same row, just count across columns
-      distance = (destHex.col - startHex.col).abs();
-    } else if (startHex.col == destHex.col) {
-      // if same column, just count across rows
-      distance = (destHex.row - startHex.row).abs();
-    } else {
-      // this is where it gets tricky
-      int dx = (destHex.row - startHex.row).abs();
-      int dy = (destHex.col - startHex.col).abs();
-      if (startHex.col < destHex.col) {
-        distance = dx + dy - (dx / 2.0).ceil();
-      } else {
-        distance = dx + dy - (dx / 2.0).floor();
-      }
-    }
-
-    return distance;
   }
 
   // ************************
@@ -1160,28 +974,6 @@ class _GameScreenState extends State<GameScreen> {
       }
     }
     return id;
-  }
-
-  // ************************
-  // _getMapHexPadding
-  // ************************
-  double _getMapHexPadding(int row, int col) {
-    return 1.0; 
-
-    /*
-    int id = _getIdFromColRow(col, row);
-    // if they've traveled through a hex, give it more padding
-    if (_hexesTraveled.contains(id)) {
-      return 5.0;
-    } else {
-      return 1.0;
-    }
-    if (_map[id].current) {
-      return 5.0;
-    } else {
-      return 1.0;
-    }
-    */
   }
 
   // ************************
@@ -1237,60 +1029,6 @@ class _GameScreenState extends State<GameScreen> {
   }
 
   // ************************
-  // _getMapHexColor
-  // ************************
-  Color _getMapHexColor(row, col) {
-    EnumTerrain enumTerrain = _map[_getIdFromColRow(col, row)].terrain;
-    Color c = Colors.black;
-
-    if (enumTerrain == EnumTerrain.scrub) {
-      c = Colors.yellow.shade600;
-    } else if (enumTerrain == EnumTerrain.brush) {
-      c = Colors.lime.shade800;
-    } else if (enumTerrain == EnumTerrain.hills) {
-      c = Colors.brown.shade200;
-    } else if (enumTerrain == EnumTerrain.rough) {
-      c = Colors.brown.shade400;
-    } else if (enumTerrain == EnumTerrain.village) {
-      c = Colors.grey.shade200;
-    } else if (enumTerrain == EnumTerrain.rescue) {
-      c = Colors.white;
-    } else {
-      c = Colors.black;
-    }
-
-    return c;
-  }
-
-  // ************************
-  // _getRandomTerrain
-  // ************************
-  EnumTerrain _getRandomTerrain() {
-    EnumTerrain enumTerrain;
-    int i;
-
-    i = Random().nextInt(10);
-    // 1: village
-    if (i == 1) {
-      enumTerrain = EnumTerrain.village;
-    }
-    // 2-4: scrub
-    else if (i.clamp(2, 4) == i) {
-      enumTerrain = EnumTerrain.scrub;
-    }
-    // 5-6: brushwood
-    else if (i.clamp(5, 7) == i) {
-      enumTerrain = EnumTerrain.brush;
-    } else if (i.clamp(8, 9) == i) {
-      enumTerrain = EnumTerrain.hills;
-    } else {
-      enumTerrain = EnumTerrain.rough;
-    }
-
-    return enumTerrain;
-  }
-
-  // ************************
   // _initMap
   // ************************
   void _initMap() {
@@ -1338,24 +1076,14 @@ class _GameScreenState extends State<GameScreen> {
     // if this is move phase, do all the logic
     if ((_phase == EnumPhase.move) && (_moveAllowed)) {
       // what is the move cost?
-      if (h.terrain == EnumTerrain.scrub) {
-        moveCost = constScrubMoveCost;
-      } else if (h.terrain == EnumTerrain.brush) {
-        moveCost = constBrushMoveCost;
-      } else if (h.terrain == EnumTerrain.hills) {
-        moveCost = constHillsMoveCost;
-      } else if (h.terrain == EnumTerrain.village) {
-        moveCost = constVillageMoveCost;
-      } else if (h.terrain == EnumTerrain.rough) {
-        moveCost = constRoughMoveCost;
-      }
+      moveCost = MapFactory.getMoveCost(h.terrain);
 
       // if they have dice assigned to move, bring up the overlay to pick from the die roll
-      if (_move > 0) {
+      if (_moveDice > 0) {
         // bring up overlay 
-        await _diceRollOverlay(EnumPhase.move, moveCost, _move);
+        await _diceRollOverlay(EnumPhase.move, moveCost, _moveDice);
       } else {
-        await _moveOverlayMessage(constNoDiceAllocatedForMoveMessage);
+        await _failedOverlayMessage(constNoDiceAllocatedForMoveMessage);
       }
     }
   }
@@ -1459,10 +1187,9 @@ class _GameScreenState extends State<GameScreen> {
                       rows: constMapRows,
                       buildTile: (col, row) => HexagonWidgetBuilder(
                         elevation: 8.0, // col.toDouble(),
-                        padding: _getMapHexPadding(
-                            row, col), // how close together hexes are
+                        padding: 1.0, 
                         cornerRadius: null, // hex shape (vs rounded)
-                        color: _getMapHexColor(row, col),
+                        color: Colors.grey,
                         //child: Text("$row, $col"),
                         child: GestureDetector(
                             onTap: () {
@@ -1615,7 +1342,7 @@ class _GameScreenState extends State<GameScreen> {
                       SizedBox(width: 25), // middle spacing column
                       Icon(Icons.healing, size: 30, color: Colors.black),
                       SizedBox(width: 1), // spacing column                        
-                      Text(constAilmentsText,
+                      Text(constAfflictionsText,
                           textAlign: TextAlign.center,
                           style: TextStyle(
                                 fontWeight: FontWeight.bold,

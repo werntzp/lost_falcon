@@ -1,4 +1,5 @@
 import 'package:lost_falcon/const.dart';
+import 'dart:math';
 
 class MapHex {
   final int id;
@@ -10,4 +11,91 @@ class MapHex {
   EnumTerrain terrain = EnumTerrain.unknown; // terrain type
 
   MapHex(this.id, this.col, this.row);
+}
+
+class MapFactory {
+
+  static int getMoveCost(EnumTerrain terrain) {
+    int moveCost = 0; 
+
+      if (terrain == EnumTerrain.scrub) {
+        moveCost = constScrubMoveCost;
+      } else if (terrain == EnumTerrain.brush) {
+        moveCost = constBrushMoveCost;
+      } else if (terrain == EnumTerrain.hills) {
+        moveCost = constHillsMoveCost;
+      } else if (terrain == EnumTerrain.village) {
+        moveCost = constVillageMoveCost;
+      } else if (terrain == EnumTerrain.rough) {
+        moveCost = constRoughMoveCost;
+      }
+
+    return moveCost; 
+
+  }
+
+  static int getStealthCost(EnumTerrain terrain) {
+    int stealthCost = 0; 
+
+      if (terrain == EnumTerrain.scrub) {
+        stealthCost = constScrubStealthCost;
+      } else if (terrain == EnumTerrain.brush) {
+        stealthCost = constBrushStealthCost;
+      } else if (terrain == EnumTerrain.hills) {
+        stealthCost = constHillsStealthCost;
+      } else if (terrain == EnumTerrain.village) {
+        stealthCost = constVillageStealthCost;
+      } else if (terrain == EnumTerrain.rough) {
+        stealthCost = constRoughStealthCost;
+      }
+
+    return stealthCost; 
+
+  }
+
+  static int getRestCost(EnumTerrain terrain) {
+    int restCost = 0; 
+
+      if (terrain == EnumTerrain.scrub) {
+        restCost = constScrubRestCost;
+      } else if (terrain == EnumTerrain.brush) {
+        restCost = constBrushRestCost;
+      } else if (terrain == EnumTerrain.hills) {
+        restCost = constHillsRestCost;
+      } else if (terrain == EnumTerrain.village) {
+        restCost = constVillageRestCost;
+      } else if (terrain == EnumTerrain.rough) {
+        restCost = constRoughRestCost;
+      }
+
+    return restCost; 
+
+  }
+
+  static int getDistance(MapHex destHex) {
+    // figure out the distance between starting hex and destination (current one)
+    MapHex startHex = MapHex(constFakeHex, constStartRow, constStartCol);
+    int distance = 0;
+
+    if (startHex.row == destHex.row) {
+      // if same row, just count across columns
+      distance = (destHex.col - startHex.col).abs();
+    } else if (startHex.col == destHex.col) {
+      // if same column, just count across rows
+      distance = (destHex.row - startHex.row).abs();
+    } else {
+      // this is where it gets tricky
+      int dx = (destHex.row - startHex.row).abs();
+      int dy = (destHex.col - startHex.col).abs();
+      if (startHex.col < destHex.col) {
+        distance = dx + dy - (dx / 2.0).ceil();
+      } else {
+        distance = dx + dy - (dx / 2.0).floor();
+      }
+    }
+
+    return distance;
+  }
+
+
 }

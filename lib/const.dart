@@ -7,20 +7,8 @@ const sdsLogo = "assets/images/sds_logo.png";
 const constAppTextFont = "Lemonada";
 
 // images
-const constImageDie6 = "assets/images/lf_die_6.png";
-const constImageDie5 = "assets/images/lf_die_5.png";
-const constImageDie4 = "assets/images/lf_die_4.png";
-const constImageDie3 = "assets/images/lf_die_3.png";
-const constImageDie2 = "assets/images/lf_die_2.png";
-const constImageDie1 = "assets/images/lf_die_1.png";
-const constImageDie0 = "assets/images/lf_die_0.png";
-const constImageStatus6 = "assets/images/lf_status_6.png";
-const constImageStatus5 = "assets/images/lf_status_5.png";
-const constImageStatus4 = "assets/images/lf_status_4.png";
-const constImageStatus3 = "assets/images/lf_status_3.png";
-const constImageStatus2 = "assets/images/lf_status_2.png";
-const constImageStatus1 = "assets/images/lf_status_1.png";
-const constImageStatus0 = "assets/images/lf_status_0.png";
+const constImageDie = "assets/images/lf_die_";
+const constImageStatus = "assets/images/lf_status_";
 const constImageScrub = "assets/images/lf_terrain_scrub.jpg";
 const constImageBrush = "assets/images/lf_terrain_brush.jpg";
 const constImageRough = "assets/images/lf_terrain_rocky.jpg";
@@ -36,16 +24,40 @@ const constImagePlayerLocation = "assets/images/lf_american_flag_small.gif";
 const constImageUnknown = "assets/images/lf_terrain_unknown.jpg";
 
 // messages
-const constNoDiceAllocatedForMoveMessage =
-    "You are unable to move as you allocated no dice.";
-const constMoveFailedMessage =
-    "You failed in the attempt to move from your current location.";
 const constDiceAllocationMessage1 = "You have";
 const constDiceAllocationMessage2 = "dice to allocate. Tap once to increment, and long press to decrement.";
-const constDiceRollMoveMessage1 = "You need to roll over a";
-const constDiceRollMoveMessage2 = "to move into a new hex.";
+
+const constGameOverHealth = "You died.";
+const constGameOverProximity = "You were captured.";
+const constGameOverEncounter = "You were killed.";
+
+const constDiceRollMoveMessage1 = "You need to roll a";
+const constDiceRollMoveMessage2 = "or higher to move from your current location.";
 const constDiceRollMoveMessage3 = "However, if you choose a 6, your Health is reduced by one point.";
-const constDiceRollMoveMessage4 = "Moving out of the hex successfully, allows you to re-roll one die during the Stealth phase.";
+const constDiceRollMoveMessage4 = "Moving successfully allows you to re-roll one die during the Stealth phase.";
+const constMoveFailedMessage =
+    "You failed in the attempt to move from your current location.";
+const constNoDiceAllocatedForMoveMessage =
+    "You are unable to move this round.";
+
+const constDiceRollStealthMessage1 = "You need to roll a";
+const constDiceRollStealthMessage2 = "or higher to remain hidden from your pursuers.";
+const constDiceRollStealthMessage3 = "However, if you choose a 6, your Health is reduced by one point.";
+const constDiceRollStealthMessage4 = "Since you were successful at moving across the map, you can re-roll one die by double tapping on it.";
+const constStealthFailedMessage =
+    "You failed in an attempt to keep ahead of your pursuers. Lose one Proximity.";
+const constNoDiceAllocatedForStealthMessage =
+    "You lost one Proximity as your pursuers gained ground.";
+
+const constDiceRollRestMessage1 = "You need to roll a";
+const constDiceRollRestMessage2 = "or higher to successfully rest and improve your Endurance by one.";
+const constDiceRollRestMessage3 = "However, if you choose a 6, your Health is reduced by one point.";
+const constRestFailedMessage =
+    "You were unable to rest and keep up your strength. Lose one Endurance.";
+const constNoDiceAllocatedForRestMessage =
+    "You lost one Endurance due to fatigue.";
+
+// buttons and labels 
 const constMoveText = "Move";
 const constStealthText = "Stealth";
 const constRestText = "Rest";
@@ -54,7 +66,7 @@ const constProximityText = "Proximity";
 const constEnduranceText = "Endurance";
 const constRoundText = "Round";
 const constInventoryText = "Inventory";
-const constAilmentsText = "Ailments";
+const constAfflictionsText = "Afflictions";
 const constQuitText = "Quit";
 const constContinueText = "Continue";
 const constOKText = "OK";
@@ -64,6 +76,7 @@ const constMapCols = 15;
 const constFakeHex = -1;
 const constStartRow = 0;
 const constStartCol = 0;
+const constNoDice = 0; 
 
 const constScrubMoveCost = 2;
 const constBrushMoveCost = 3;
@@ -82,6 +95,10 @@ const constBrushRestCost = 3;
 const constHillsRestCost = 5;
 const constVillageRestCost = 7;
 const constRoughRestCost = 4;
+
+enum EnumDirection { increment, decrement}
+
+enum EnumGameOver { health, proximity, encounter } 
 
 enum EnumPhase { mapping, encounter, allocate, move, stealth, rest }
 
