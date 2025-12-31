@@ -1,0 +1,154 @@
+import 'package:lost_falcon/const.dart';
+import 'package:lost_falcon/models/map_model.dart';
+import 'dart:math';
+
+
+class EncounterFactory {
+
+  // three lists for encounters 
+  final List<List<EnumEncounter>> _close = List.generate(
+    constDieSides,
+    (_) => List.filled(constDieSides, EnumEncounter.none),
+  );
+  final List<List<EnumEncounter>> _medium = List.generate(
+    constDieSides,
+    (_) => List.filled(constDieSides, EnumEncounter.none),
+  );
+  final List<List<EnumEncounter>> _far = List.generate(
+    constDieSides,
+    (_) => List.filled(constDieSides, EnumEncounter.none),
+  );
+
+  EncounterFactory() {
+
+    // fill specific spots in all the grids 
+    _close[1][1] = EnumEncounter.dust; 
+    _close[1][2] = EnumEncounter.dust; 
+    _close[1][3] = EnumEncounter.dust; 
+    _close[1][4] = EnumEncounter.dust; 
+    _close[1][5] = EnumEncounter.chemicals; 
+    _close[1][6] = EnumEncounter.thorns; 
+    _close[2][1] = EnumEncounter.rockslide; 
+    _close[5][5] = EnumEncounter.highground; 
+    _close[5][6] = EnumEncounter.building; 
+    _close[6][1] = EnumEncounter.road; 
+    _close[6][2] = EnumEncounter.road; 
+    _close[6][3] = EnumEncounter.road; 
+    _close[6][4] = EnumEncounter.soldier; 
+    _close[6][5] = EnumEncounter.soldier; 
+    _close[6][6] = EnumEncounter.soldier; 
+
+    _medium[1][1] = EnumEncounter.dust; 
+    _medium[1][2] = EnumEncounter.dust; 
+    _medium[1][3] = EnumEncounter.dust; 
+    _medium[1][4] = EnumEncounter.dust; 
+    _medium[1][5] = EnumEncounter.dust; 
+    _medium[1][6] = EnumEncounter.snake; 
+    _medium[2][1] = EnumEncounter.wolf; 
+    _medium[2][2] = EnumEncounter.mortar; 
+    _medium[2][3] = EnumEncounter.mortar; 
+    _medium[6][1] = EnumEncounter.chopper; 
+    _medium[6][2] = EnumEncounter.chopper; 
+    _medium[6][3] = EnumEncounter.apc; 
+    _medium[6][4] = EnumEncounter.cave; 
+    _medium[6][5] = EnumEncounter.gunships; 
+    _medium[6][6] = EnumEncounter.gunships; 
+
+    _far[1][1] = EnumEncounter.dust; 
+    _far[1][2] = EnumEncounter.rockslide; 
+    _far[1][3] = EnumEncounter.rockslide; 
+    _far[1][4] = EnumEncounter.rockslide; 
+    _far[1][5] = EnumEncounter.rockslide; 
+    _far[1][6] = EnumEncounter.minefield; 
+    _far[2][1] = EnumEncounter.sniper; 
+    _far[2][2] = EnumEncounter.sniper; 
+    _far[2][3] = EnumEncounter.sniper; 
+    _far[5][6] = EnumEncounter.milepost; 
+    _far[6][1] = EnumEncounter.tributary; 
+    _far[6][2] = EnumEncounter.tributary; 
+    _far[6][3] = EnumEncounter.building; 
+    _far[6][4] = EnumEncounter.gunships; 
+    _far[6][5] = EnumEncounter.gunships; 
+    _far[6][6] = EnumEncounter.gunships; 
+
+  }
+
+  // ************************
+  // list of encounters as strings in a list
+  // ************************
+  List<String> getEncounterNames() { 
+    final List<String> paths = [];
+    String enc = ""; 
+
+      enc = EnumEncounter.apc.name;
+      paths.add("$constImageEncounters$enc.jpg");
+      enc = EnumEncounter.dust.name;
+      paths.add("$constImageEncounters$enc.jpg");      
+      enc = EnumEncounter.chemicals.name;
+      paths.add("$constImageEncounters$enc.jpg");      
+      enc = EnumEncounter.thorns.name;
+      paths.add("$constImageEncounters$enc.jpg");      
+      enc = EnumEncounter.rockslide.name;
+      paths.add("$constImageEncounters$enc.jpg");      
+      enc = EnumEncounter.highground.name;
+      paths.add("$constImageEncounters$enc.jpg");      
+      enc = EnumEncounter.building.name;
+      paths.add("$constImageEncounters$enc.jpg");      
+      enc = EnumEncounter.road.name;
+      paths.add("$constImageEncounters$enc.jpg");      
+      enc = EnumEncounter.soldier.name;
+      paths.add("$constImageEncounters$enc.jpg");      
+      enc = EnumEncounter.snake.name;
+      paths.add("$constImageEncounters$enc.jpg");      
+      enc = EnumEncounter.wolf.name;
+      paths.add("$constImageEncounters$enc.jpg");      
+      enc = EnumEncounter.mortar.name;
+      paths.add("$constImageEncounters$enc.jpg");      
+      enc = EnumEncounter.chopper.name;
+      paths.add("$constImageEncounters$enc.jpg");      
+      enc = EnumEncounter.cave.name;
+      paths.add("$constImageEncounters$enc.jpg");      
+      enc = EnumEncounter.gunships.name;
+      paths.add("$constImageEncounters$enc.jpg");      
+      enc = EnumEncounter.minefield.name;
+      paths.add("$constImageEncounters$enc.jpg");      
+      enc = EnumEncounter.sniper.name;
+      paths.add("$constImageEncounters$enc.jpg");      
+      enc = EnumEncounter.milepost.name;
+      paths.add("$constImageEncounters$enc.jpg");      
+      enc = EnumEncounter.tributary.name;
+      paths.add("$constImageEncounters$enc.jpg");      
+
+    return List.from(paths); 
+
+  }
+
+  // ************************
+  // depending where they are, did an encounter happen?  
+  // ************************
+  EnumEncounter getRandomEncounter(MapHex currentHex) {
+    EnumEncounter encounter = EnumEncounter.none; 
+
+    // roll two "dice" (tens and ones) and depending on distance from
+    // starting hex, see whether the player has an encounter
+    int tens = Random().nextInt(5) + 1;
+    int ones = Random().nextInt(5) + 1;
+    int distance = MapFactory.getDistanceFromStart(currentHex);
+
+    // 1-4 hexes from start 
+    if ((distance >= 1) && (distance <= 4)) {
+      encounter = _close[tens][ones];
+    // 5-9 
+    } else if ((distance >= 5) && (distance <= 9)) {
+      encounter = _medium[tens][ones];
+    // 10-15 
+    } else if ((distance >= 10) && (distance <= 15)) {
+      encounter = _far[tens][ones];
+
+    }
+
+    return encounter; 
+
+  }
+
+}

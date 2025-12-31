@@ -22,6 +22,7 @@ const constImageVillageGrey = "assets/images/lf_terrain_village_grey.jpg";
 const constImageRescue = "assets/images/lf_rescue.jpg";
 const constImagePlayerLocation = "assets/images/lf_american_flag_small.gif";
 const constImageUnknown = "assets/images/lf_terrain_unknown.jpg";
+const constImageEncounters = "assets/images/lf_enc_";
 
 // messages
 const constDiceAllocationMessage1 = "You have";
@@ -57,6 +58,10 @@ const constRestFailedMessage =
 const constNoDiceAllocatedForRestMessage =
     "You lost one Endurance due to fatigue.";
 
+const constEncountersMessage = "Let's see if you had any encounters this round!";
+
+// encounters 
+
 // buttons and labels 
 const constMoveText = "Move";
 const constStealthText = "Stealth";
@@ -77,6 +82,7 @@ const constFakeHex = -1;
 const constStartRow = 0;
 const constStartCol = 0;
 const constNoDice = 0; 
+const constDieSides = 6; 
 
 const constScrubMoveCost = 2;
 const constBrushMoveCost = 3;
@@ -112,7 +118,7 @@ enum EnumEncounter {
   dust,
   chemicals,
   thorns,
-  eathquake,
+  rockslide, 
   highground,
   building,
   road,

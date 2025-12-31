@@ -15,6 +15,9 @@ class MapHex {
 
 class MapFactory {
 
+  // ************************
+  // return move number based on terrain
+  // ************************
   static int getMoveCost(EnumTerrain terrain) {
     int moveCost = 0; 
 
@@ -34,6 +37,9 @@ class MapFactory {
 
   }
 
+  // ************************
+  // return stealth number based on terrain
+  // ************************
   static int getStealthCost(EnumTerrain terrain) {
     int stealthCost = 0; 
 
@@ -53,6 +59,9 @@ class MapFactory {
 
   }
 
+  // ************************
+  // return rest number based on terrain 
+  // ************************
   static int getRestCost(EnumTerrain terrain) {
     int restCost = 0; 
 
@@ -72,7 +81,11 @@ class MapFactory {
 
   }
 
-  static int getDistance(MapHex destHex) {
+
+  // ************************
+  // how far are we from the starting hex?  
+  // ************************
+  static int getDistanceFromStart(MapHex destHex) {
     // figure out the distance between starting hex and destination (current one)
     MapHex startHex = MapHex(constFakeHex, constStartRow, constStartCol);
     int distance = 0;

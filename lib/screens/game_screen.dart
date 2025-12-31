@@ -1,12 +1,14 @@
 import 'package:flutter/material.dart';
 import 'package:hexagon/hexagon.dart';
 import 'package:lost_falcon/const.dart';
+import 'package:lost_falcon/models/encounter_model.dart';
 import '../models/map_model.dart';
 import '../models/pilot_model.dart';
 import 'dart:math';
 import 'dart:async';
 
 Pilot _pilot = Pilot();
+EncounterFactory _encounterFactory = EncounterFactory(); 
 int _round = 1;
 int _moveDice = constNoDice;
 int _stealthDice = constNoDice;
@@ -15,13 +17,13 @@ int _totalDice = _pilot.getEndurance();
 int _oldHex = 0;
 int _selectedHex = 0;
 EnumPhase _phase = EnumPhase.mapping;
-EnumEncounter _encounter = EnumEncounter.none;
 List<MapHex> _map = [];
 bool _moveAllowed = false;
 List<int> _hexesTraveled = [];
 List<int> _rollingDice = []; 
 Timer? _rollTimer; 
 bool _allowedToReRoll = false;
+int _currentEncounterIndex = 1; 
 
 // extension used to capitalize the first letter of a word 
 extension StringExtension on String {
@@ -210,7 +212,7 @@ class _GameScreenState extends State<GameScreen> {
                             color: Colors.black,
                             fontSize: 18.0),
                       )),
-                  onPressed:  () { _closeDiceAllocationOverlay(); },
+                  onPressed:  () { _genericCloseOverlay(); },
                 ),
               ),
             ],
@@ -228,7 +230,7 @@ class _GameScreenState extends State<GameScreen> {
   // *********************************************
   // close out overlay 
   // *********************************************
-  void _closeDiceRollingOverlay() {
+  void _genericCloseOverlay() {
 
       _overlayEntry?.remove(); 
       _completer?.complete(); 
@@ -244,7 +246,7 @@ class _GameScreenState extends State<GameScreen> {
   void _tapDice(EnumPhase phase, int value, int target) async {
 
     // get rid of the overlay (either way)
-    _closeDiceRollingOverlay();
+    _genericCloseOverlay();
 
     // decide what to do based on phase 
     if (phase == EnumPhase.move) {
@@ -363,11 +365,11 @@ class _GameScreenState extends State<GameScreen> {
 
     // Start a new timer that fires repeatedly
     _rollTimer = Timer.periodic(const Duration(milliseconds: 60), (_) {
-      _rollDice(); // your existing method that randomizes all dice
+    _rollDice(); // your existing method that randomizes all dice
     _overlayEntry?.markNeedsBuild(); // forces overlay to redraw
     });
 
-    // Stop the rolling after 1 second
+    // Stop the rolling after 2 seconds
     Future.delayed(const Duration(seconds: 2), () {
       _rollTimer?.cancel();
     });
@@ -393,9 +395,6 @@ class _GameScreenState extends State<GameScreen> {
       message = "$constDiceRollRestMessage1 $rollToBeat $constDiceRollRestMessage2 $constDiceRollRestMessage3 ";
 
     }
-
-    // set number of dice based on how many allocated  
-    _rollingDice = List.generate(numDice, (_) => Random().nextInt(6) + 1);
 
     _completer = Completer<void>();
     if (_overlayEntry != null) return; // Prevent stacking
@@ -443,6 +442,7 @@ class _GameScreenState extends State<GameScreen> {
                   )
                 ],
               ),
+
             ],
             ))))]));
   
@@ -491,10 +491,28 @@ class _GameScreenState extends State<GameScreen> {
 
   }
 
+  // *********************************************
+  // start a timer to randomly cycle through encounters
+  // *********************************************
+  void _cycleEncounters() {
+    // Cancel any previous timer
+    _rollTimer?.cancel();
+
+    // Start a new timer that fires repeatedly
+    _rollTimer = Timer.periodic(const Duration(milliseconds: 60), (_) {
+
+    _overlayEntry?.markNeedsBuild(); // forces overlay to redraw
+    }); 
+    Future.delayed(const Duration(seconds: 2), () {
+      _rollTimer?.cancel();
+    });
+
+  }
+
  // *********************************************
   // display overlay seeing what encounter (maybe) happened
   // *********************************************
-  Future<void> _encounterOverlay(EnumPhase phase, int rollToBeat, int numDice) async {
+  Future<void> _encounterOverlay() async {
 
     _completer = Completer<void>();
     if (_overlayEntry != null) return; // Prevent stacking
@@ -525,30 +543,29 @@ class _GameScreenState extends State<GameScreen> {
             mainAxisSize: MainAxisSize.min,
             children: [
               const SizedBox(height: 12),
-              Text(
-                "$constDiceRollMoveMessage1 $rollToBeat $constDiceRollMoveMessage2 $constDiceRollMoveMessage3 $constDiceRollMoveMessage4",
-                style: const TextStyle(color: Colors.white, fontFamily: constAppTextFont, fontSize: 15),
+              const Text(
+                constEncountersMessage,
+                style:  TextStyle(color: Colors.white, fontFamily: constAppTextFont, fontSize: 15),
                 textAlign: TextAlign.center,
               ),
               const Padding(
                 padding: EdgeInsets.all(10.0),
               ),
-              const Column(crossAxisAlignment: CrossAxisAlignment.start,
-                children: <Widget>[
-                  Wrap(
-                    spacing: 12,
-                    runSpacing: 12,
-                    //children: _drawDice(numDice, rollToBeat),
-                  )
-                ],
-              ),
+              Container(
+                color: Colors.black54,
+                alignment: Alignment.center,
+                child: Image.asset(
+                  _encounterFactory.getEncounterVisuals()[_currentEncounterIndex],
+                  fit: BoxFit.contain,
+                ),              
+              ), 
             ],
             ))))]));
   
     Overlay.of(context).insert(_overlayEntry!);
 
     // start the timer to roll dice 
-    _startRolling();
+    _cycleEncounters();
 
   }
 
@@ -899,7 +916,8 @@ class _GameScreenState extends State<GameScreen> {
 
     // if encounter phase, decide if they had an encounter
     if (_phase == EnumPhase.encounter) {
-      //_doEncounterPhase();
+      _currentEncounterIndex = Random().nextInt(_encounterFactory.getEncounterVisuals().length);
+      await _encounterOverlay(); 
     }
 
     // if allocate phase, bring up allocation dialog
@@ -1063,7 +1081,6 @@ class _GameScreenState extends State<GameScreen> {
   // _selectMapHex
   // ************************
   void _selectMapHex(int row, int col) async {
-    bool playerMoved = false;
     int moveCost = 0;
 
     // get current hex
