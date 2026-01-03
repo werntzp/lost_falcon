@@ -58,9 +58,28 @@ const constRestFailedMessage =
 const constNoDiceAllocatedForRestMessage =
     "You lost one Endurance due to fatigue.";
 
-const constEncountersMessage = "Let's see if you had any encounters this round!";
-
 // encounters 
+const constEncountersMessage = "Let's see if you had any encounters this round!";
+const dustEncounterMessage = "A dust storm kicks up obstructing your view while the strong wind and harsh blowing sand wears you down."; 
+const chemicalsEncounterMessage = "You have to cross through a field full of chemical munitions which burns and irritates your skin."; 
+const thornsEncounterMessage = "Your progress has been halted by these half-inch thorns."; 
+const rockslideEncounterMessage = "As you are climbing, a rockslide carries you down you the hill and you suffer a broken foot in the tumble."; 
+const highgroundEncounterMessage = "From this vantage you can see for miles, including a bustling village that may be welcoming."; 
+const buildingEncounterMessage = "It appears that this building has been abandoned. The burn marks and bullet holes present this as another casualty of war."; 
+const roadEncounterMessage = "A flat stretch of road provides an easier path to move on."; 
+const soldierEncounterMessage = "A fallen soldier lies facedown hidden in the brush."; 
+const snakeEncounterMessage = "As you trek across the desert, you disturb a sleeping snake. You jerk away but it is too late."; 
+const wolfEncounterMessage = "A low, menacing growl startles you as something lunges towards you."; 
+const mortarEncounterMessage = "The familiar whistle announces the arrival of mortar rounds around you."; 
+const helicopterEncounterMessage = "You stumble upon a crashed and abandoned Blackhawk that looks like it has been stripped clean."; 
+const apcEncounterMessage = "The hulk of an armored personnel carrier sits quietly. The insides have been thoroughly stripped."; 
+const caveEncounterMessage = "This small cave may have served as a hiding spot for rebel forces before being abandoned."; 
+const gunshipsEncounterMessage = "Roaring overhead is a flight of attack helicopters intent on ruining someone's day."; 
+const minefieldEncounterMessage = "Mines block your way."; 
+const sniperEncounterMessage = "You work your way across an open area that gives a perfect field of fire for snipers. A round strikes you in the shoulder."; 
+const milepostEncounterMessage = "You come to an intersection that provides several safe looking options to move quickly down.";
+const tributaryEncounterMessage = "You come across a stream that provides needed water and is easy to move along."; 
+const noEncounterMessage = "Nothing but empty desert ahead of you."; 
 
 // buttons and labels 
 const constMoveText = "Move";
@@ -126,7 +145,7 @@ enum EnumEncounter {
   snake,
   wolf,
   mortar,
-  chopper,
+  helicopter,
   apc,
   cave,
   gunships,

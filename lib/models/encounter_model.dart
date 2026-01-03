@@ -5,21 +5,26 @@ import 'dart:math';
 
 class EncounterFactory {
 
+  // lists for graphics and messages 
+  final List<String> _paths = [];
+  final List<String> _messages = [];
+
   // three lists for encounters 
   final List<List<EnumEncounter>> _close = List.generate(
-    constDieSides,
-    (_) => List.filled(constDieSides, EnumEncounter.none),
+    constDieSides + 1,
+    (_) => List.filled(constDieSides + 1, EnumEncounter.none),
   );
   final List<List<EnumEncounter>> _medium = List.generate(
-    constDieSides,
-    (_) => List.filled(constDieSides, EnumEncounter.none),
+    constDieSides + 1,
+    (_) => List.filled(constDieSides + 1, EnumEncounter.none),
   );
   final List<List<EnumEncounter>> _far = List.generate(
-    constDieSides,
-    (_) => List.filled(constDieSides, EnumEncounter.none),
+    constDieSides + 1,
+    (_) => List.filled(constDieSides + 1, EnumEncounter.none),
   );
 
   EncounterFactory() {
+    String enc = ""; 
 
     // fill specific spots in all the grids 
     _close[1][1] = EnumEncounter.dust; 
@@ -47,8 +52,8 @@ class EncounterFactory {
     _medium[2][1] = EnumEncounter.wolf; 
     _medium[2][2] = EnumEncounter.mortar; 
     _medium[2][3] = EnumEncounter.mortar; 
-    _medium[6][1] = EnumEncounter.chopper; 
-    _medium[6][2] = EnumEncounter.chopper; 
+    _medium[6][1] = EnumEncounter.helicopter; 
+    _medium[6][2] = EnumEncounter.helicopter; 
     _medium[6][3] = EnumEncounter.apc; 
     _medium[6][4] = EnumEncounter.cave; 
     _medium[6][5] = EnumEncounter.gunships; 
@@ -71,55 +76,79 @@ class EncounterFactory {
     _far[6][5] = EnumEncounter.gunships; 
     _far[6][6] = EnumEncounter.gunships; 
 
+    enc = EnumEncounter.apc.name;
+    _paths.add("$constImageEncounters$enc.jpg");
+
+    enc = EnumEncounter.dust.name;
+    _paths.add("$constImageEncounters$enc.jpg");      
+    
+    enc = EnumEncounter.chemicals.name;
+    _paths.add("$constImageEncounters$enc.jpg");      
+    
+    enc = EnumEncounter.thorns.name;
+    _paths.add("$constImageEncounters$enc.jpg");      
+    
+    enc = EnumEncounter.rockslide.name;
+    _paths.add("$constImageEncounters$enc.jpg");      
+    
+    enc = EnumEncounter.highground.name;
+    _paths.add("$constImageEncounters$enc.jpg");      
+    
+    enc = EnumEncounter.building.name;
+    _paths.add("$constImageEncounters$enc.jpg");      
+    
+    enc = EnumEncounter.road.name;
+    _paths.add("$constImageEncounters$enc.jpg");      
+    
+    enc = EnumEncounter.soldier.name;
+    _paths.add("$constImageEncounters$enc.jpg");      
+    
+    enc = EnumEncounter.snake.name;
+    _paths.add("$constImageEncounters$enc.jpg");      
+    
+    enc = EnumEncounter.wolf.name;
+    _paths.add("$constImageEncounters$enc.jpg");      
+    
+    enc = EnumEncounter.mortar.name;
+    _paths.add("$constImageEncounters$enc.jpg");      
+    
+    enc = EnumEncounter.helicopter.name;
+    _paths.add("$constImageEncounters$enc.jpg");      
+    
+    enc = EnumEncounter.cave.name;
+    _paths.add("$constImageEncounters$enc.jpg");      
+    
+    enc = EnumEncounter.gunships.name;
+    _paths.add("$constImageEncounters$enc.jpg");      
+    
+    enc = EnumEncounter.minefield.name;
+    _paths.add("$constImageEncounters$enc.jpg");      
+    
+    enc = EnumEncounter.sniper.name;
+    _paths.add("$constImageEncounters$enc.jpg");      
+    
+    enc = EnumEncounter.milepost.name;
+    _paths.add("$constImageEncounters$enc.jpg");      
+    
+    enc = EnumEncounter.tributary.name;
+    _paths.add("$constImageEncounters$enc.jpg");   
+
+
   }
 
   // ************************
   // list of encounters as strings in a list
   // ************************
-  List<String> getEncounterNames() { 
-    final List<String> paths = [];
-    String enc = ""; 
+  List<String> getEncounterVisuals() { 
+    return List.from(_paths); 
+  }
 
-      enc = EnumEncounter.apc.name;
-      paths.add("$constImageEncounters$enc.jpg");
-      enc = EnumEncounter.dust.name;
-      paths.add("$constImageEncounters$enc.jpg");      
-      enc = EnumEncounter.chemicals.name;
-      paths.add("$constImageEncounters$enc.jpg");      
-      enc = EnumEncounter.thorns.name;
-      paths.add("$constImageEncounters$enc.jpg");      
-      enc = EnumEncounter.rockslide.name;
-      paths.add("$constImageEncounters$enc.jpg");      
-      enc = EnumEncounter.highground.name;
-      paths.add("$constImageEncounters$enc.jpg");      
-      enc = EnumEncounter.building.name;
-      paths.add("$constImageEncounters$enc.jpg");      
-      enc = EnumEncounter.road.name;
-      paths.add("$constImageEncounters$enc.jpg");      
-      enc = EnumEncounter.soldier.name;
-      paths.add("$constImageEncounters$enc.jpg");      
-      enc = EnumEncounter.snake.name;
-      paths.add("$constImageEncounters$enc.jpg");      
-      enc = EnumEncounter.wolf.name;
-      paths.add("$constImageEncounters$enc.jpg");      
-      enc = EnumEncounter.mortar.name;
-      paths.add("$constImageEncounters$enc.jpg");      
-      enc = EnumEncounter.chopper.name;
-      paths.add("$constImageEncounters$enc.jpg");      
-      enc = EnumEncounter.cave.name;
-      paths.add("$constImageEncounters$enc.jpg");      
-      enc = EnumEncounter.gunships.name;
-      paths.add("$constImageEncounters$enc.jpg");      
-      enc = EnumEncounter.minefield.name;
-      paths.add("$constImageEncounters$enc.jpg");      
-      enc = EnumEncounter.sniper.name;
-      paths.add("$constImageEncounters$enc.jpg");      
-      enc = EnumEncounter.milepost.name;
-      paths.add("$constImageEncounters$enc.jpg");      
-      enc = EnumEncounter.tributary.name;
-      paths.add("$constImageEncounters$enc.jpg");      
-
-    return List.from(paths); 
+  // ************************
+  // encounter description 
+  // ************************
+  String getEncounterDescription(EnumEncounter encounter) { 
+  
+    return "E_NOTIMPL";
 
   }
 

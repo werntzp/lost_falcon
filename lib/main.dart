@@ -86,7 +86,7 @@ class LostFalconHome extends StatelessWidget {
               mainAxisSize: MainAxisSize.max,
               children: <Widget>[
                 const SizedBox(
-                  height: 575.0,
+                  height: 600.0,
                 ),
                 SizedBox(
                   width: 160.0,

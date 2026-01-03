@@ -8,7 +8,7 @@ import 'dart:math';
 import 'dart:async';
 
 Pilot _pilot = Pilot();
-EncounterFactory _encounterFactory = EncounterFactory(); 
+final EncounterFactory _encounterFactory = EncounterFactory(); 
 int _round = 1;
 int _moveDice = constNoDice;
 int _stealthDice = constNoDice;
@@ -24,6 +24,7 @@ List<int> _rollingDice = [];
 Timer? _rollTimer; 
 bool _allowedToReRoll = false;
 int _currentEncounterIndex = 1; 
+List<Image> _encounterImages = [];
 
 // extension used to capitalize the first letter of a word 
 extension StringExtension on String {
@@ -35,8 +36,149 @@ extension StringExtension on String {
   }
 }
 
-bool _overlayShowing = false; 
 
+// *********************************************
+//  class to cycle images in the overlay 
+// *********************************************
+class ImageCyclerOverlay extends StatefulWidget {
+  final VoidCallback onClose;
+
+  const ImageCyclerOverlay({super.key, required this.onClose});
+
+  @override
+  State<ImageCyclerOverlay> createState() => _ImageCyclerOverlayState();
+}
+
+// *********************************************
+//  implementation code 
+// *********************************************
+class _ImageCyclerOverlayState extends State<ImageCyclerOverlay>
+    with SingleTickerProviderStateMixin {
+  late final AnimationController controller;
+  late final Animation<double> fade;
+
+  final rand = Random();
+  int index = 0;
+
+  Timer? timer;
+
+  @override
+  void initState() {
+    super.initState();
+
+    // Animation controller for smooth fades
+    controller = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 150),
+    );
+
+    fade = CurvedAnimation(
+      parent: controller,
+      curve: Curves.easeInOut,
+    );
+
+    // Delay preload until widget is mounted
+    WidgetsBinding.instance.addPostFrameCallback((_) async {
+    // preload all our encounter images
+    _encounterImages = _encounterFactory.getEncounterVisuals().map((p) => Image.asset(p)).toList();
+    for (final img in _encounterImages) {
+      await precacheImage(img.image, context);
+    }      
+
+    // Immediately show the first image
+    setState(() {
+        _currentEncounterIndex = rand.nextInt(_encounterImages.length);
+    });
+    controller.forward(from: 0);
+
+    // Start cycling once everything is ready
+    timer = Timer.periodic(const Duration(milliseconds: 300), (_) {
+      if (!mounted) return; 
+      setState(() {
+        _currentEncounterIndex = rand.nextInt(_encounterImages.length);
+        controller.forward(from: 0);
+      });
+    });
+
+    // Stop after 2 seconds
+    Future.delayed(const Duration(seconds: 3), () {
+      if (!mounted) return;
+      timer?.cancel();
+    });
+
+    });
+  }
+
+
+
+  @override
+  void dispose() {
+    timer?.cancel();
+    controller.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return  Stack(
+        children: [ 
+          Positioned(
+            child: Container(
+              color: Colors.black.withAlpha((0.4*255).toInt()) // adjustable darkness
+            ),
+          ),
+        Positioned(
+        top: 200,
+        left: 50,
+        right: 50,
+        child: Material(
+          elevation: 8.0,
+          color: Colors.transparent,
+          child: Container(
+            padding: const EdgeInsets.all(12),
+            decoration: BoxDecoration(
+              color: Colors.black,
+              borderRadius: BorderRadius.circular(12),
+            ),
+            child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              const SizedBox(height: 12),
+              const Text(
+                constEncountersMessage,
+                style:  TextStyle(color: Colors.white, fontFamily: constAppTextFont, fontSize: 15),
+                textAlign: TextAlign.center,
+              ),
+              const Padding(
+                padding: EdgeInsets.all(10.0),
+              ),
+              Container(
+                color: Colors.black54,
+                alignment: Alignment.center,
+                height: 225,
+                width: 225, 
+                child: FadeTransition(opacity: fade,  
+                  child: _encounterImages[_currentEncounterIndex], 
+                  ),                            
+              ),
+              const Padding(
+                padding: EdgeInsets.all(10.0),
+              ), 
+              Text(
+                _encounterFactory.getEncounterDescription(EnumEncounter.none),
+                style:  const TextStyle(color: Colors.white, fontFamily: constAppTextFont, fontSize: 15),
+                textAlign: TextAlign.center,
+              ),
+
+            ],
+            ))))]);    
+  } 
+
+}
+
+  // *********************************************
+  //  main game screen class
+  // *********************************************
 class GameScreen extends StatefulWidget {
   const GameScreen({super.key});
 
@@ -44,6 +186,9 @@ class GameScreen extends StatefulWidget {
   _GameScreenState createState() => _GameScreenState();
 }
 
+  // *********************************************
+  //  stateclass
+  // *********************************************
 class _GameScreenState extends State<GameScreen> {
 
   OverlayEntry? _overlayEntry;
@@ -71,7 +216,6 @@ class _GameScreenState extends State<GameScreen> {
       _completer?.complete(); 
       _overlayEntry = null; 
       _completer = null; 
-      _overlayShowing = false; 
       setState(() {
         // do nothing 
       });
@@ -88,7 +232,6 @@ class _GameScreenState extends State<GameScreen> {
 
     if (_overlayEntry != null) return; // Prevent stacking
 
-    _overlayShowing = true; 
     _overlayEntry = OverlayEntry(
       builder: (context) => Stack(
         children: [
@@ -236,7 +379,6 @@ class _GameScreenState extends State<GameScreen> {
       _completer?.complete(); 
       _overlayEntry = null; 
       _completer = null; 
-      _overlayShowing = false; 
 
   }
 
@@ -365,8 +507,8 @@ class _GameScreenState extends State<GameScreen> {
 
     // Start a new timer that fires repeatedly
     _rollTimer = Timer.periodic(const Duration(milliseconds: 60), (_) {
-    _rollDice(); // your existing method that randomizes all dice
-    _overlayEntry?.markNeedsBuild(); // forces overlay to redraw
+      _rollDice(); // your existing method that randomizes all dice
+      _overlayEntry?.markNeedsBuild(); // forces overlay to redraw
     });
 
     // Stop the rolling after 2 seconds
@@ -399,7 +541,6 @@ class _GameScreenState extends State<GameScreen> {
     _completer = Completer<void>();
     if (_overlayEntry != null) return; // Prevent stacking
 
-    _overlayShowing = true; 
     _overlayEntry = OverlayEntry(
       builder: (context) => Stack(
         children: [
@@ -461,7 +602,6 @@ class _GameScreenState extends State<GameScreen> {
     _completer = Completer<void>();
     if (_overlayEntry != null) return; // Prevent stacking
 
-    _overlayShowing = true;
     _overlayEntry = OverlayEntry(
       builder: (context) => Stack(
         children: [
@@ -484,40 +624,39 @@ class _GameScreenState extends State<GameScreen> {
       _completer?.complete(); 
       _overlayEntry = null; 
       _completer = null; 
-      _overlayShowing = false;
     });
 
     await _completer!.future; 
 
   }
 
+ // *********************************************
+  // this needs to be called to insert the encounter overlay 
   // *********************************************
-  // start a timer to randomly cycle through encounters
-  // *********************************************
-  void _cycleEncounters() {
-    // Cancel any previous timer
-    _rollTimer?.cancel();
+  void _showEncounterOverlay(BuildContext context) {
+    final overlay = Overlay.of(context);
+    late OverlayEntry entry;
 
-    // Start a new timer that fires repeatedly
-    _rollTimer = Timer.periodic(const Duration(milliseconds: 60), (_) {
+    entry = OverlayEntry(
+      builder: (_) => ImageCyclerOverlay(
+        onClose: () => entry.remove(),
+      ),
+    );
 
-    _overlayEntry?.markNeedsBuild(); // forces overlay to redraw
-    }); 
-    Future.delayed(const Duration(seconds: 2), () {
-      _rollTimer?.cancel();
-    });
-
+    overlay.insert(entry);
   }
+
+
 
  // *********************************************
   // display overlay seeing what encounter (maybe) happened
   // *********************************************
+  /*
   Future<void> _encounterOverlay() async {
 
     _completer = Completer<void>();
     if (_overlayEntry != null) return; // Prevent stacking
 
-    _overlayShowing = true; 
     _overlayEntry = OverlayEntry(
       builder: (context) => Stack(
         children: [
@@ -556,18 +695,28 @@ class _GameScreenState extends State<GameScreen> {
                 alignment: Alignment.center,
                 child: Image.asset(
                   _encounterFactory.getEncounterVisuals()[_currentEncounterIndex],
+                  width: 275, 
+                  height: 275, 
                   fit: BoxFit.contain,
-                ),              
+                ),                            
+              ),
+              const Padding(
+                padding: EdgeInsets.all(10.0),
               ), 
+              Text(
+                _encounterFactory.getEncounterDescription(EnumEncounter.none),
+                style:  const TextStyle(color: Colors.white, fontFamily: constAppTextFont, fontSize: 15),
+                textAlign: TextAlign.center,
+              ),
+
             ],
             ))))]));
   
     Overlay.of(context).insert(_overlayEntry!);
 
-    // start the timer to roll dice 
-    _cycleEncounters();
 
   }
+  */
 
   // ************************
   // _changeMove
@@ -916,8 +1065,7 @@ class _GameScreenState extends State<GameScreen> {
 
     // if encounter phase, decide if they had an encounter
     if (_phase == EnumPhase.encounter) {
-      _currentEncounterIndex = Random().nextInt(_encounterFactory.getEncounterVisuals().length);
-      await _encounterOverlay(); 
+      _showEncounterOverlay(context); 
     }
 
     // if allocate phase, bring up allocation dialog
@@ -939,6 +1087,8 @@ class _GameScreenState extends State<GameScreen> {
     // if stealth phase, decide whether they successfully hid from pursuers
     if (_phase == EnumPhase.stealth) {
       if (_stealthDice > 0) {
+        // set number of dice based on how many allocated  
+        _rollingDice = List.generate(_stealthDice, (_) => Random().nextInt(6) + 1);
         await _diceRollOverlay(EnumPhase.stealth, MapFactory.getStealthCost(_getCurrentHex().terrain), _stealthDice); 
       }
       else {
@@ -1098,6 +1248,7 @@ class _GameScreenState extends State<GameScreen> {
       // if they have dice assigned to move, bring up the overlay to pick from the die roll
       if (_moveDice > 0) {
         // bring up overlay 
+        _rollingDice = List.generate(_moveDice, (_) => Random().nextInt(6) + 1);
         await _diceRollOverlay(EnumPhase.move, moveCost, _moveDice);
       } else {
         await _failedOverlayMessage(constNoDiceAllocatedForMoveMessage);
