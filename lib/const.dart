@@ -81,6 +81,17 @@ const milepostEncounterMessage = "You come to an intersection that provides seve
 const tributaryEncounterMessage = "You come across a stream that provides needed water and is easy to move along."; 
 const noEncounterMessage = "Nothing but empty desert ahead of you."; 
 
+// village actions
+const constVillageRobbedItems = "You were robbed in the village and lost your items! Move to an adjacent, mapped spot."; 
+const constVillageRobbedNoItems = "The villagers looked pretty threatening, so you decide to leave. Move to an adjacent, mapped spot."; 
+const constVillageDelayed = "The villagers do not harm you, but purposefull slow you down which lets your pursuers get closer. Lose Proximity and Endurance. Move to an adjacent, mapped spot"; 
+const constVillageKickedOut = "You are forcibly kicked out of the village and cannot enter here again."; 
+const constVillageUntrusting = "Everyone warily ignores you and lets you pass through. Move to any adjacent spot."; 
+const constVillagePeaceful = "You are offered sanctuary. Gain Endurance and move to an adjacent, mapped spot."; 
+const constVillageHelpful = "A villager gives you an old motorcycle. You gain Proximity and can drive three map spots in any direction before it runs out of gas."; 
+const constVillageAlliedAfflictions = "A doctor in the village heals an affliction before you leave. Gain Health, Proximity, and Endurance. Move to any adjacent spot."; 
+const constVillageAlliedNoAfflications = "A doctor in the village treats you. Gain Health, Proximity, and Endurance. Move to any adjacent spot."; 
+
 // buttons and labels 
 const constMoveText = "Move";
 const constStealthText = "Stealth";
@@ -132,6 +143,8 @@ enum EnumTerrain { scrub, brush, hills, village, rough, rescue, unknown }
 enum EnumAffliction { deepcut, burn, brokenfoot, gunshotwound, fever }
 
 enum EnumInventory { ak, machete, firstaidkit, flaregun, binoculars }
+
+enum EnumVillageReactions { none, robbed, delayed, kickedout, untrusting, peaceful, helpful, allied } 
 
 enum EnumEncounter {
   dust,

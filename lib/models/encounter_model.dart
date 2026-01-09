@@ -162,7 +162,8 @@ class EncounterFactory {
     // starting hex, see whether the player has an encounter
     int tens = Random().nextInt(5) + 1;
     int ones = Random().nextInt(5) + 1;
-    int distance = MapFactory.getDistanceFromStart(currentHex);
+    MapHex startHex = MapHex(constFakeHex, constStartRow, constStartCol);
+    int distance = MapFactory.getDistanceBetweenHexes(startHex, currentHex);
 
     // 1-4 hexes from start 
     if ((distance >= 1) && (distance <= 4)) {

@@ -85,9 +85,8 @@ class MapFactory {
   // ************************
   // how far are we from the starting hex?  
   // ************************
-  static int getDistanceFromStart(MapHex destHex) {
-    // figure out the distance between starting hex and destination (current one)
-    MapHex startHex = MapHex(constFakeHex, constStartRow, constStartCol);
+  static int getDistanceBetweenHexes(MapHex startHex, MapHex destHex) {
+    // figure out the distan ce between starting hex and destination (current one)
     int distance = 0;
 
     if (startHex.row == destHex.row) {

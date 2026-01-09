@@ -16,15 +16,20 @@ int _restDice = constNoDice;
 int _totalDice = _pilot.getEndurance(); 
 int _oldHex = 0;
 int _selectedHex = 0;
+int _motorcycleMoves = 0; 
 EnumPhase _phase = EnumPhase.mapping;
 List<MapHex> _map = [];
 bool _moveAllowed = false;
-List<int> _hexesTraveled = [];
+Set<int> _hexesTraveled = {};
+Set<int> _hexesImpassable = {};
 List<int> _rollingDice = []; 
 Timer? _rollTimer; 
 bool _allowedToReRoll = false;
 int _currentEncounterIndex = 1; 
 List<Image> _encounterImages = [];
+Set<EnumInventory> _inventory = {}; 
+Set<EnumAffliction> _afflications = {}; 
+EnumVillageReactions _villageReaction = EnumVillageReactions.none;
 
 // extension used to capitalize the first letter of a word 
 extension StringExtension on String {
@@ -59,7 +64,7 @@ class _ImageCyclerOverlayState extends State<ImageCyclerOverlay>
 
   final rand = Random();
   int index = 0;
-
+  bool ready = false; 
   Timer? timer;
 
   @override
@@ -88,6 +93,7 @@ class _ImageCyclerOverlayState extends State<ImageCyclerOverlay>
     // Immediately show the first image
     setState(() {
         _currentEncounterIndex = rand.nextInt(_encounterImages.length);
+        ready = true;
     });
     controller.forward(from: 0);
 
@@ -155,10 +161,10 @@ class _ImageCyclerOverlayState extends State<ImageCyclerOverlay>
               Container(
                 color: Colors.black54,
                 alignment: Alignment.center,
-                height: 225,
-                width: 225, 
+                height: 175,
+                width: 175, 
                 child: FadeTransition(opacity: fade,  
-                  child: _encounterImages[_currentEncounterIndex], 
+                  child: ready ? _encounterImages[_currentEncounterIndex] : const SizedBox(), 
                   ),                            
               ),
               const Padding(
@@ -383,6 +389,104 @@ class _GameScreenState extends State<GameScreen> {
   }
 
   // *********************************************
+  // player entered a village 
+  // *********************************************
+  void _handleVillage() async {
+    int result = 0; 
+    String message = ""; 
+
+    result = Random().nextInt(10) + 2; 
+
+    // based on result, let's do this thing
+    if (result == 2) { // robbed
+      _villageReaction = EnumVillageReactions.robbed;
+      // if they had items, they are all lost 
+      if (_inventory.isNotEmpty) {
+        message = constVillageRobbedItems;
+        _inventory.clear();
+      }
+      else { 
+        message = constVillageRobbedNoItems;
+      }
+      _moveAllowed = true; 
+
+    }
+    else if (result == 3) { // delayed
+      _villageReaction = EnumVillageReactions.delayed;
+      // reduce values 
+      _pilot.setProximity(EnumDirection.decrement);
+      _pilot.setEndurance(EnumDirection.decrement);
+      message = constVillageDelayed;
+      _moveAllowed = true; 
+
+    }
+    else if ((result == 4) || (result == 5)) { // kicked out
+      _villageReaction = EnumVillageReactions.kickedout;
+      message = constVillageKickedOut;
+      // village now impassable 
+      _hexesImpassable.add(_selectedHex);
+      // move them back to old hex 
+      _map[_oldHex].current = true; 
+      // can't move
+      _moveAllowed = false; 
+    
+    }
+    else if ((result < 7) && (result < 9)) { // untrusting
+      _villageReaction = EnumVillageReactions.untrusting;
+      message = constVillageUntrusting;
+      _moveAllowed = true; 
+    
+    }
+    else if ((result == 9) || (result == 10)) { // peaceful
+      _villageReaction = EnumVillageReactions.peaceful;
+      message = constVillagePeaceful;
+      // increment by 2 
+      _pilot.setEndurance(EnumDirection.increment);
+      _pilot.setEndurance(EnumDirection.increment);
+      _moveAllowed = true; 
+
+    }
+    else if (result == 11) { // helpful
+      _villageReaction = EnumVillageReactions.helpful;
+      message = constVillageHelpful;
+      _moveAllowed = true; 
+      _pilot.setProximity(EnumDirection.increment); 
+
+    }
+    else { 
+      _villageReaction = EnumVillageReactions.allied;
+      if (_afflications.isNotEmpty) {
+        message = constVillageAlliedAfflictions;
+        // heal one affliction
+        if (_afflications.length == 1) {
+          _afflications.clear(); 
+        }
+        else { 
+          EnumAffliction item = _afflications.elementAt(Random().nextInt(_afflications.length));
+          _afflications.remove(item);
+        }
+      }
+      else { 
+        message = constVillageAlliedNoAfflications;
+      }
+
+      _pilot.setEndurance(EnumDirection.increment);
+      _pilot.setHealth(EnumDirection.increment);
+      _pilot.setProximity(EnumDirection.increment);
+
+    }
+
+    // throw up village dialog 
+    await _villageEncounterOverlay(message);
+
+    setState(() {
+      // do nothing 
+    });
+
+
+  }
+
+  // *********************************************
   // user selected a die
   // *********************************************
   void _tapDice(EnumPhase phase, int value, int target) async {
@@ -405,8 +509,15 @@ class _GameScreenState extends State<GameScreen> {
         }
         // map out next hexes
         _doMappingPhase();
+        // for now, assume they can't move again
+        _moveAllowed = false; 
         // did they choose a six? 
         if (value == 6) { _pilot.setHealth(EnumDirection.decrement); }
+        // did they enter a village? that brings a whole new thing to check
+        if (_map[_selectedHex].terrain == EnumTerrain.village) {
+          _handleVillage(); 
+        }
+
       }
       else {
         await _failedOverlayMessage(constMoveFailedMessage);
@@ -438,7 +549,7 @@ class _GameScreenState extends State<GameScreen> {
 
     // update ui 
     setState(() {
-      _moveAllowed = false; 
+      // do nothing 
     });
 
   }
@@ -595,6 +706,42 @@ class _GameScreenState extends State<GameScreen> {
   }
 
   // *********************************************
+  // village message overlay
+  // *********************************************
+  Future<void> _villageEncounterOverlay(String message) async {
+
+    _completer = Completer<void>();
+    if (_overlayEntry != null) return; // Prevent stacking
+
+    _overlayEntry = OverlayEntry(
+      builder: (context) => Stack(
+        children: [
+          Align(alignment: Alignment.center,
+            child: Card(
+              elevation: 8.0,              
+              color: Colors.black,
+              child: Padding(
+              padding: const EdgeInsets.all(10.0),
+              child: Text(
+                message,
+                style: const TextStyle(fontFamily: constAppTextFont, fontSize: 18, fontWeight: FontWeight.bold, color: Colors.white),
+                textAlign: TextAlign.center))))]));
+
+    Overlay.of(context).insert(_overlayEntry!);
+
+    // Remove after 2 seconds
+    Future.delayed(const Duration(seconds: 2), () {
+      _overlayEntry?.remove(); 
+      _completer?.complete(); 
+      _overlayEntry = null; 
+      _completer = null; 
+    });
+
+    await _completer!.future; 
+
+  }
+
+  // *********************************************
   // failed message overlay
   // *********************************************
   Future<void> _failedOverlayMessage(String message) async {
@@ -645,78 +792,6 @@ class _GameScreenState extends State<GameScreen> {
 
     overlay.insert(entry);
   }
-
-
-
- // *********************************************
-  // display overlay seeing what encounter (maybe) happened
-  // *********************************************
-  /*
-  Future<void> _encounterOverlay() async {
-
-    _completer = Completer<void>();
-    if (_overlayEntry != null) return; // Prevent stacking
-
-    _overlayEntry = OverlayEntry(
-      builder: (context) => Stack(
-        children: [
-          Positioned.fill(
-            child: Container(
-              color: Colors.black.withAlpha((0.4*255).toInt()) // adjustable darkness
-            ),
-          ),
-        Positioned(
-        top: 200,
-        left: 50,
-        right: 50,
-        child: Material(
-          elevation: 8.0,
-          color: Colors.transparent,
-          child: Container(
-            padding: const EdgeInsets.all(12),
-            decoration: BoxDecoration(
-              color: Colors.black,
-              borderRadius: BorderRadius.circular(12),
-            ),
-            child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              const SizedBox(height: 12),
-              const Text(
-                constEncountersMessage,
-                style:  TextStyle(color: Colors.white, fontFamily: constAppTextFont, fontSize: 15),
-                textAlign: TextAlign.center,
-              ),
-              const Padding(
-                padding: EdgeInsets.all(10.0),
-              ),
-              Container(
-                color: Colors.black54,
-                alignment: Alignment.center,
-                child: Image.asset(
-                  _encounterFactory.getEncounterVisuals()[_currentEncounterIndex],
-                  width: 275, 
-                  height: 275, 
-                  fit: BoxFit.contain,
-                ),                            
-              ),
-              const Padding(
-                padding: EdgeInsets.all(10.0),
-              ), 
-              Text(
-                _encounterFactory.getEncounterDescription(EnumEncounter.none),
-                style:  const TextStyle(color: Colors.white, fontFamily: constAppTextFont, fontSize: 15),
-                textAlign: TextAlign.center,
-              ),
-
-            ],
-            ))))]));
-  
-    Overlay.of(context).insert(_overlayEntry!);
-
-
-  }
-  */
 
   // ************************
   // _changeMove
@@ -1080,6 +1155,9 @@ class _GameScreenState extends State<GameScreen> {
 
     // if move phase, just set the flag allowing them to move (when they pick a new hex)
     if (_phase == EnumPhase.move) {
+      // reset village flags and counters 
+      _villageReaction = EnumVillageReactions.none;
+      _motorcycleMoves = 0; 
       // set flag that allows a move (so they only do it once per turn)
       if (_moveDice > 0) { _moveAllowed = true; }
     }
@@ -1232,6 +1310,7 @@ class _GameScreenState extends State<GameScreen> {
   // ************************
   void _selectMapHex(int row, int col) async {
     int moveCost = 0;
+    int hexDistance = 0; 
 
     // get current hex
     MapHex h = _getCurrentHex();
@@ -1239,20 +1318,75 @@ class _GameScreenState extends State<GameScreen> {
     _oldHex = h.id;
     // get the id of the hex they selected
     _selectedHex = _getIdFromColRow(col, row);
+    // get distance between hexes
+    hexDistance = MapFactory.getDistanceBetweenHexes(_map[_oldHex], _map[_selectedHex]);
+
+    // first check, if this hex is impassable, bail right out
+    if ((_hexesImpassable.isNotEmpty) & (_hexesImpassable.contains(_selectedHex))) {
+      return; 
+    }
 
     // if this is move phase, do all the logic
     if ((_phase == EnumPhase.move) && (_moveAllowed)) {
-      // what is the move cost?
-      moveCost = MapFactory.getMoveCost(h.terrain);
-
-      // if they have dice assigned to move, bring up the overlay to pick from the die roll
-      if (_moveDice > 0) {
-        // bring up overlay 
-        _rollingDice = List.generate(_moveDice, (_) => Random().nextInt(6) + 1);
-        await _diceRollOverlay(EnumPhase.move, moveCost, _moveDice);
-      } else {
-        await _failedOverlayMessage(constNoDiceAllocatedForMoveMessage);
+      // is the hex too far away? 
+      if (hexDistance > 1) {
+        // abort 
+        return; 
       }
+
+      // if we're in one of the village reaction moves, don't worry about regular move stuff
+      if (_villageReaction == EnumVillageReactions.none) {
+        // what is the move cost?
+        moveCost = MapFactory.getMoveCost(h.terrain);
+        // if they have dice assigned to move, bring up the overlay to pick from the die roll
+        if (_moveDice > 0) {
+          // bring up overlay 
+          _rollingDice = List.generate(_moveDice, (_) => Random().nextInt(6) + 1);
+          await _diceRollOverlay(EnumPhase.move, moveCost, _moveDice);
+        } else {
+          await _failedOverlayMessage(constNoDiceAllocatedForMoveMessage);
+        }
+        _moveAllowed = false; 
+
+      }
+      else { 
+        // if robbed, delayed, or peaceful need to move into a hex that's already mapped
+        if (_map[_selectedHex].terrain == EnumTerrain.unknown) {
+          // must be untrusting, helpful, or allied 
+          if ((_villageReaction == EnumVillageReactions.untrusting) || 
+            (_villageReaction == EnumVillageReactions.helpful) || 
+            (_villageReaction == EnumVillageReactions.allied)) {
+              // ok to move 
+              _map[_selectedHex].current = true;
+              _hexesTraveled.add(_selectedHex);
+
+          }
+        
+        }
+        else { 
+          // ok to move 
+          _map[_selectedHex].current = true;
+          _hexesTraveled.add(_selectedHex);
+
+        }
+
+        // if on motorcycle, increment those moves 
+        if (_villageReaction == EnumVillageReactions.helpful) {
+          _motorcycleMoves++; 
+          if (_motorcycleMoves > 3) {
+            _motorcycleMoves = 0;
+            _moveAllowed = false; 
+          }
+        }
+        else { 
+          _moveAllowed = false; 
+        }
+        
+
+
+      }
+
+
     }
   }
  
@@ -1294,6 +1428,15 @@ class _GameScreenState extends State<GameScreen> {
         child: Icon(Icons.directions_run, color: Colors.black, size: 50)
           );      
     }
+    // else if player cannot travel through this hex, show close icon
+    else if ((_hexesImpassable.isNotEmpty) && (_hexesImpassable.contains(id))) {
+      return const Positioned(
+        top: 25,
+        left: 32, 
+        child: Icon(Icons.cancel, color: Colors.red, size: 50)
+          );      
+    }
+
     // else, just an empty container
     else {
       return Container(); 

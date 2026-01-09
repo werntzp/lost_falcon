@@ -76,9 +76,6 @@ flutter:
   # list giving the asset and other descriptors for the font. For
   # example:
   fonts:
-    - family: LumanosimoRegular
-      fonts:
-        - asset: assets/fonts/LumanosimoRegular.ttf
 
     - family: Lemonada
       fonts:
