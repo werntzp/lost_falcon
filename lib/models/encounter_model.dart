@@ -78,60 +78,84 @@ class EncounterFactory {
 
     enc = EnumEncounter.apc.name;
     _paths.add("$constImageEncounters$enc.jpg");
+    _messages.add(apcEncounterMessage);
 
     enc = EnumEncounter.dust.name;
     _paths.add("$constImageEncounters$enc.jpg");      
-    
+    _messages.add(dustEncounterMessage);
+
     enc = EnumEncounter.chemicals.name;
     _paths.add("$constImageEncounters$enc.jpg");      
-    
+    _messages.add(chemicalsEncounterMessage);
+
     enc = EnumEncounter.thorns.name;
     _paths.add("$constImageEncounters$enc.jpg");      
-    
+    _messages.add(thornsEncounterMessage);
+
+
     enc = EnumEncounter.rockslide.name;
     _paths.add("$constImageEncounters$enc.jpg");      
-    
+    _messages.add(rockslideEncounterMessage);
+
     enc = EnumEncounter.highground.name;
     _paths.add("$constImageEncounters$enc.jpg");      
-    
+    _messages.add(highgroundEncounterMessage);
+
     enc = EnumEncounter.building.name;
     _paths.add("$constImageEncounters$enc.jpg");      
-    
+    _messages.add(buildingEncounterMessage);
+
     enc = EnumEncounter.road.name;
     _paths.add("$constImageEncounters$enc.jpg");      
-    
+    _messages.add(roadEncounterMessage);   
+
     enc = EnumEncounter.soldier.name;
     _paths.add("$constImageEncounters$enc.jpg");      
-    
+    _messages.add(soldierEncounterMessage);    
+
     enc = EnumEncounter.snake.name;
     _paths.add("$constImageEncounters$enc.jpg");      
-    
+    _messages.add(snakeEncounterMessage);   
+
     enc = EnumEncounter.wolf.name;
     _paths.add("$constImageEncounters$enc.jpg");      
-    
+    _messages.add(wolfEncounterMessage);;     
+
     enc = EnumEncounter.mortar.name;
     _paths.add("$constImageEncounters$enc.jpg");      
-    
+    _messages.add(mortarEncounterMessage);
+
     enc = EnumEncounter.helicopter.name;
     _paths.add("$constImageEncounters$enc.jpg");      
-    
+    _messages.add(helicopterEncounterMessage);   
+
     enc = EnumEncounter.cave.name;
     _paths.add("$constImageEncounters$enc.jpg");      
-    
+    _messages.add(caveEncounterMessage);
+
     enc = EnumEncounter.gunships.name;
     _paths.add("$constImageEncounters$enc.jpg");      
-    
+    _messages.add(gunshipsEncounterMessage);
+
     enc = EnumEncounter.minefield.name;
     _paths.add("$constImageEncounters$enc.jpg");      
-    
+    _messages.add(minefieldEncounterMessage);    
+
     enc = EnumEncounter.sniper.name;
     _paths.add("$constImageEncounters$enc.jpg");      
-    
+    _messages.add(sniperEncounterMessage);
+
     enc = EnumEncounter.milepost.name;
     _paths.add("$constImageEncounters$enc.jpg");      
-    
+    _messages.add(milepostEncounterMessage);
+
     enc = EnumEncounter.tributary.name;
     _paths.add("$constImageEncounters$enc.jpg");   
+    _messages.add(tributaryEncounterMessage);
+
+    enc = EnumEncounter.none.name;
+    _paths.add("$constImageEncounters$enc.jpg");   
+    _messages.add(noEncounterMessage);
 
 
   }
@@ -146,9 +170,22 @@ class EncounterFactory {
   // ************************
   // encounter description 
   // ************************
-  String getEncounterDescription(EnumEncounter encounter) { 
+  String getEncounterDescription(int index) { 
   
-    return "E_NOTIMPL";
+    return _messages[index];
+
+  }
+
+  // ************************
+  // actually handle the encounter   
+  // ************************
+  void handleEncounter(EnumEncounter encounter) {
+
+    // depending on the encounter, do something 
+
+
+
+
 
   }
 

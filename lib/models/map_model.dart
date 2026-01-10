@@ -27,8 +27,6 @@ class MapFactory {
         moveCost = constBrushMoveCost;
       } else if (terrain == EnumTerrain.hills) {
         moveCost = constHillsMoveCost;
-      } else if (terrain == EnumTerrain.village) {
-        moveCost = constVillageMoveCost;
       } else if (terrain == EnumTerrain.rough) {
         moveCost = constRoughMoveCost;
       }
@@ -49,8 +47,6 @@ class MapFactory {
         stealthCost = constBrushStealthCost;
       } else if (terrain == EnumTerrain.hills) {
         stealthCost = constHillsStealthCost;
-      } else if (terrain == EnumTerrain.village) {
-        stealthCost = constVillageStealthCost;
       } else if (terrain == EnumTerrain.rough) {
         stealthCost = constRoughStealthCost;
       }
@@ -71,8 +67,6 @@ class MapFactory {
         restCost = constBrushRestCost;
       } else if (terrain == EnumTerrain.hills) {
         restCost = constHillsRestCost;
-      } else if (terrain == EnumTerrain.village) {
-        restCost = constVillageRestCost;
       } else if (terrain == EnumTerrain.rough) {
         restCost = constRoughRestCost;
       }
@@ -86,7 +80,7 @@ class MapFactory {
   // how far are we from the starting hex?  
   // ************************
   static int getDistanceBetweenHexes(MapHex startHex, MapHex destHex) {
-    // figure out the distan ce between starting hex and destination (current one)
+    // figure out the distance between starting hex and destination (current one)
     int distance = 0;
 
     if (startHex.row == destHex.row) {
@@ -109,5 +103,46 @@ class MapFactory {
     return distance;
   }
 
+  // ************************
+  // how far are we from the starting hex?  
+  // ************************
+  static MapHex moveRandomSteps(int currentRow, int currentCol, int numSteps) {
+    int nextRow = 0;
+    int nextCol = 0; 
+    bool rowUp = false; 
+    bool colUp = false; 
+
+    for (int i = 1; i <= numSteps; i++) {
+      // get a random direction to move up  
+      rowUp = Random().nextBool();
+      colUp = Random().nextBool();
+
+      // going up or down from current column 
+      colUp ? nextCol = currentCol + 1 : nextCol = currentCol; 
+      // but check bounds 
+      if (nextCol > constMapCols) { nextCol = currentCol; }
+
+      // going up or down rows depends on whether column is even or odd 
+      if (currentCol % 2 == 0) {
+        // if even, down is row-1, up is same row
+        rowUp ? nextRow = currentRow : nextRow = currentRow - 1;  
+      }
+      else { 
+        // if odd, down is same row, up row+1
+        rowUp ? nextRow = currentRow + 1: nextRow = currentRow;  
+      }
+      // check bounds
+      if ((nextRow < 0) || (nextRow == constMapRows)) { nextRow = currentRow; }
+
+      // so we've found a safe spot, so swap value and iterate again 
+      currentCol = nextCol;
+      currentRow = nextRow; 
+
+    }
+
+    // ok, now we have the map spot so send out a hex
+    return MapHex(constFakeHex, currentCol, currentRow);
+
+  }
 
 }

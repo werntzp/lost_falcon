@@ -69,8 +69,8 @@ const buildingEncounterMessage = "It appears that this building has been abandon
 const roadEncounterMessage = "A flat stretch of road provides an easier path to move on."; 
 const soldierEncounterMessage = "A fallen soldier lies facedown hidden in the brush."; 
 const snakeEncounterMessage = "As you trek across the desert, you disturb a sleeping snake. You jerk away but it is too late."; 
-const wolfEncounterMessage = "A low, menacing growl startles you as something lunges towards you."; 
-const mortarEncounterMessage = "The familiar whistle announces the arrival of mortar rounds around you."; 
+const wolfEncounterMessage = "A low, menacing growl startles you as a   lunges out."; 
+const mortarEncounterMessage = "The familiar whistle announces the arrival of mortar rounds falling around you."; 
 const helicopterEncounterMessage = "You stumble upon a crashed and abandoned Blackhawk that looks like it has been stripped clean."; 
 const apcEncounterMessage = "The hulk of an armored personnel carrier sits quietly. The insides have been thoroughly stripped."; 
 const caveEncounterMessage = "This small cave may have served as a hiding spot for rebel forces before being abandoned."; 
@@ -79,7 +79,7 @@ const minefieldEncounterMessage = "Mines block your way.";
 const sniperEncounterMessage = "You work your way across an open area that gives a perfect field of fire for snipers. A round strikes you in the shoulder."; 
 const milepostEncounterMessage = "You come to an intersection that provides several safe looking options to move quickly down.";
 const tributaryEncounterMessage = "You come across a stream that provides needed water and is easy to move along."; 
-const noEncounterMessage = "Nothing but empty desert ahead of you."; 
+const noEncounterMessage = "Nothing but blue skies and empty desert ahead of you."; 
 
 // village actions
 const constVillageRobbedItems = "You were robbed in the village and lost your items! Move to an adjacent, mapped spot."; 
@@ -117,19 +117,16 @@ const constDieSides = 6;
 const constScrubMoveCost = 2;
 const constBrushMoveCost = 3;
 const constHillsMoveCost = 5;
-const constVillageMoveCost = 1;
 const constRoughMoveCost = 4;
 
 const constScrubStealthCost = 4;
 const constBrushStealthCost = 4;
 const constHillsStealthCost = 3;
-const constVillageStealthCost = 7;
 const constRoughStealthCost = 3;
 
 const constScrubRestCost = 3;
 const constBrushRestCost = 3;
 const constHillsRestCost = 5;
-const constVillageRestCost = 7;
 const constRoughRestCost = 4;
 
 enum EnumDirection { increment, decrement}
@@ -147,6 +144,7 @@ enum EnumInventory { ak, machete, firstaidkit, flaregun, binoculars }
 enum EnumVillageReactions { none, robbed, delayed, kickedout, untrusting, peaceful, helpful, allied } 
 
 enum EnumEncounter {
+  apc,
   dust,
   chemicals,
   thorns,
@@ -159,7 +157,6 @@ enum EnumEncounter {
   wolf,
   mortar,
   helicopter,
-  apc,
   cave,
   gunships,
   minefield,

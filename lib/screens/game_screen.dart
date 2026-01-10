@@ -41,7 +41,6 @@ extension StringExtension on String {
   }
 }
 
-
 // *********************************************
 //  class to cycle images in the overlay 
 // *********************************************
@@ -66,6 +65,178 @@ class _ImageCyclerOverlayState extends State<ImageCyclerOverlay>
   int index = 0;
   bool ready = false; 
   Timer? timer;
+  String message = ""; 
+  bool handleEncounter = false; 
+
+  // ************************
+  // pick terrain
+  // ************************
+  void _pickTerrain(int col, int row) {
+    int id = 0;
+      
+    id = _getIdFromColRow(col, row);
+    if (!_map[id].visible) { 
+      Random().nextBool() ? _map[id].terrain == EnumTerrain.scrub : _map[id].terrain == EnumTerrain.brush; 
+      _map[id].visible = true; 
+    }
+
+  }
+
+
+  // ************************
+  // randomly mark terrain around the new village 
+  // ************************
+  void _setTerrainAroundVillage(int col, int row) {
+    int newRow = 0;
+    int newCol = 0; 
+
+    // walk around this new spot and change terrain to brush or scrub
+    // row -1, col
+    newCol = col;
+    newRow = row - 1;
+    if ((newRow >= 0)) { _pickTerrain(newCol, newRow); }
+
+    // row +1, col 
+    newCol = col;
+    newRow = row + 1;    
+    if ((newRow <= constMapRows)) { _pickTerrain(newCol, newRow); }
+
+    // for even cols
+    if (col % 2 == 0) {  
+      // row -1, col +1
+      newCol = col + 1;
+      newRow = row - 1;    
+      if ((newRow >= 0) || (newCol <= constMapCols) ) { _pickTerrain(newCol, newRow); }
+
+      // row, col +1
+      newCol = col + 1;
+      newRow = row;    
+      if ((newCol <= constMapCols) ) { _pickTerrain(newCol, newRow); }
+
+      // row, col -1
+      newCol = col - 1;
+      newRow = row;    
+      if ((newCol >= 0) ) { _pickTerrain(newCol, newRow); }
+
+      // row -1, col -1
+      newCol = col - 1;
+      newRow = row - 1;    
+      if ((newRow >= 0) || (newCol >= 0) ) { _pickTerrain(newCol, newRow); }
+
+    }
+    else {
+      // row, col +1; 
+      newCol = col + 1;
+      newRow = row;    
+      if ((newCol <= constMapCols) ) { _pickTerrain(newCol, newRow); }
+
+      // row +1, col +1
+      newCol = col + 1;
+      newRow = row + 1;    
+      if ((newRow <= constMapRows) || (newCol <= constMapCols) ) { _pickTerrain(newCol, newRow); }
+
+      // row +1, col -1
+      newCol = col - 1;
+      newRow = row + 1;    
+      if ((newRow <= constMapRows) || (newCol >= 0) ) { _pickTerrain(newCol, newRow); }
+
+      // row, col -1
+      newCol = col - 1;
+      newRow = row;    
+      if ((newCol >= 0) ) { _pickTerrain(newCol, newRow); }
+
+    }
+
+  }
+
+  // ************************
+  // _getIdFromRowCol
+  // ************************
+  int _getIdFromColRow(int col, int row) {
+    int id = 0;
+
+    for (MapHex m in _map) {
+      if ((m.row == row) && (m.col == col)) {
+        id = m.id;
+        break;
+      }
+    }
+    return id;
+  }
+
+  // *********************************************
+  //  pass back button to close the overlay
+  // *********************************************
+  Widget _returnContinueButton() {
+
+    return SizedBox(
+                width: 160.0,
+                height: 55.0,
+                child: OutlinedButton(
+                  style: OutlinedButton.styleFrom(
+                    foregroundColor: Colors.black, // Text and icon color
+                    backgroundColor: Colors.white, // Background color
+                    overlayColor: Colors.blueAccent.withValues(), // pressed ripple
+                    side: const BorderSide(color: Colors.black,   width: 3.0,), // Border color
+                  ),   
+                  child: const Align(
+                      alignment: Alignment.center,
+                      child: Text(
+                        constContinueText,
+                        style: TextStyle(
+                            fontFamily: constAppTextFont,
+                            color: Colors.black,
+                            fontSize: 18.0),
+                      )),
+                  onPressed:  () { widget.onClose(); },
+                ));
+
+  }
+
+  // *********************************************
+  //  figure out what happened and their options (if any)
+  // *********************************************
+  Widget _handleEncounter() {
+    EnumEncounter encounter = EnumEncounter.values[_currentEncounterIndex];
+    late MapHex newHex;
+    int id = 0; 
+
+    if (handleEncounter) {
+      // no encounter
+      if (encounter == EnumEncounter.none) {
+        return _returnContinueButton(); 
+      }
+      // apc
+      else if (encounter == EnumEncounter.apc) {
+        return _returnContinueButton();
+      }
+      // highground
+      else if (encounter == EnumEncounter.highground) {
+        // add a village 4 spaces away and surround it with brush or scrub
+        newHex = MapFactory.moveRandomSteps(_map[_selectedHex].row, _map[_selectedHex].col, 4);
+        // make that a village
+        id = _getIdFromColRow(newHex.col, newHex.row);
+        _map[id].terrain = EnumTerrain.village;
+        _map[id].visible = true; 
+        // walk around it to make bordering spaces either scrub or brush if they are empty
+        _setTerrainAroundVillage(newHex.col, newHex.row); 
+
+
+        return _returnContinueButton();
+      }      
+      // catch all (remove later)
+      else { 
+        return _returnContinueButton();
+      }
+
+    }
+    else { 
+      // while cycling, just have nothing
+      return Container(); 
+
+    }
+
+  }
 
   @override
   void initState() {
@@ -110,12 +281,15 @@ class _ImageCyclerOverlayState extends State<ImageCyclerOverlay>
     Future.delayed(const Duration(seconds: 3), () {
       if (!mounted) return;
       timer?.cancel();
+      handleEncounter = true; 
+      setState(() {
+        message = _encounterFactory.getEncounterDescription(_currentEncounterIndex);
+        _encounterFactory.handleEncounter(EnumEncounter.values[_currentEncounterIndex]);
+      });
     });
 
     });
   }
-
-
 
   @override
   void dispose() {
@@ -171,20 +345,22 @@ class _ImageCyclerOverlayState extends State<ImageCyclerOverlay>
                 padding: EdgeInsets.all(10.0),
               ), 
               Text(
-                _encounterFactory.getEncounterDescription(EnumEncounter.none),
+                message,
                 style:  const TextStyle(color: Colors.white, fontFamily: constAppTextFont, fontSize: 15),
                 textAlign: TextAlign.center,
               ),
-
+              const Padding(
+                padding: EdgeInsets.all(10.0),
+              ), 
+              _handleEncounter(),
             ],
             ))))]);    
-  } 
+      } 
+    }
 
-}
-
-  // *********************************************
-  //  main game screen class
-  // *********************************************
+// *********************************************
+//  gamescreen class 
+// *********************************************
 class GameScreen extends StatefulWidget {
   const GameScreen({super.key});
 
@@ -192,9 +368,9 @@ class GameScreen extends StatefulWidget {
   _GameScreenState createState() => _GameScreenState();
 }
 
-  // *********************************************
-  //  stateclass
-  // *********************************************
+// *********************************************
+//  stateclass
+// *********************************************
 class _GameScreenState extends State<GameScreen> {
 
   OverlayEntry? _overlayEntry;
@@ -427,11 +603,14 @@ class _GameScreenState extends State<GameScreen> {
       _hexesImpassable.add(_selectedHex);
       // move them back to old hex 
       _map[_oldHex].current = true; 
+      _map[_selectedHex].current = false; 
+      // remove this hex from one they've traveled in
+      _hexesTraveled.remove(_selectedHex);
       // can't move
       _moveAllowed = false; 
     
     }
-    else if ((result < 7) && (result < 9)) { // untrusting
+    else if ((result == 6) || (result == 7) || (result == 8) ) { // untrusting
       _villageReaction = EnumVillageReactions.untrusting;
       message = constVillageUntrusting;
       _moveAllowed = true; 
@@ -473,6 +652,7 @@ class _GameScreenState extends State<GameScreen> {
       _pilot.setEndurance(EnumDirection.increment);
       _pilot.setHealth(EnumDirection.increment);
       _pilot.setProximity(EnumDirection.increment);
+      _moveAllowed = true; 
 
     }
 
@@ -1178,7 +1358,7 @@ class _GameScreenState extends State<GameScreen> {
     // if rest phase, decide whether they lose any endurance
     if (_phase == EnumPhase.rest) {
       if (_restDice > 0) {
-        await _diceRollOverlay(EnumPhase.rest, MapFactory.getStealthCost(_getCurrentHex().terrain), _restDice); 
+        await _diceRollOverlay(EnumPhase.rest, MapFactory.getRestCost(_getCurrentHex().terrain), _restDice); 
       }
       else {
         _pilot.setEndurance(EnumDirection.decrement);
@@ -1385,6 +1565,10 @@ class _GameScreenState extends State<GameScreen> {
 
 
       }
+
+      setState(() {
+        // update ui
+      });
 
 
     }

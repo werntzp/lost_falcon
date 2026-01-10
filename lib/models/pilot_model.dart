@@ -72,6 +72,8 @@ class Pilot {
   void setProximity(EnumDirection direction) {
     if (direction == EnumDirection.increment) {
       _proximity++; 
+      if (_proximity > 6) { _proximity = 6; }
+
     }
     else {
       _proximity--;
