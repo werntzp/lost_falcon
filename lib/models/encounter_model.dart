@@ -2,14 +2,12 @@ import 'package:lost_falcon/const.dart';
 import 'package:lost_falcon/models/map_model.dart';
 import 'dart:math';
 
-
 class EncounterFactory {
-
-  // lists for graphics and messages 
+  // lists for graphics and messages
   final List<String> _paths = [];
   final List<String> _messages = [];
 
-  // three lists for encounters 
+  // three lists for encounters
   final List<List<EnumEncounter>> _close = List.generate(
     constDieSides + 1,
     (_) => List.filled(constDieSides + 1, EnumEncounter.none),
@@ -24,176 +22,159 @@ class EncounterFactory {
   );
 
   EncounterFactory() {
-    String enc = ""; 
+    String enc = "";
 
-    // fill specific spots in all the grids 
-    _close[1][1] = EnumEncounter.dust; 
-    _close[1][2] = EnumEncounter.dust; 
-    _close[1][3] = EnumEncounter.dust; 
-    _close[1][4] = EnumEncounter.dust; 
-    _close[1][5] = EnumEncounter.chemicals; 
-    _close[1][6] = EnumEncounter.thorns; 
-    _close[2][1] = EnumEncounter.rockslide; 
-    _close[5][5] = EnumEncounter.highground; 
-    _close[5][6] = EnumEncounter.building; 
-    _close[6][1] = EnumEncounter.road; 
-    _close[6][2] = EnumEncounter.road; 
-    _close[6][3] = EnumEncounter.road; 
-    _close[6][4] = EnumEncounter.soldier; 
-    _close[6][5] = EnumEncounter.soldier; 
-    _close[6][6] = EnumEncounter.soldier; 
+    // fill specific spots in all the grids
+    _close[1][1] = EnumEncounter.dust;
+    _close[1][2] = EnumEncounter.dust;
+    _close[1][3] = EnumEncounter.dust;
+    _close[1][4] = EnumEncounter.dust;
+    _close[1][5] = EnumEncounter.chemicals;
+    _close[1][6] = EnumEncounter.thorns;
+    _close[2][1] = EnumEncounter.rockslide;
+    _close[5][5] = EnumEncounter.highground;
+    _close[5][6] = EnumEncounter.building;
+    _close[6][1] = EnumEncounter.road;
+    _close[6][2] = EnumEncounter.road;
+    _close[6][3] = EnumEncounter.road;
+    _close[6][4] = EnumEncounter.soldier;
+    _close[6][5] = EnumEncounter.soldier;
+    _close[6][6] = EnumEncounter.soldier;
 
-    _medium[1][1] = EnumEncounter.dust; 
-    _medium[1][2] = EnumEncounter.dust; 
-    _medium[1][3] = EnumEncounter.dust; 
-    _medium[1][4] = EnumEncounter.dust; 
-    _medium[1][5] = EnumEncounter.dust; 
-    _medium[1][6] = EnumEncounter.snake; 
-    _medium[2][1] = EnumEncounter.wolf; 
-    _medium[2][2] = EnumEncounter.mortar; 
-    _medium[2][3] = EnumEncounter.mortar; 
-    _medium[6][1] = EnumEncounter.helicopter; 
-    _medium[6][2] = EnumEncounter.helicopter; 
-    _medium[6][3] = EnumEncounter.apc; 
-    _medium[6][4] = EnumEncounter.cave; 
-    _medium[6][5] = EnumEncounter.gunships; 
-    _medium[6][6] = EnumEncounter.gunships; 
+    _medium[1][1] = EnumEncounter.dust;
+    _medium[1][2] = EnumEncounter.dust;
+    _medium[1][3] = EnumEncounter.dust;
+    _medium[1][4] = EnumEncounter.dust;
+    _medium[1][5] = EnumEncounter.dust;
+    _medium[1][6] = EnumEncounter.snake;
+    _medium[2][1] = EnumEncounter.wolf;
+    _medium[2][2] = EnumEncounter.mortar;
+    _medium[2][3] = EnumEncounter.mortar;
+    _medium[6][1] = EnumEncounter.helicopter;
+    _medium[6][2] = EnumEncounter.helicopter;
+    _medium[6][3] = EnumEncounter.apc;
+    _medium[6][4] = EnumEncounter.cave;
+    _medium[6][5] = EnumEncounter.gunships;
+    _medium[6][6] = EnumEncounter.gunships;
 
-    _far[1][1] = EnumEncounter.dust; 
-    _far[1][2] = EnumEncounter.rockslide; 
-    _far[1][3] = EnumEncounter.rockslide; 
-    _far[1][4] = EnumEncounter.rockslide; 
-    _far[1][5] = EnumEncounter.rockslide; 
-    _far[1][6] = EnumEncounter.minefield; 
-    _far[2][1] = EnumEncounter.sniper; 
-    _far[2][2] = EnumEncounter.sniper; 
-    _far[2][3] = EnumEncounter.sniper; 
-    _far[5][6] = EnumEncounter.milepost; 
-    _far[6][1] = EnumEncounter.tributary; 
-    _far[6][2] = EnumEncounter.tributary; 
-    _far[6][3] = EnumEncounter.building; 
-    _far[6][4] = EnumEncounter.gunships; 
-    _far[6][5] = EnumEncounter.gunships; 
-    _far[6][6] = EnumEncounter.gunships; 
+    _far[1][1] = EnumEncounter.dust;
+    _far[1][2] = EnumEncounter.rockslide;
+    _far[1][3] = EnumEncounter.rockslide;
+    _far[1][4] = EnumEncounter.rockslide;
+    _far[1][5] = EnumEncounter.rockslide;
+    _far[1][6] = EnumEncounter.minefield;
+    _far[2][1] = EnumEncounter.sniper;
+    _far[2][2] = EnumEncounter.sniper;
+    _far[2][3] = EnumEncounter.sniper;
+    _far[5][6] = EnumEncounter.milepost;
+    _far[6][1] = EnumEncounter.tributary;
+    _far[6][2] = EnumEncounter.tributary;
+    _far[6][3] = EnumEncounter.building;
+    _far[6][4] = EnumEncounter.gunships;
+    _far[6][5] = EnumEncounter.gunships;
+    _far[6][6] = EnumEncounter.gunships;
 
     enc = EnumEncounter.apc.name;
     _paths.add("$constImageEncounters$enc.jpg");
     _messages.add(apcEncounterMessage);
 
     enc = EnumEncounter.dust.name;
-    _paths.add("$constImageEncounters$enc.jpg");      
+    _paths.add("$constImageEncounters$enc.jpg");
     _messages.add(dustEncounterMessage);
 
     enc = EnumEncounter.chemicals.name;
-    _paths.add("$constImageEncounters$enc.jpg");      
+    _paths.add("$constImageEncounters$enc.jpg");
     _messages.add(chemicalsEncounterMessage);
 
     enc = EnumEncounter.thorns.name;
-    _paths.add("$constImageEncounters$enc.jpg");      
+    _paths.add("$constImageEncounters$enc.jpg");
     _messages.add(thornsEncounterMessage);
 
-
     enc = EnumEncounter.rockslide.name;
-    _paths.add("$constImageEncounters$enc.jpg");      
+    _paths.add("$constImageEncounters$enc.jpg");
     _messages.add(rockslideEncounterMessage);
 
     enc = EnumEncounter.highground.name;
-    _paths.add("$constImageEncounters$enc.jpg");      
+    _paths.add("$constImageEncounters$enc.jpg");
     _messages.add(highgroundEncounterMessage);
 
     enc = EnumEncounter.building.name;
-    _paths.add("$constImageEncounters$enc.jpg");      
+    _paths.add("$constImageEncounters$enc.jpg");
     _messages.add(buildingEncounterMessage);
 
     enc = EnumEncounter.road.name;
-    _paths.add("$constImageEncounters$enc.jpg");      
-    _messages.add(roadEncounterMessage);   
+    _paths.add("$constImageEncounters$enc.jpg");
+    _messages.add(roadEncounterMessage);
 
     enc = EnumEncounter.soldier.name;
-    _paths.add("$constImageEncounters$enc.jpg");      
-    _messages.add(soldierEncounterMessage);    
+    _paths.add("$constImageEncounters$enc.jpg");
+    _messages.add(soldierEncounterMessage);
 
     enc = EnumEncounter.snake.name;
-    _paths.add("$constImageEncounters$enc.jpg");      
-    _messages.add(snakeEncounterMessage);   
+    _paths.add("$constImageEncounters$enc.jpg");
+    _messages.add(snakeEncounterMessage);
 
     enc = EnumEncounter.wolf.name;
-    _paths.add("$constImageEncounters$enc.jpg");      
-    _messages.add(wolfEncounterMessage);;     
+    _paths.add("$constImageEncounters$enc.jpg");
+    _messages.add(wolfEncounterMessage);
+    ;
 
     enc = EnumEncounter.mortar.name;
-    _paths.add("$constImageEncounters$enc.jpg");      
+    _paths.add("$constImageEncounters$enc.jpg");
     _messages.add(mortarEncounterMessage);
 
     enc = EnumEncounter.helicopter.name;
-    _paths.add("$constImageEncounters$enc.jpg");      
-    _messages.add(helicopterEncounterMessage);   
+    _paths.add("$constImageEncounters$enc.jpg");
+    _messages.add(helicopterEncounterMessage);
 
     enc = EnumEncounter.cave.name;
-    _paths.add("$constImageEncounters$enc.jpg");      
+    _paths.add("$constImageEncounters$enc.jpg");
     _messages.add(caveEncounterMessage);
 
     enc = EnumEncounter.gunships.name;
-    _paths.add("$constImageEncounters$enc.jpg");      
+    _paths.add("$constImageEncounters$enc.jpg");
     _messages.add(gunshipsEncounterMessage);
 
     enc = EnumEncounter.minefield.name;
-    _paths.add("$constImageEncounters$enc.jpg");      
-    _messages.add(minefieldEncounterMessage);    
+    _paths.add("$constImageEncounters$enc.jpg");
+    _messages.add(minefieldEncounterMessage);
 
     enc = EnumEncounter.sniper.name;
-    _paths.add("$constImageEncounters$enc.jpg");      
+    _paths.add("$constImageEncounters$enc.jpg");
     _messages.add(sniperEncounterMessage);
 
     enc = EnumEncounter.milepost.name;
-    _paths.add("$constImageEncounters$enc.jpg");      
+    _paths.add("$constImageEncounters$enc.jpg");
     _messages.add(milepostEncounterMessage);
 
     enc = EnumEncounter.tributary.name;
-    _paths.add("$constImageEncounters$enc.jpg");   
+    _paths.add("$constImageEncounters$enc.jpg");
     _messages.add(tributaryEncounterMessage);
 
     enc = EnumEncounter.none.name;
-    _paths.add("$constImageEncounters$enc.jpg");   
+    _paths.add("$constImageEncounters$enc.jpg");
     _messages.add(noEncounterMessage);
-
-
   }
 
   // ************************
   // list of encounters as strings in a list
   // ************************
-  List<String> getEncounterVisuals() { 
-    return List.from(_paths); 
+  List<String> getEncounterVisuals() {
+    return List.from(_paths);
   }
 
   // ************************
-  // encounter description 
+  // encounter description
   // ************************
-  String getEncounterDescription(int index) { 
-  
+  String getEncounterDescription(int index) {
     return _messages[index];
-
   }
 
   // ************************
-  // actually handle the encounter   
+  // depending where they are, did an encounter happen?
   // ************************
-  void handleEncounter(EnumEncounter encounter) {
-
-    // depending on the encounter, do something 
-
-
-
-
-
-  }
-
-  // ************************
-  // depending where they are, did an encounter happen?  
-  // ************************
-  EnumEncounter getRandomEncounter(MapHex currentHex) {
-    EnumEncounter encounter = EnumEncounter.none; 
+  int getRandomEncounter(MapHex currentHex) {
+    EnumEncounter encounter = EnumEncounter.none;
 
     // roll two "dice" (tens and ones) and depending on distance from
     // starting hex, see whether the player has an encounter
@@ -202,20 +183,17 @@ class EncounterFactory {
     MapHex startHex = MapHex(constFakeHex, constStartRow, constStartCol);
     int distance = MapFactory.getDistanceBetweenHexes(startHex, currentHex);
 
-    // 1-4 hexes from start 
+    // 1-4 hexes from start
     if ((distance >= 1) && (distance <= 4)) {
       encounter = _close[tens][ones];
-    // 5-9 
+      // 5-9
     } else if ((distance >= 5) && (distance <= 9)) {
       encounter = _medium[tens][ones];
-    // 10-15 
+      // 10-15
     } else if ((distance >= 10) && (distance <= 15)) {
       encounter = _far[tens][ones];
-
     }
 
-    return encounter; 
-
+    return encounter.index;
   }
-
 }

@@ -8,30 +8,30 @@ import 'dart:math';
 import 'dart:async';
 
 Pilot _pilot = Pilot();
-final EncounterFactory _encounterFactory = EncounterFactory(); 
+final EncounterFactory _encounterFactory = EncounterFactory();
 int _round = 1;
 int _moveDice = constNoDice;
 int _stealthDice = constNoDice;
 int _restDice = constNoDice;
-int _totalDice = _pilot.getEndurance(); 
+int _totalDice = _pilot.getEndurance();
 int _oldHex = 0;
 int _selectedHex = 0;
-int _motorcycleMoves = 0; 
+int _motorcycleMoves = 0;
 EnumPhase _phase = EnumPhase.mapping;
 List<MapHex> _map = [];
 bool _moveAllowed = false;
 Set<int> _hexesTraveled = {};
 Set<int> _hexesImpassable = {};
-List<int> _rollingDice = []; 
-Timer? _rollTimer; 
+List<int> _rollingDice = [];
+Timer? _rollTimer;
 bool _allowedToReRoll = false;
-int _currentEncounterIndex = 1; 
+int _currentEncounterIndex = 1;
 List<Image> _encounterImages = [];
-Set<EnumInventory> _inventory = {}; 
-Set<EnumAffliction> _afflications = {}; 
+Set<EnumInventory> _inventory = {};
+Set<EnumAffliction> _afflications = {};
 EnumVillageReactions _villageReaction = EnumVillageReactions.none;
 
-// extension used to capitalize the first letter of a word 
+// extension used to capitalize the first letter of a word
 extension StringExtension on String {
   String capitalizeFirstLetter() {
     if (isEmpty) {
@@ -42,7 +42,7 @@ extension StringExtension on String {
 }
 
 // *********************************************
-//  class to cycle images in the overlay 
+//  class to cycle images in the overlay
 // *********************************************
 class ImageCyclerOverlay extends StatefulWidget {
   final VoidCallback onClose;
@@ -54,7 +54,7 @@ class ImageCyclerOverlay extends StatefulWidget {
 }
 
 // *********************************************
-//  implementation code 
+//  implementation code
 // *********************************************
 class _ImageCyclerOverlayState extends State<ImageCyclerOverlay>
     with SingleTickerProviderStateMixin {
@@ -63,90 +63,106 @@ class _ImageCyclerOverlayState extends State<ImageCyclerOverlay>
 
   final rand = Random();
   int index = 0;
-  bool ready = false; 
+  bool ready = false;
   Timer? timer;
-  String message = ""; 
-  bool handleEncounter = false; 
+  String message = "";
+  bool handleEncounter = false;
 
   // ************************
   // pick terrain
   // ************************
   void _pickTerrain(int col, int row) {
     int id = 0;
-      
-    id = _getIdFromColRow(col, row);
-    if (!_map[id].visible) { 
-      Random().nextBool() ? _map[id].terrain == EnumTerrain.scrub : _map[id].terrain == EnumTerrain.brush; 
-      _map[id].visible = true; 
-    }
 
+    id = _getIdFromColRow(col, row);
+    if (!_map[id].visible) {
+      Random().nextBool()
+          ? _map[id].terrain = EnumTerrain.scrub
+          : _map[id].terrain = EnumTerrain.brush;
+      _map[id].visible = true;
+    }
   }
 
-
   // ************************
-  // randomly mark terrain around the new village 
+  // randomly mark terrain around the new village
   // ************************
   void _setTerrainAroundVillage(int col, int row) {
     int newRow = 0;
-    int newCol = 0; 
+    int newCol = 0;
 
     // walk around this new spot and change terrain to brush or scrub
     // row -1, col
     newCol = col;
     newRow = row - 1;
-    if ((newRow >= 0)) { _pickTerrain(newCol, newRow); }
+    if ((newRow >= 0)) {
+      _pickTerrain(newCol, newRow);
+    }
 
-    // row +1, col 
+    // row +1, col
     newCol = col;
-    newRow = row + 1;    
-    if ((newRow <= constMapRows)) { _pickTerrain(newCol, newRow); }
+    newRow = row + 1;
+    if ((newRow <= constMapRows)) {
+      _pickTerrain(newCol, newRow);
+    }
 
     // for even cols
-    if (col % 2 == 0) {  
-      // row -1, col +1
-      newCol = col + 1;
-      newRow = row - 1;    
-      if ((newRow >= 0) || (newCol <= constMapCols) ) { _pickTerrain(newCol, newRow); }
-
+    if (col % 2 == 0) {
       // row, col +1
       newCol = col + 1;
-      newRow = row;    
-      if ((newCol <= constMapCols) ) { _pickTerrain(newCol, newRow); }
+      newRow = row;
+      if ((newCol <= constMapCols)) {
+        _pickTerrain(newCol, newRow);
+      }
 
       // row, col -1
       newCol = col - 1;
-      newRow = row;    
-      if ((newCol >= 0) ) { _pickTerrain(newCol, newRow); }
-
-      // row -1, col -1
-      newCol = col - 1;
-      newRow = row - 1;    
-      if ((newRow >= 0) || (newCol >= 0) ) { _pickTerrain(newCol, newRow); }
-
-    }
-    else {
-      // row, col +1; 
-      newCol = col + 1;
-      newRow = row;    
-      if ((newCol <= constMapCols) ) { _pickTerrain(newCol, newRow); }
+      newRow = row;
+      if ((newCol >= 0)) {
+        _pickTerrain(newCol, newRow);
+      }
 
       // row +1, col +1
       newCol = col + 1;
-      newRow = row + 1;    
-      if ((newRow <= constMapRows) || (newCol <= constMapCols) ) { _pickTerrain(newCol, newRow); }
+      newRow = row + 1;
+      if ((newRow <= constMapRows) || (newCol <= constMapCols)) {
+        _pickTerrain(newCol, newRow);
+      }
 
       // row +1, col -1
       newCol = col - 1;
-      newRow = row + 1;    
-      if ((newRow <= constMapRows) || (newCol >= 0) ) { _pickTerrain(newCol, newRow); }
+      newRow = row + 1;
+      if ((newRow <= constMapRows) || (newCol >= 0)) {
+        _pickTerrain(newCol, newRow);
+      }
+    } else {
+      // row -1, col +1
+      newCol = col + 1;
+      newRow = row - 1;
+      if ((newRow >= 0) || (newCol <= constMapCols)) {
+        _pickTerrain(newCol, newRow);
+      }
+
+      // row, col +1;
+      newCol = col + 1;
+      newRow = row;
+      if ((newCol <= constMapCols)) {
+        _pickTerrain(newCol, newRow);
+      }
+
+      // row -1, col -1
+      newCol = col - 1;
+      newRow = row - 1;
+      if ((newRow >= 0) || (newCol >= 0)) {
+        _pickTerrain(newCol, newRow);
+      }
 
       // row, col -1
       newCol = col - 1;
-      newRow = row;    
-      if ((newCol >= 0) ) { _pickTerrain(newCol, newRow); }
-
+      newRow = row;
+      if ((newCol >= 0)) {
+        _pickTerrain(newCol, newRow);
+      }
     }
-
   }
 
   // ************************
@@ -168,29 +184,32 @@ class _ImageCyclerOverlayState extends State<ImageCyclerOverlay>
   //  pass back button to close the overlay
   // *********************************************
   Widget _returnContinueButton() {
-
     return SizedBox(
-                width: 160.0,
-                height: 55.0,
-                child: OutlinedButton(
-                  style: OutlinedButton.styleFrom(
-                    foregroundColor: Colors.black, // Text and icon color
-                    backgroundColor: Colors.white, // Background color
-                    overlayColor: Colors.blueAccent.withValues(), // pressed ripple
-                    side: const BorderSide(color: Colors.black,   width: 3.0,), // Border color
-                  ),   
-                  child: const Align(
-                      alignment: Alignment.center,
-                      child: Text(
-                        constContinueText,
-                        style: TextStyle(
-                            fontFamily: constAppTextFont,
-                            color: Colors.black,
-                            fontSize: 18.0),
-                      )),
-                  onPressed:  () { widget.onClose(); },
-                ));
-
+        width: 160.0,
+        height: 55.0,
+        child: OutlinedButton(
+          style: OutlinedButton.styleFrom(
+            foregroundColor: Colors.black, // Text and icon color
+            backgroundColor: Colors.white, // Background color
+            overlayColor: Colors.blueAccent.withValues(), // pressed ripple
+            side: const BorderSide(
+              color: Colors.black,
+              width: 3.0,
+            ), // Border color
+          ),
+          child: const Align(
+              alignment: Alignment.center,
+              child: Text(
+                constContinueText,
+                style: TextStyle(
+                    fontFamily: constAppTextFont,
+                    color: Colors.black,
+                    fontSize: 18.0),
+              )),
+          onPressed: () {
+            widget.onClose();
+          },
+        ));
   }
 
   // *********************************************
@@ -199,12 +218,12 @@ class _ImageCyclerOverlayState extends State<ImageCyclerOverlay>
   Widget _handleEncounter() {
     EnumEncounter encounter = EnumEncounter.values[_currentEncounterIndex];
     late MapHex newHex;
-    int id = 0; 
+    int id = 0;
 
     if (handleEncounter) {
       // no encounter
       if (encounter == EnumEncounter.none) {
-        return _returnContinueButton(); 
+        return _returnContinueButton();
       }
       // apc
       else if (encounter == EnumEncounter.apc) {
@@ -213,29 +232,27 @@ class _ImageCyclerOverlayState extends State<ImageCyclerOverlay>
       // highground
       else if (encounter == EnumEncounter.highground) {
         // add a village 4 spaces away and surround it with brush or scrub
-        newHex = MapFactory.moveRandomSteps(_map[_selectedHex].row, _map[_selectedHex].col, 4);
+        newHex = MapFactory.moveRandomSteps(
+            _map[_selectedHex].row, _map[_selectedHex].col, 4);
         // make that a village
         id = _getIdFromColRow(newHex.col, newHex.row);
         _map[id].terrain = EnumTerrain.village;
-        _map[id].visible = true; 
+        _map[id].visible = true;
         // walk around it to make bordering spaces either scrub or brush if they are empty
-        _setTerrainAroundVillage(newHex.col, newHex.row); 
+        setState(() {
+          _setTerrainAroundVillage(newHex.col, newHex.row);
+        });
 
-
-        return _returnContinueButton();
-      }      
-      // catch all (remove later)
-      else { 
         return _returnContinueButton();
       }
-
-    }
-    else { 
+      // catch all (remove later)
+      else {
+        return _returnContinueButton();
+      }
+    } else {
       // while cycling, just have nothing
-      return Container(); 
-
+      return Container();
     }
-
   }
 
   @override
@@ -255,39 +272,46 @@ class _ImageCyclerOverlayState extends State<ImageCyclerOverlay>
 
     // Delay preload until widget is mounted
     WidgetsBinding.instance.addPostFrameCallback((_) async {
-    // preload all our encounter images
-    _encounterImages = _encounterFactory.getEncounterVisuals().map((p) => Image.asset(p)).toList();
-    for (final img in _encounterImages) {
-      await precacheImage(img.image, context);
-    }      
+      // preload all our encounter images
+      _encounterImages = _encounterFactory
+          .getEncounterVisuals()
+          .map((p) => Image.asset(p))
+          .toList();
+      for (final img in _encounterImages) {
+        await precacheImage(img.image, context);
+      }
 
-    // Immediately show the first image
-    setState(() {
+      // Immediately show the first image
+      setState(() {
         _currentEncounterIndex = rand.nextInt(_encounterImages.length);
         ready = true;
-    });
-    controller.forward(from: 0);
-
-    // Start cycling once everything is ready
-    timer = Timer.periodic(const Duration(milliseconds: 300), (_) {
-      if (!mounted) return; 
-      setState(() {
-        _currentEncounterIndex = rand.nextInt(_encounterImages.length);
-        controller.forward(from: 0);
       });
-    });
+      controller.forward(from: 0);
 
-    // Stop after 2 seconds
-    Future.delayed(const Duration(seconds: 3), () {
-      if (!mounted) return;
-      timer?.cancel();
-      handleEncounter = true; 
-      setState(() {
-        message = _encounterFactory.getEncounterDescription(_currentEncounterIndex);
-        _encounterFactory.handleEncounter(EnumEncounter.values[_currentEncounterIndex]);
+      // Start cycling once everything is ready
+      timer = Timer.periodic(const Duration(milliseconds: 300), (_) {
+        if (!mounted) return;
+        setState(() {
+          _currentEncounterIndex = rand.nextInt(_encounterImages.length);
+          controller.forward(from: 0);
+        });
       });
-    });
 
+      // Stop after 2 seconds
+      Future.delayed(const Duration(seconds: 3), () {
+        if (!mounted) return;
+        timer?.cancel();
+        handleEncounter = true;
+        setState(() {
+          // only pick an encounter that is appropriate based on their distance from start
+          _currentEncounterIndex =
+              _encounterFactory.getRandomEncounter(_map[_selectedHex]);
+          // hardcode this for testing!
+          // _currentEncounterIndex = 5; // highground
+          message =
+              _encounterFactory.getEncounterDescription(_currentEncounterIndex);
+        });
+      });
     });
   }
 
@@ -300,66 +324,76 @@ class _ImageCyclerOverlayState extends State<ImageCyclerOverlay>
 
   @override
   Widget build(BuildContext context) {
-    return  Stack(
-        children: [ 
-          Positioned(
-            child: Container(
-              color: Colors.black.withAlpha((0.4*255).toInt()) // adjustable darkness
+    return Stack(children: [
+      Positioned(
+        child: Container(
+            color: Colors.black
+                .withAlpha((0.4 * 255).toInt()) // adjustable darkness
             ),
-          ),
-        Positioned(
-        top: 200,
-        left: 50,
-        right: 50,
-        child: Material(
-          elevation: 8.0,
-          color: Colors.transparent,
-          child: Container(
-            padding: const EdgeInsets.all(12),
-            decoration: BoxDecoration(
-              color: Colors.black,
-              borderRadius: BorderRadius.circular(12),
-            ),
-            child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              const SizedBox(height: 12),
-              const Text(
-                constEncountersMessage,
-                style:  TextStyle(color: Colors.white, fontFamily: constAppTextFont, fontSize: 15),
-                textAlign: TextAlign.center,
-              ),
-              const Padding(
-                padding: EdgeInsets.all(10.0),
-              ),
-              Container(
-                color: Colors.black54,
-                alignment: Alignment.center,
-                height: 175,
-                width: 175, 
-                child: FadeTransition(opacity: fade,  
-                  child: ready ? _encounterImages[_currentEncounterIndex] : const SizedBox(), 
-                  ),                            
-              ),
-              const Padding(
-                padding: EdgeInsets.all(10.0),
-              ), 
-              Text(
-                message,
-                style:  const TextStyle(color: Colors.white, fontFamily: constAppTextFont, fontSize: 15),
-                textAlign: TextAlign.center,
-              ),
-              const Padding(
-                padding: EdgeInsets.all(10.0),
-              ), 
-              _handleEncounter(),
-            ],
-            ))))]);    
-      } 
-    }
+      ),
+      Positioned(
+          top: 200,
+          left: 50,
+          right: 50,
+          child: Material(
+              elevation: 8.0,
+              color: Colors.transparent,
+              child: Container(
+                  padding: const EdgeInsets.all(12),
+                  decoration: BoxDecoration(
+                    color: Colors.black,
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      const SizedBox(height: 12),
+                      const Text(
+                        constEncountersMessage,
+                        style: TextStyle(
+                            color: Colors.white,
+                            fontFamily: constAppTextFont,
+                            fontSize: 15),
+                        textAlign: TextAlign.center,
+                      ),
+                      const Padding(
+                        padding: EdgeInsets.all(10.0),
+                      ),
+                      Container(
+                        color: Colors.black54,
+                        alignment: Alignment.center,
+                        height: 225,
+                        width: 225,
+                        child: FadeTransition(
+                          opacity: fade,
+                          child: ready
+                              ? _encounterImages[_currentEncounterIndex]
+                              : const SizedBox(),
+                        ),
+                      ),
+                      const Padding(
+                        padding: EdgeInsets.all(10.0),
+                      ),
+                      Text(
+                        message,
+                        style: const TextStyle(
+                            color: Colors.white,
+                            fontFamily: constAppTextFont,
+                            fontSize: 15),
+                        textAlign: TextAlign.center,
+                      ),
+                      const Padding(
+                        padding: EdgeInsets.all(10.0),
+                      ),
+                      _handleEncounter(),
+                    ],
+                  ))))
+    ]);
+  }
+}
 
 // *********************************************
-//  gamescreen class 
+//  gamescreen class
 // *********************************************
 class GameScreen extends StatefulWidget {
   const GameScreen({super.key});
@@ -372,9 +406,8 @@ class GameScreen extends StatefulWidget {
 //  stateclass
 // *********************************************
 class _GameScreenState extends State<GameScreen> {
-
   OverlayEntry? _overlayEntry;
-  Completer<void>? _completer; 
+  Completer<void>? _completer;
 
   @override
   void initState() {
@@ -387,294 +420,309 @@ class _GameScreenState extends State<GameScreen> {
     WidgetsBinding.instance.addPostFrameCallback((_) {
       _diceAllocationOverlay();
     });
-
   }
 
   // *********************************************
   // finished allocatiing dice
   // *********************************************
   void _closeDiceAllocationOverlay() {
-      _overlayEntry?.remove(); 
-      _completer?.complete(); 
-      _overlayEntry = null; 
-      _completer = null; 
-      setState(() {
-        // do nothing 
-      });
+    _overlayEntry?.remove();
+    _completer?.complete();
+    _overlayEntry = null;
+    _completer = null;
+    setState(() {
+      // do nothing
+    });
   }
 
   // *********************************************
   // display overlay to get dice allocation
   // *********************************************
   Future<void> _diceAllocationOverlay() async {
-
-    _totalDice = _pilot.getEndurance(); 
+    _totalDice = _pilot.getEndurance();
 
     _completer = Completer<void>();
 
     if (_overlayEntry != null) return; // Prevent stacking
 
     _overlayEntry = OverlayEntry(
-      builder: (context) => Stack(
-        children: [
-          Positioned.fill(
-            child: Container(
-              color: Colors.black.withAlpha((0.4*255).toInt()) // adjustable darkness
-            ),
-          ),
-        Positioned(
-        top: 200,
-        left: 50,
-        right: 50,
-        child: Material(
-          elevation: 8.0,
-          color: Colors.transparent,
-          child: Container(
-            padding: const EdgeInsets.all(12),
-            decoration: BoxDecoration(
-              color: Colors.black,
-              borderRadius: BorderRadius.circular(12),
-            ),
-            child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              const SizedBox(height: 12),
-              Text(
-                "$constDiceAllocationMessage1 $_totalDice $constDiceAllocationMessage2",
-                style: const TextStyle(color: Colors.white, fontFamily: constAppTextFont, fontSize: 15),
-                textAlign: TextAlign.center,
-              ),
-              const Padding(
-                padding: EdgeInsets.all(10.0),
-              ),
-              Column(crossAxisAlignment: CrossAxisAlignment.start,
-                children: <Widget>[
-                  GestureDetector(
-                    onTap: () { _changeMove(EnumDirection.increment); },
-                    onLongPress: () { _changeMove(EnumDirection.decrement); },
-                    child: Row(children: <Widget>[
-                      const SizedBox(width: 75),
-                      Image(
-                          image: _moveImage(),
-                          width: 80.0,
-                          height: 18.0,
-                          fit: BoxFit.fill,
-                        ),
-                      const SizedBox(width: 5), // spacing column                        
-                      const Text(constMoveText,
-                          textAlign: TextAlign.center,
-                          style: TextStyle(
-                              color: Colors.white,  
-                              fontWeight: FontWeight.bold,
-                              fontFamily: constAppTextFont,
-                              fontSize: 18.0)),
-                    ],),
-                  ),
-                  const SizedBox(height: 5),
-                  GestureDetector(
-                    onTap: () { _changeStealth(EnumDirection.increment); },
-                    onLongPress: () { _changeStealth(EnumDirection.decrement); },
-                    child: Row(children: <Widget>[
-                      const SizedBox(width: 75),
-                      Image(
-                          image: _stealthImage(),
-                          width: 80.0,
-                          height: 18.0,
-                          fit: BoxFit.fill,
-                        ),
-                      const SizedBox(width: 5), // spacing column                        
-                      const Text(constStealthText,
-                          textAlign: TextAlign.center,
-                          style: TextStyle(
-                              color: Colors.white,  
-                              fontWeight: FontWeight.bold,
-                              fontFamily: constAppTextFont,
-                              fontSize: 18.0)),
-                    ],),
-                  ),
-                  const SizedBox(height: 5),
-                  GestureDetector(
-                    onTap: () { _changeRest(EnumDirection.increment); },
-                    onLongPress: () { _changeRest(EnumDirection.decrement); },
-                    child: Row(children: <Widget>[
-                      const SizedBox(width: 75),
-                      Image(
-                          image: _restImage(),
-                          width: 80.0,
-                          height: 18.0,
-                          fit: BoxFit.fill,
-                        ),
-                      const SizedBox(width: 5), // spacing column                        
-                      const Text(constRestText,
-                          textAlign: TextAlign.center,
-                          style: TextStyle(
-                              color: Colors.white,  
-                              fontWeight: FontWeight.bold,
-                              fontFamily: constAppTextFont,
-                              fontSize: 18.0)),
-                    ],),
-                  ),
-                ],),
-              const Padding(
-                padding: EdgeInsets.all(10.0),
-              ),
-              SizedBox(
-                width: 160.0,
-                height: 55.0,
-                child: OutlinedButton(
-                  style: OutlinedButton.styleFrom(
-                    foregroundColor: Colors.black, // Text and icon color
-                    backgroundColor: Colors.white, // Background color
-                    overlayColor: Colors.blueAccent.withValues(), // pressed ripple
-                    side: const BorderSide(color: Colors.black,   width: 3.0,), // Border color
-                  ),   
-                  child: const Align(
-                      alignment: Alignment.center,
-                      child: Text(
-                        constOKText,
-                        style: TextStyle(
-                            fontFamily: constAppTextFont,
-                            color: Colors.black,
-                            fontSize: 18.0),
-                      )),
-                  onPressed:  () { _genericCloseOverlay(); },
+        builder: (context) => Stack(
+              children: [
+                Positioned.fill(
+                  child: Container(
+                      color: Colors.black
+                          .withAlpha((0.4 * 255).toInt()) // adjustable darkness
+                      ),
                 ),
-              ),
-            ],
-          ),
-        ),
-        ),
-    )
-    ],
-    ));
+                Positioned(
+                  top: 200,
+                  left: 50,
+                  right: 50,
+                  child: Material(
+                    elevation: 8.0,
+                    color: Colors.transparent,
+                    child: Container(
+                      padding: const EdgeInsets.all(12),
+                      decoration: BoxDecoration(
+                        color: Colors.black,
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      child: Column(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          const SizedBox(height: 12),
+                          Text(
+                            "$constDiceAllocationMessage1 $_totalDice $constDiceAllocationMessage2",
+                            style: const TextStyle(
+                                color: Colors.white,
+                                fontFamily: constAppTextFont,
+                                fontSize: 15),
+                            textAlign: TextAlign.center,
+                          ),
+                          const Padding(
+                            padding: EdgeInsets.all(10.0),
+                          ),
+                          Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: <Widget>[
+                              GestureDetector(
+                                onTap: () {
+                                  _changeMove(EnumDirection.increment);
+                                },
+                                onLongPress: () {
+                                  _changeMove(EnumDirection.decrement);
+                                },
+                                child: Row(
+                                  children: <Widget>[
+                                    const SizedBox(width: 75),
+                                    Image(
+                                      image: _moveImage(),
+                                      width: 80.0,
+                                      height: 18.0,
+                                      fit: BoxFit.fill,
+                                    ),
+                                    const SizedBox(width: 5), // spacing column
+                                    const Text(constMoveText,
+                                        textAlign: TextAlign.center,
+                                        style: TextStyle(
+                                            color: Colors.white,
+                                            fontWeight: FontWeight.bold,
+                                            fontFamily: constAppTextFont,
+                                            fontSize: 18.0)),
+                                  ],
+                                ),
+                              ),
+                              const SizedBox(height: 5),
+                              GestureDetector(
+                                onTap: () {
+                                  _changeStealth(EnumDirection.increment);
+                                },
+                                onLongPress: () {
+                                  _changeStealth(EnumDirection.decrement);
+                                },
+                                child: Row(
+                                  children: <Widget>[
+                                    const SizedBox(width: 75),
+                                    Image(
+                                      image: _stealthImage(),
+                                      width: 80.0,
+                                      height: 18.0,
+                                      fit: BoxFit.fill,
+                                    ),
+                                    const SizedBox(width: 5), // spacing column
+                                    const Text(constStealthText,
+                                        textAlign: TextAlign.center,
+                                        style: TextStyle(
+                                            color: Colors.white,
+                                            fontWeight: FontWeight.bold,
+                                            fontFamily: constAppTextFont,
+                                            fontSize: 18.0)),
+                                  ],
+                                ),
+                              ),
+                              const SizedBox(height: 5),
+                              GestureDetector(
+                                onTap: () {
+                                  _changeRest(EnumDirection.increment);
+                                },
+                                onLongPress: () {
+                                  _changeRest(EnumDirection.decrement);
+                                },
+                                child: Row(
+                                  children: <Widget>[
+                                    const SizedBox(width: 75),
+                                    Image(
+                                      image: _restImage(),
+                                      width: 80.0,
+                                      height: 18.0,
+                                      fit: BoxFit.fill,
+                                    ),
+                                    const SizedBox(width: 5), // spacing column
+                                    const Text(constRestText,
+                                        textAlign: TextAlign.center,
+                                        style: TextStyle(
+                                            color: Colors.white,
+                                            fontWeight: FontWeight.bold,
+                                            fontFamily: constAppTextFont,
+                                            fontSize: 18.0)),
+                                  ],
+                                ),
+                              ),
+                            ],
+                          ),
+                          const Padding(
+                            padding: EdgeInsets.all(10.0),
+                          ),
+                          SizedBox(
+                            width: 160.0,
+                            height: 55.0,
+                            child: OutlinedButton(
+                              style: OutlinedButton.styleFrom(
+                                foregroundColor:
+                                    Colors.black, // Text and icon color
+                                backgroundColor:
+                                    Colors.white, // Background color
+                                overlayColor: Colors.blueAccent
+                                    .withValues(), // pressed ripple
+                                side: const BorderSide(
+                                  color: Colors.black,
+                                  width: 3.0,
+                                ), // Border color
+                              ),
+                              child: const Align(
+                                  alignment: Alignment.center,
+                                  child: Text(
+                                    constOKText,
+                                    style: TextStyle(
+                                        fontFamily: constAppTextFont,
+                                        color: Colors.black,
+                                        fontSize: 18.0),
+                                  )),
+                              onPressed: () {
+                                _genericCloseOverlay();
+                              },
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                )
+              ],
+            ));
 
     Overlay.of(context).insert(_overlayEntry!);
-
   }
 
   // *********************************************
-  // close out overlay 
+  // close out overlay
   // *********************************************
   void _genericCloseOverlay() {
-
-      _overlayEntry?.remove(); 
-      _completer?.complete(); 
-      _overlayEntry = null; 
-      _completer = null; 
-
+    _overlayEntry?.remove();
+    _completer?.complete();
+    _overlayEntry = null;
+    _completer = null;
   }
 
   // *********************************************
-  // player entered a village 
+  // player entered a village
   // *********************************************
   void _handleVillage() async {
-    int result = 0; 
-    String message = ""; 
+    int result = 0;
+    String message = "";
 
-    result = Random().nextInt(10) + 2; 
+    result = Random().nextInt(10) + 2;
 
     // based on result, let's do this thing
-    if (result == 2) { // robbed
+    if (result == 2) {
+      // robbed
       _villageReaction = EnumVillageReactions.robbed;
-      // if they had items, they are all lost 
+      // if they had items, they are all lost
       if (_inventory.isNotEmpty) {
         message = constVillageRobbedItems;
         _inventory.clear();
-      }
-      else { 
+      } else {
         message = constVillageRobbedNoItems;
       }
-      _moveAllowed = true; 
-
-    }
-    else if (result == 3) { // delayed
+      _moveAllowed = true;
+    } else if (result == 3) {
+      // delayed
       _villageReaction = EnumVillageReactions.delayed;
-      // reduce values 
+      // reduce values
       _pilot.setProximity(EnumDirection.decrement);
       _pilot.setEndurance(EnumDirection.decrement);
       message = constVillageDelayed;
-      _moveAllowed = true; 
-
-    }
-    else if ((result == 4) || (result == 5)) { // kicked out
+      _moveAllowed = true;
+    } else if ((result == 4) || (result == 5)) {
+      // kicked out
       _villageReaction = EnumVillageReactions.kickedout;
       message = constVillageKickedOut;
-      // village now impassable 
+      // village now impassable
       _hexesImpassable.add(_selectedHex);
-      // move them back to old hex 
-      _map[_oldHex].current = true; 
-      _map[_selectedHex].current = false; 
+      // move them back to old hex
+      _map[_oldHex].current = true;
+      _map[_selectedHex].current = false;
       // remove this hex from one they've traveled in
       _hexesTraveled.remove(_selectedHex);
       // can't move
-      _moveAllowed = false; 
-    
-    }
-    else if ((result == 6) || (result == 7) || (result == 8) ) { // untrusting
+      _moveAllowed = false;
+    } else if ((result == 6) || (result == 7) || (result == 8)) {
+      // untrusting
       _villageReaction = EnumVillageReactions.untrusting;
       message = constVillageUntrusting;
-      _moveAllowed = true; 
-    
-    }
-    else if ((result == 9) || (result == 10)) { // peaceful
+      _moveAllowed = true;
+    } else if ((result == 9) || (result == 10)) {
+      // peaceful
       _villageReaction = EnumVillageReactions.peaceful;
       message = constVillagePeaceful;
-      // increment by 2 
+      // increment by 2
       _pilot.setEndurance(EnumDirection.increment);
       _pilot.setEndurance(EnumDirection.increment);
-      _moveAllowed = true; 
-
-    }
-    else if (result == 11) { // helpful
+      _moveAllowed = true;
+    } else if (result == 11) {
+      // helpful
       _villageReaction = EnumVillageReactions.helpful;
       message = constVillageHelpful;
-      _moveAllowed = true; 
-      _pilot.setProximity(EnumDirection.increment); 
-
-    }
-    else { 
+      _moveAllowed = true;
+      _pilot.setProximity(EnumDirection.increment);
+    } else {
       _villageReaction = EnumVillageReactions.allied;
       if (_afflications.isNotEmpty) {
         message = constVillageAlliedAfflictions;
         // heal one affliction
         if (_afflications.length == 1) {
-          _afflications.clear(); 
-        }
-        else { 
-          EnumAffliction item = _afflications.elementAt(Random().nextInt(_afflications.length));
+          _afflications.clear();
+        } else {
+          EnumAffliction item =
+              _afflications.elementAt(Random().nextInt(_afflications.length));
           _afflications.remove(item);
         }
-      }
-      else { 
+      } else {
         message = constVillageAlliedNoAfflications;
       }
 
       _pilot.setEndurance(EnumDirection.increment);
       _pilot.setHealth(EnumDirection.increment);
       _pilot.setProximity(EnumDirection.increment);
-      _moveAllowed = true; 
-
+      _moveAllowed = true;
     }
 
-    // throw up village dialog 
+    // throw up village dialog
     await _villageEncounterOverlay(message);
 
     setState(() {
-      // do nothing 
+      // do nothing
     });
-
-
   }
 
   // *********************************************
   // user selected a die
   // *********************************************
   void _tapDice(EnumPhase phase, int value, int target) async {
-
     // get rid of the overlay (either way)
     _genericCloseOverlay();
 
-    // decide what to do based on phase 
+    // decide what to do based on phase
     if (phase == EnumPhase.move) {
       if (value >= target) {
         // clear all hexes
@@ -685,112 +733,102 @@ class _GameScreenState extends State<GameScreen> {
         if (_selectedHex != _oldHex) {
           _map[_selectedHex].current = true;
           _hexesTraveled.add(_selectedHex);
-          _allowedToReRoll = true; 
+          _allowedToReRoll = true;
         }
         // map out next hexes
         _doMappingPhase();
         // for now, assume they can't move again
-        _moveAllowed = false; 
-        // did they choose a six? 
-        if (value == 6) { _pilot.setHealth(EnumDirection.decrement); }
+        _moveAllowed = false;
+        // did they choose a six?
+        if (value == 6) {
+          _pilot.setHealth(EnumDirection.decrement);
+        }
         // did they enter a village? that brings a whole new thing to check
         if (_map[_selectedHex].terrain == EnumTerrain.village) {
-          _handleVillage(); 
+          _handleVillage();
         }
-
-      }
-      else {
+      } else {
         await _failedOverlayMessage(constMoveFailedMessage);
       }
-
-    } 
-    else if (phase == EnumPhase.stealth) {
-      // for stealth phase, see if they chose a six 
+    } else if (phase == EnumPhase.stealth) {
+      // for stealth phase, see if they chose a six
       if (value >= target) {
-        if (value == 6) { _pilot.setHealth(EnumDirection.decrement); }
-      }
-      else {
-        _pilot.setProximity(EnumDirection.decrement); 
+        if (value == 6) {
+          _pilot.setHealth(EnumDirection.decrement);
+        }
+      } else {
+        _pilot.setProximity(EnumDirection.decrement);
         await _failedOverlayMessage(constStealthFailedMessage);
       }
-    }
-    else { // rest
+    } else {
+      // rest
       if (value >= target) {
-        _pilot.setEndurance(EnumDirection.increment); 
-        // did they choose a six? 
-        if (value == 6) { _pilot.setHealth(EnumDirection.decrement); }
-      }
-      else { 
-        _pilot.setEndurance(EnumDirection.decrement); 
+        _pilot.setEndurance(EnumDirection.increment);
+        // did they choose a six?
+        if (value == 6) {
+          _pilot.setHealth(EnumDirection.decrement);
+        }
+      } else {
+        _pilot.setEndurance(EnumDirection.decrement);
         await _failedOverlayMessage(constRestFailedMessage);
-
       }
     }
 
-    // update ui 
+    // update ui
     setState(() {
-      // do nothing 
+      // do nothing
     });
-
   }
 
   // *********************************************
   // reroll one die
   // *********************************************
   void _reRoll(int index) {
-
     // only do this if they are allowed, and then flip that flag
     if (_allowedToReRoll) {
-
-      _allowedToReRoll = false;  
+      _allowedToReRoll = false;
       setState(() {
         _rollingDice[index] = Random().nextInt(6) + 1;
       });
       _overlayEntry?.markNeedsBuild(); // forces overlay to redraw
-
     }
-
   }
 
   // *********************************************
-  // give dice new values  
+  // give dice new values
   // *********************************************
   void _rollDice() {
-    
     setState(() {
       _rollingDice = _rollingDice.map((_) => Random().nextInt(6) + 1).toList();
     });
-
   }
 
   // *********************************************
-  // draw the dice 
+  // draw the dice
   // *********************************************
   List<Widget> _drawDice(EnumPhase phase, int target) {
-
-    // set each one    
+    // set each one
     return _rollingDice.asMap().entries.map((entry) {
-      final index = entry.key; 
-      final value = entry.value; 
+      final index = entry.key;
+      final value = entry.value;
 
       return GestureDetector(
-        onTap: () {
-          _tapDice(phase, value, target); 
-        },
-        onDoubleTap: () {
-          _reRoll(index);
-        },
-        child: Image.asset(
-          'assets/images/dice_face_white_$value.jpg',
-          width: 64,
-          height: 64,
-      ));
+          onTap: () {
+            _tapDice(phase, value, target);
+          },
+          onDoubleTap: () {
+            _reRoll(index);
+          },
+          child: Image.asset(
+            'assets/images/dice_face_white_$value.jpg',
+            width: 64,
+            height: 64,
+          ));
     }).toList();
-    
   }
 
   // *********************************************
-  // start a timer to roll the dice  
+  // start a timer to roll the dice
   // *********************************************
   void _startRolling() {
     // Cancel any previous timer
@@ -806,159 +844,167 @@ class _GameScreenState extends State<GameScreen> {
     Future.delayed(const Duration(seconds: 2), () {
       _rollTimer?.cancel();
     });
-
   }
 
   // *********************************************
-  // display overlay for rolling and choosing dice 
+  // display overlay for rolling and choosing dice
   // *********************************************
-  Future<void> _diceRollOverlay(EnumPhase phase, int rollToBeat, int numDice) async {
-    String message = ""; 
+  Future<void> _diceRollOverlay(
+      EnumPhase phase, int rollToBeat, int numDice) async {
+    String message = "";
 
     if (phase == EnumPhase.move) {
-      message = "$constDiceRollMoveMessage1 $rollToBeat $constDiceRollMoveMessage2 $constDiceRollMoveMessage3 $constDiceRollMoveMessage4";
-    }
-    else if (phase == EnumPhase.stealth) {
-      message = "$constDiceRollStealthMessage1 $rollToBeat $constDiceRollStealthMessage2 $constDiceRollStealthMessage3 ";
+      message =
+          "$constDiceRollMoveMessage1 $rollToBeat $constDiceRollMoveMessage2 $constDiceRollMoveMessage3 $constDiceRollMoveMessage4";
+    } else if (phase == EnumPhase.stealth) {
+      message =
+          "$constDiceRollStealthMessage1 $rollToBeat $constDiceRollStealthMessage2 $constDiceRollStealthMessage3 ";
       if (_allowedToReRoll) {
         message += constDiceRollStealthMessage4;
       }
-    }
-    else { // rest phase 
-      message = "$constDiceRollRestMessage1 $rollToBeat $constDiceRollRestMessage2 $constDiceRollRestMessage3 ";
-
+    } else {
+      // rest phase
+      message =
+          "$constDiceRollRestMessage1 $rollToBeat $constDiceRollRestMessage2 $constDiceRollRestMessage3 ";
     }
 
     _completer = Completer<void>();
     if (_overlayEntry != null) return; // Prevent stacking
 
     _overlayEntry = OverlayEntry(
-      builder: (context) => Stack(
-        children: [
-          Positioned.fill(
-            child: Container(
-              color: Colors.black.withAlpha((0.4*255).toInt()) // adjustable darkness
-            ),
-          ),
-        Positioned(
-        top: 200,
-        left: 50,
-        right: 50,
-        child: Material(
-          elevation: 8.0,
-          color: Colors.transparent,
-          child: Container(
-            padding: const EdgeInsets.all(12),
-            decoration: BoxDecoration(
-              color: Colors.black,
-              borderRadius: BorderRadius.circular(12),
-            ),
-            child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              const SizedBox(height: 12),
-              Text(
-                message,
-                style: const TextStyle(color: Colors.white, fontFamily: constAppTextFont, fontSize: 15),
-                textAlign: TextAlign.center,
+        builder: (context) => Stack(children: [
+              Positioned.fill(
+                child: Container(
+                    color: Colors.black
+                        .withAlpha((0.4 * 255).toInt()) // adjustable darkness
+                    ),
               ),
-              const Padding(
-                padding: EdgeInsets.all(10.0),
-              ),
-              Column(crossAxisAlignment: CrossAxisAlignment.start,
-                children: <Widget>[
-                  Wrap(
-                    spacing: 12,
-                    runSpacing: 12,
-                    children: _drawDice(phase, rollToBeat),
-                  )
-                ],
-              ),
+              Positioned(
+                  top: 200,
+                  left: 50,
+                  right: 50,
+                  child: Material(
+                      elevation: 8.0,
+                      color: Colors.transparent,
+                      child: Container(
+                          padding: const EdgeInsets.all(12),
+                          decoration: BoxDecoration(
+                            color: Colors.black,
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                          child: Column(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              const SizedBox(height: 12),
+                              Text(
+                                message,
+                                style: const TextStyle(
+                                    color: Colors.white,
+                                    fontFamily: constAppTextFont,
+                                    fontSize: 15),
+                                textAlign: TextAlign.center,
+                              ),
+                              const Padding(
+                                padding: EdgeInsets.all(10.0),
+                              ),
+                              Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: <Widget>[
+                                  Wrap(
+                                    spacing: 12,
+                                    runSpacing: 12,
+                                    children: _drawDice(phase, rollToBeat),
+                                  )
+                                ],
+                              ),
+                            ],
+                          ))))
+            ]));
 
-            ],
-            ))))]));
-  
     Overlay.of(context).insert(_overlayEntry!);
 
-    // start the timer to roll dice 
+    // start the timer to roll dice
     _startRolling();
-
   }
 
   // *********************************************
   // village message overlay
   // *********************************************
   Future<void> _villageEncounterOverlay(String message) async {
-
     _completer = Completer<void>();
     if (_overlayEntry != null) return; // Prevent stacking
 
     _overlayEntry = OverlayEntry(
-      builder: (context) => Stack(
-        children: [
-          Align(alignment: Alignment.center,
-            child: Card(
-              elevation: 8.0,              
-              color: Colors.black,
-              child: Padding(
-              padding: const EdgeInsets.all(10.0),
-              child: Text(
-                message,
-                style: const TextStyle(fontFamily: constAppTextFont, fontSize: 18, fontWeight: FontWeight.bold, color: Colors.white),
-                textAlign: TextAlign.center))))]));
+        builder: (context) => Stack(children: [
+              Align(
+                  alignment: Alignment.center,
+                  child: Card(
+                      elevation: 8.0,
+                      color: Colors.black,
+                      child: Padding(
+                          padding: const EdgeInsets.all(10.0),
+                          child: Text(message,
+                              style: const TextStyle(
+                                  fontFamily: constAppTextFont,
+                                  fontSize: 18,
+                                  fontWeight: FontWeight.bold,
+                                  color: Colors.white),
+                              textAlign: TextAlign.center))))
+            ]));
 
     Overlay.of(context).insert(_overlayEntry!);
 
-    // Remove after 2 seconds
-    Future.delayed(const Duration(seconds: 2), () {
-      _overlayEntry?.remove(); 
-      _completer?.complete(); 
-      _overlayEntry = null; 
-      _completer = null; 
+    // Remove after 3 seconds
+    Future.delayed(const Duration(seconds: 3), () {
+      _overlayEntry?.remove();
+      _completer?.complete();
+      _overlayEntry = null;
+      _completer = null;
     });
 
-    await _completer!.future; 
-
+    await _completer!.future;
   }
 
   // *********************************************
   // failed message overlay
   // *********************************************
   Future<void> _failedOverlayMessage(String message) async {
-
     _completer = Completer<void>();
     if (_overlayEntry != null) return; // Prevent stacking
 
     _overlayEntry = OverlayEntry(
-      builder: (context) => Stack(
-        children: [
-          Align(alignment: Alignment.center,
-            child: Card(
-              elevation: 8.0,              
-              color: Colors.red,
-              child: Padding(
-              padding: const EdgeInsets.all(10.0),
-              child: Text(
-                message,
-                style: const TextStyle(fontFamily: constAppTextFont, fontSize: 18, fontWeight: FontWeight.bold, color: Colors.white),
-                textAlign: TextAlign.center))))]));
+        builder: (context) => Stack(children: [
+              Align(
+                  alignment: Alignment.center,
+                  child: Card(
+                      elevation: 8.0,
+                      color: Colors.red,
+                      child: Padding(
+                          padding: const EdgeInsets.all(10.0),
+                          child: Text(message,
+                              style: const TextStyle(
+                                  fontFamily: constAppTextFont,
+                                  fontSize: 18,
+                                  fontWeight: FontWeight.bold,
+                                  color: Colors.white),
+                              textAlign: TextAlign.center))))
+            ]));
 
     Overlay.of(context).insert(_overlayEntry!);
 
     // Remove after 1 second
     Future.delayed(const Duration(seconds: 2), () {
-      _overlayEntry?.remove(); 
-      _completer?.complete(); 
-      _overlayEntry = null; 
-      _completer = null; 
+      _overlayEntry?.remove();
+      _completer?.complete();
+      _overlayEntry = null;
+      _completer = null;
     });
 
-    await _completer!.future; 
-
+    await _completer!.future;
   }
 
- // *********************************************
-  // this needs to be called to insert the encounter overlay 
+  // *********************************************
+  // this needs to be called to insert the encounter overlay
   // *********************************************
   void _showEncounterOverlay(BuildContext context) {
     final overlay = Overlay.of(context);
@@ -977,80 +1023,73 @@ class _GameScreenState extends State<GameScreen> {
   // _changeMove
   // ************************
   void _changeMove(EnumDirection direction) {
-    // if up, see if there are dice left 
+    // if up, see if there are dice left
     if ((direction == EnumDirection.increment) && (_totalDice > 0)) {
-        _totalDice--;
-        _moveDice++;
-    }
-    else if ((direction == EnumDirection.decrement) && (_moveDice > 0)) { 
-        _totalDice++;
-        _moveDice--;
+      _totalDice--;
+      _moveDice++;
+    } else if ((direction == EnumDirection.decrement) && (_moveDice > 0)) {
+      _totalDice++;
+      _moveDice--;
     }
 
-    // redraw the overlay 
+    // redraw the overlay
     setState(() {
       _overlayEntry?.markNeedsBuild();
     });
-
   }
 
   // ************************
   // _changeStealth
   // ************************
   void _changeStealth(EnumDirection direction) {
-    // if up, see if there are dice left 
+    // if up, see if there are dice left
     if ((direction == EnumDirection.increment) && (_totalDice > 0)) {
-        _totalDice--;
-        _stealthDice++;
-    }
-    else if ((direction == EnumDirection.decrement) && (_stealthDice > 0)) { 
-        _totalDice++;
-        _stealthDice--;
+      _totalDice--;
+      _stealthDice++;
+    } else if ((direction == EnumDirection.decrement) && (_stealthDice > 0)) {
+      _totalDice++;
+      _stealthDice--;
     }
 
-    // redraw the overlay 
+    // redraw the overlay
     setState(() {
       _overlayEntry?.markNeedsBuild();
     });
-
   }
 
   // ************************
   // _changeRest
   // ************************
   void _changeRest(EnumDirection direction) {
-    // if up, see if there are dice left 
+    // if up, see if there are dice left
     if ((direction == EnumDirection.increment) && (_totalDice > 0)) {
-        _totalDice--;
-        _restDice++;
-    }
-    else if ((direction == EnumDirection.decrement) && (_restDice > 0)) { 
-        _totalDice++;
-        _restDice--;
+      _totalDice--;
+      _restDice++;
+    } else if ((direction == EnumDirection.decrement) && (_restDice > 0)) {
+      _totalDice++;
+      _restDice--;
     }
 
-    // redraw the overlay 
+    // redraw the overlay
     setState(() {
       _overlayEntry?.markNeedsBuild();
     });
-
   }
+
   // ************************
   // _newGame
   // ************************
   void _newGame() async {
-
     // set up the map
     _initMap();
 
     // initial values
     _round = 1;
-    _pilot = Pilot(); 
+    _pilot = Pilot();
     _moveDice = constNoDice;
     _stealthDice = constNoDice;
     _restDice = constNoDice;
     _phase = EnumPhase.allocate;
-
   }
 
   // ************************
@@ -1320,7 +1359,10 @@ class _GameScreenState extends State<GameScreen> {
 
     // if encounter phase, decide if they had an encounter
     if (_phase == EnumPhase.encounter) {
-      _showEncounterOverlay(context); 
+      _showEncounterOverlay(context);
+      setState(() {
+        // TBD
+      });
     }
 
     // if allocate phase, bring up allocation dialog
@@ -1328,28 +1370,31 @@ class _GameScreenState extends State<GameScreen> {
       // reset all dice allocations
       _moveDice = 0;
       _stealthDice = 0;
-      _restDice = 0; 
-      _totalDice = _pilot.getEndurance(); 
-      await _diceAllocationOverlay(); 
+      _restDice = 0;
+      _totalDice = _pilot.getEndurance();
+      await _diceAllocationOverlay();
     }
 
     // if move phase, just set the flag allowing them to move (when they pick a new hex)
     if (_phase == EnumPhase.move) {
-      // reset village flags and counters 
+      // reset village flags and counters
       _villageReaction = EnumVillageReactions.none;
-      _motorcycleMoves = 0; 
+      _motorcycleMoves = 0;
       // set flag that allows a move (so they only do it once per turn)
-      if (_moveDice > 0) { _moveAllowed = true; }
+      if (_moveDice > 0) {
+        _moveAllowed = true;
+      }
     }
 
     // if stealth phase, decide whether they successfully hid from pursuers
     if (_phase == EnumPhase.stealth) {
       if (_stealthDice > 0) {
-        // set number of dice based on how many allocated  
-        _rollingDice = List.generate(_stealthDice, (_) => Random().nextInt(6) + 1);
-        await _diceRollOverlay(EnumPhase.stealth, MapFactory.getStealthCost(_getCurrentHex().terrain), _stealthDice); 
-      }
-      else {
+        // set number of dice based on how many allocated
+        _rollingDice =
+            List.generate(_stealthDice, (_) => Random().nextInt(6) + 1);
+        await _diceRollOverlay(EnumPhase.stealth,
+            MapFactory.getStealthCost(_getCurrentHex().terrain), _stealthDice);
+      } else {
         _pilot.setProximity(EnumDirection.decrement);
         await _failedOverlayMessage(constStealthFailedMessage);
       }
@@ -1358,9 +1403,9 @@ class _GameScreenState extends State<GameScreen> {
     // if rest phase, decide whether they lose any endurance
     if (_phase == EnumPhase.rest) {
       if (_restDice > 0) {
-        await _diceRollOverlay(EnumPhase.rest, MapFactory.getRestCost(_getCurrentHex().terrain), _restDice); 
-      }
-      else {
+        await _diceRollOverlay(EnumPhase.rest,
+            MapFactory.getRestCost(_getCurrentHex().terrain), _restDice);
+      } else {
         _pilot.setEndurance(EnumDirection.decrement);
         await _failedOverlayMessage(constRestFailedMessage);
       }
@@ -1490,7 +1535,7 @@ class _GameScreenState extends State<GameScreen> {
   // ************************
   void _selectMapHex(int row, int col) async {
     int moveCost = 0;
-    int hexDistance = 0; 
+    int hexDistance = 0;
 
     // get current hex
     MapHex h = _getCurrentHex();
@@ -1499,19 +1544,21 @@ class _GameScreenState extends State<GameScreen> {
     // get the id of the hex they selected
     _selectedHex = _getIdFromColRow(col, row);
     // get distance between hexes
-    hexDistance = MapFactory.getDistanceBetweenHexes(_map[_oldHex], _map[_selectedHex]);
+    hexDistance =
+        MapFactory.getDistanceBetweenHexes(_map[_oldHex], _map[_selectedHex]);
 
     // first check, if this hex is impassable, bail right out
-    if ((_hexesImpassable.isNotEmpty) & (_hexesImpassable.contains(_selectedHex))) {
-      return; 
+    if ((_hexesImpassable.isNotEmpty) &
+        (_hexesImpassable.contains(_selectedHex))) {
+      return;
     }
 
     // if this is move phase, do all the logic
     if ((_phase == EnumPhase.move) && (_moveAllowed)) {
-      // is the hex too far away? 
+      // is the hex too far away?
       if (hexDistance > 1) {
-        // abort 
-        return; 
+        // abort
+        return;
       }
 
       // if we're in one of the village reaction moves, don't worry about regular move stuff
@@ -1520,60 +1567,55 @@ class _GameScreenState extends State<GameScreen> {
         moveCost = MapFactory.getMoveCost(h.terrain);
         // if they have dice assigned to move, bring up the overlay to pick from the die roll
         if (_moveDice > 0) {
-          // bring up overlay 
-          _rollingDice = List.generate(_moveDice, (_) => Random().nextInt(6) + 1);
+          // bring up overlay
+          _rollingDice =
+              List.generate(_moveDice, (_) => Random().nextInt(6) + 1);
           await _diceRollOverlay(EnumPhase.move, moveCost, _moveDice);
         } else {
           await _failedOverlayMessage(constNoDiceAllocatedForMoveMessage);
         }
-        _moveAllowed = false; 
-
-      }
-      else { 
+        _moveAllowed = false;
+      } else {
         // if robbed, delayed, or peaceful need to move into a hex that's already mapped
         if (_map[_selectedHex].terrain == EnumTerrain.unknown) {
-          // must be untrusting, helpful, or allied 
-          if ((_villageReaction == EnumVillageReactions.untrusting) || 
-            (_villageReaction == EnumVillageReactions.helpful) || 
-            (_villageReaction == EnumVillageReactions.allied)) {
-              // ok to move 
-              _map[_selectedHex].current = true;
-              _hexesTraveled.add(_selectedHex);
-
+          // must be untrusting, helpful, or allied
+          if ((_villageReaction == EnumVillageReactions.untrusting) ||
+              (_villageReaction == EnumVillageReactions.helpful) ||
+              (_villageReaction == EnumVillageReactions.allied)) {
+            // ok to move
+            _map[_oldHex].current = false;
+            _map[_selectedHex].current = true;
+            _hexesTraveled.add(_selectedHex);
+            _hexesTraveled.add(_oldHex);
+            _doMappingPhase();
           }
-        
-        }
-        else { 
-          // ok to move 
+        } else {
+          // ok to move
+          _map[_oldHex].current = false;
           _map[_selectedHex].current = true;
           _hexesTraveled.add(_selectedHex);
-
+          _hexesTraveled.add(_oldHex);
+          _doMappingPhase();
         }
 
-        // if on motorcycle, increment those moves 
+        // if on motorcycle, increment those moves
         if (_villageReaction == EnumVillageReactions.helpful) {
-          _motorcycleMoves++; 
+          _motorcycleMoves++;
           if (_motorcycleMoves > 3) {
             _motorcycleMoves = 0;
-            _moveAllowed = false; 
+            _moveAllowed = false;
           }
+        } else {
+          _moveAllowed = false;
         }
-        else { 
-          _moveAllowed = false; 
-        }
-        
-
-
       }
 
       setState(() {
         // update ui
       });
-
-
     }
   }
- 
+
   // ************************
   void _showMapHexInfo(int row, int col) {
     // show pop-up with terrain info or anything else
@@ -1587,46 +1629,42 @@ class _GameScreenState extends State<GameScreen> {
     int id = _getIdFromColRow(col, row);
     bool isCurrentPlayerLocation = _map[id].current;
 
-    // if player in current hex, show american flag 
+    // if player in current hex, show american flag
     if (isCurrentPlayerLocation) {
       return Positioned(
-        top: 30,
-        left: 35, 
-        child: Container(
-            height: 35,
-            width: 45, 
-            decoration: BoxDecoration(
-              border: Border.all(
-              color: Colors.black,
-              width: 2, // thin border
+          top: 30,
+          left: 35,
+          child: Container(
+              height: 35,
+              width: 45,
+              decoration: BoxDecoration(
+                border: Border.all(
+                  color: Colors.black,
+                  width: 2, // thin border
+                ),
               ),
-            ),
-            child: Image.asset(constImagePlayerLocation, fit: BoxFit.cover))
-          );
+              child: Image.asset(constImagePlayerLocation, fit: BoxFit.cover)));
     }
     // else if player traveled through hex, show person icon
     else if (_hexesTraveled.contains(id)) {
       return const Positioned(
-        top: 25,
-        left: 32, 
-        child: Icon(Icons.directions_run, color: Colors.black, size: 50)
-          );      
+          top: 25,
+          left: 32,
+          child: Icon(Icons.directions_run, color: Colors.black, size: 50));
     }
     // else if player cannot travel through this hex, show close icon
     else if ((_hexesImpassable.isNotEmpty) && (_hexesImpassable.contains(id))) {
       return const Positioned(
-        top: 25,
-        left: 32, 
-        child: Icon(Icons.cancel, color: Colors.red, size: 50)
-          );      
+          top: 25,
+          left: 32,
+          child: Icon(Icons.cancel, color: Colors.red, size: 50));
     }
 
     // else, just an empty container
     else {
-      return Container(); 
+      return Container();
     }
   }
-
 
   // ************************
   // build
@@ -1643,36 +1681,57 @@ class _GameScreenState extends State<GameScreen> {
                     padding: EdgeInsets.all(1.0),
                   ),
                   const Text(appTitle,
-                    style: TextStyle(fontFamily: constAppTextFont, fontSize: 50)),
-                  const Padding(padding: EdgeInsets.all(0.0),),
+                      style: TextStyle(
+                          fontFamily: constAppTextFont, fontSize: 50)),
+                  const Padding(
+                    padding: EdgeInsets.all(0.0),
+                  ),
                   Center(
                     child: RichText(
-                      textAlign: TextAlign.center, 
+                      textAlign: TextAlign.center,
                       text: TextSpan(
                         children: [
-                          const TextSpan(text: constRoundText,
-                              style: TextStyle(fontFamily: constAppTextFont, fontSize: 19, color: Colors.black),              
+                          const TextSpan(
+                            text: constRoundText,
+                            style: TextStyle(
+                                fontFamily: constAppTextFont,
+                                fontSize: 19,
+                                color: Colors.black),
                           ),
                           const TextSpan(
                             text: ' ',
-                            style: TextStyle(fontFamily: constAppTextFont, fontSize: 19, color: Colors.black),
-                          ),                
+                            style: TextStyle(
+                                fontFamily: constAppTextFont,
+                                fontSize: 19,
+                                color: Colors.black),
+                          ),
                           TextSpan(
                             text: _displayRound(),
-                            style: const TextStyle(fontFamily: constAppTextFont, fontSize: 19, color: Colors.black),
+                            style: const TextStyle(
+                                fontFamily: constAppTextFont,
+                                fontSize: 19,
+                                color: Colors.black),
                           ),
                           const TextSpan(
                             text: ' - ',
-                            style: TextStyle(fontFamily: constAppTextFont, fontSize: 19, color: Colors.black),
-                          ),                
-                          TextSpan(text: _displayPhase(false),
-                              style: const TextStyle(fontFamily: constAppTextFont, fontSize: 19, color: Colors.black),              
+                            style: TextStyle(
+                                fontFamily: constAppTextFont,
+                                fontSize: 19,
+                                color: Colors.black),
                           ),
-                      ],
+                          TextSpan(
+                            text: _displayPhase(false),
+                            style: const TextStyle(
+                                fontFamily: constAppTextFont,
+                                fontSize: 19,
+                                color: Colors.black),
+                          ),
+                        ],
                       ),
                     ),
                   ),
-                  Expanded(child: SingleChildScrollView(
+                  Expanded(
+                      child: SingleChildScrollView(
                     scrollDirection: Axis.horizontal,
                     child: HexagonOffsetGrid.evenFlat(
                       color: const Color.fromARGB(255, 173, 147, 62),
@@ -1682,33 +1741,32 @@ class _GameScreenState extends State<GameScreen> {
                       rows: constMapRows,
                       buildTile: (col, row) => HexagonWidgetBuilder(
                         elevation: 8.0, // col.toDouble(),
-                        padding: 1.0, 
+                        padding: 1.0,
                         cornerRadius: null, // hex shape (vs rounded)
                         color: Colors.grey,
                         //child: Text("$row, $col"),
                         child: GestureDetector(
-                            onTap: () {
-                              debugPrint("row: $row.toString(), col: $col.toString()");
-                              // do something if we're in the move phase
-                              if (_phase == EnumPhase.move) {
-                                _selectMapHex(row, col);
-                              }
-                            },
-                            onLongPress: () {
-                              _showMapHexInfo(row, col);
-                            },
-                            child: Stack(
-                                children: [
-                                  AspectRatio(
-                                  aspectRatio: HexagonType.FLAT.ratio,
-                                  child: Image.asset(
-                                    _getMapHexGraphic(row, col),
-                                    fit: BoxFit.cover,
-                                  )),
-                                  _showMapHexExtras(row, col), 
-                                ]
-                            ),
-                          ), // put image here wrapped in a gesture detector
+                          onTap: () {
+                            debugPrint(
+                                "row: $row.toString(), col: $col.toString()");
+                            // do something if we're in the move phase
+                            if (_phase == EnumPhase.move) {
+                              _selectMapHex(row, col);
+                            }
+                          },
+                          onLongPress: () {
+                            _showMapHexInfo(row, col);
+                          },
+                          child: Stack(children: [
+                            AspectRatio(
+                                aspectRatio: HexagonType.FLAT.ratio,
+                                child: Image.asset(
+                                  _getMapHexGraphic(row, col),
+                                  fit: BoxFit.cover,
+                                )),
+                            _showMapHexExtras(row, col),
+                          ]),
+                        ), // put image here wrapped in a gesture detector
                       ),
                     ),
                   )),
@@ -1721,7 +1779,7 @@ class _GameScreenState extends State<GameScreen> {
                         width: 80.0,
                         height: 18.0,
                         fit: BoxFit.fill,
-                      ),                     
+                      ),
                       const SizedBox(width: 5), // spacing column
                       const Text(constHealthText,
                           textAlign: TextAlign.center,
@@ -1731,19 +1789,18 @@ class _GameScreenState extends State<GameScreen> {
                               fontSize: 12.0)),
                       const SizedBox(width: 72), // flexible spacing column
                       Image(
-                          image: _moveImage(),
-                          width: 80.0,
-                          height: 18.0,
-                          fit: BoxFit.fill,
-                        ),
-                      const SizedBox(width: 5), // spacing column                        
+                        image: _moveImage(),
+                        width: 80.0,
+                        height: 18.0,
+                        fit: BoxFit.fill,
+                      ),
+                      const SizedBox(width: 5), // spacing column
                       const Text(constMoveText,
                           textAlign: TextAlign.center,
                           style: TextStyle(
                               fontWeight: FontWeight.bold,
                               fontFamily: constAppTextFont,
                               fontSize: 12.0)),
-
                     ],
                   ),
                   const Padding(
@@ -1758,7 +1815,7 @@ class _GameScreenState extends State<GameScreen> {
                         width: 80.0,
                         height: 18.0,
                         fit: BoxFit.fill,
-                      ),                     
+                      ),
                       const SizedBox(width: 5), // spacing column
                       const Text(constProximityText,
                           textAlign: TextAlign.center,
@@ -1768,19 +1825,18 @@ class _GameScreenState extends State<GameScreen> {
                               fontSize: 12.0)),
                       const SizedBox(width: 50), // middle spacing column
                       Image(
-                          image: _stealthImage(),
-                          width: 80.0,
-                          height: 18.0,
-                          fit: BoxFit.fill,
-                        ),
-                      const SizedBox(width: 5), // spacing column                        
+                        image: _stealthImage(),
+                        width: 80.0,
+                        height: 18.0,
+                        fit: BoxFit.fill,
+                      ),
+                      const SizedBox(width: 5), // spacing column
                       const Text(constStealthText,
                           textAlign: TextAlign.center,
                           style: TextStyle(
                               fontWeight: FontWeight.bold,
                               fontFamily: constAppTextFont,
                               fontSize: 12.0)),
-
                     ],
                   ),
                   const Padding(
@@ -1795,7 +1851,7 @@ class _GameScreenState extends State<GameScreen> {
                         width: 80.0,
                         height: 18.0,
                         fit: BoxFit.fill,
-                      ),                     
+                      ),
                       const SizedBox(width: 5), // spacing column
                       const Text(constEnduranceText,
                           textAlign: TextAlign.center,
@@ -1805,19 +1861,18 @@ class _GameScreenState extends State<GameScreen> {
                               fontSize: 12.0)),
                       const SizedBox(width: 43), // middle spacing column
                       Image(
-                          image: _restImage(),
-                          width: 80.0,
-                          height: 18.0,
-                          fit: BoxFit.fill,
-                        ),
-                      const SizedBox(width: 5), // spacing column                        
+                        image: _restImage(),
+                        width: 80.0,
+                        height: 18.0,
+                        fit: BoxFit.fill,
+                      ),
+                      const SizedBox(width: 5), // spacing column
                       const Text(constRestText,
                           textAlign: TextAlign.center,
                           style: TextStyle(
-                                fontWeight: FontWeight.bold,
+                              fontWeight: FontWeight.bold,
                               fontFamily: constAppTextFont,
                               fontSize: 12.0)),
-
                     ],
                   ),
                   const Padding(
@@ -1836,82 +1891,90 @@ class _GameScreenState extends State<GameScreen> {
                               fontSize: 15.0)),
                       SizedBox(width: 25), // middle spacing column
                       Icon(Icons.healing, size: 30, color: Colors.black),
-                      SizedBox(width: 1), // spacing column                        
+                      SizedBox(width: 1), // spacing column
                       Text(constAfflictionsText,
                           textAlign: TextAlign.center,
                           style: TextStyle(
-                                fontWeight: FontWeight.bold,
+                              fontWeight: FontWeight.bold,
                               fontFamily: constAppTextFont,
                               fontSize: 15.0)),
                     ],
                   ),
                   const Padding(
                     padding: EdgeInsets.all(8.0),
-                  ),                  
+                  ),
                   Row(
                     mainAxisAlignment: MainAxisAlignment.center,
                     crossAxisAlignment: CrossAxisAlignment.center,
                     children: <Widget>[
-                  Column(
-                    children: [SizedBox(
-                    width: 160.0,
-                    height: 55.0,
-                    child: OutlinedButton(
-                      style: OutlinedButton.styleFrom(
-                        foregroundColor: Colors.black, // Text and icon color
-                        backgroundColor: Colors.white, // Background color
-                        overlayColor: Colors.blueAccent.withValues(), // pressed ripple
-                        side: const BorderSide(color: Colors.black,   width: 3.0,), // Border color
-                      ),   
-                      child: const Align(
-                          alignment: Alignment.center,
-                          child: Text(
-                            constContinueText,
-                            style: TextStyle(
-                                fontFamily: constAppTextFont,
+                      Column(children: [
+                        SizedBox(
+                          width: 160.0,
+                          height: 55.0,
+                          child: OutlinedButton(
+                            style: OutlinedButton.styleFrom(
+                              foregroundColor:
+                                  Colors.black, // Text and icon color
+                              backgroundColor: Colors.white, // Background color
+                              overlayColor: Colors.blueAccent
+                                  .withValues(), // pressed ripple
+                              side: const BorderSide(
                                 color: Colors.black,
-                                fontWeight: FontWeight.bold,
-                                fontSize: 18.0),
-                          )),
-                      onPressed:  () {
-                        _continueButtonPress(); 
-                      },  
-                    ),
-                  )]),
-                    const SizedBox(
-                      width: 15.0,
-                      height: 5.0),
-                    Column(
-                      children: [SizedBox(
-                      width: 160.0,
-                      height: 55.0,
-                      child: OutlinedButton(
-                        style: OutlinedButton.styleFrom(
-                          foregroundColor: Colors.black, // Text and icon color
-                          backgroundColor: Colors.white, // Background color
-                          overlayColor: Colors.blueAccent.withValues(), // pressed ripple
-                          side: const BorderSide(color: Colors.black,   width: 3.0,), // Border color
-                        ),   
-                        child: const Align(
-                            alignment: Alignment.center,
-                            child: Text(
-                              constQuitText,
-                              style: const TextStyle(
-                                  fontFamily: constAppTextFont,
-                                  color: Colors.black,
-                                  fontWeight: FontWeight.bold,
-                                  fontSize: 18.0),
-                            )),
-                        onPressed:  () {
-                          // TBD
-                        },  
-                      ),
-                    )]),
-                  ],
- 
-                     
+                                width: 3.0,
+                              ), // Border color
+                            ),
+                            child: const Align(
+                                alignment: Alignment.center,
+                                child: Text(
+                                  constContinueText,
+                                  style: TextStyle(
+                                      fontFamily: constAppTextFont,
+                                      color: Colors.black,
+                                      fontWeight: FontWeight.bold,
+                                      fontSize: 18.0),
+                                )),
+                            onPressed: () {
+                              _continueButtonPress();
+                            },
+                          ),
+                        )
+                      ]),
+                      const SizedBox(width: 15.0, height: 5.0),
+                      Column(children: [
+                        SizedBox(
+                          width: 160.0,
+                          height: 55.0,
+                          child: OutlinedButton(
+                            style: OutlinedButton.styleFrom(
+                              foregroundColor:
+                                  Colors.black, // Text and icon color
+                              backgroundColor: Colors.white, // Background color
+                              overlayColor: Colors.blueAccent
+                                  .withValues(), // pressed ripple
+                              side: const BorderSide(
+                                color: Colors.black,
+                                width: 3.0,
+                              ), // Border color
+                            ),
+                            child: const Align(
+                                alignment: Alignment.center,
+                                child: Text(
+                                  constQuitText,
+                                  style: const TextStyle(
+                                      fontFamily: constAppTextFont,
+                                      color: Colors.black,
+                                      fontWeight: FontWeight.bold,
+                                      fontSize: 18.0),
+                                )),
+                            onPressed: () {
+                              // TBD
+                            },
+                          ),
+                        )
+                      ]),
+                    ],
                   ),
-                    const Padding(
+                  const Padding(
                     padding: EdgeInsets.all(12.0),
                   ),
                 ])));

@@ -14,70 +14,65 @@ class MapHex {
 }
 
 class MapFactory {
-
   // ************************
   // return move number based on terrain
   // ************************
   static int getMoveCost(EnumTerrain terrain) {
-    int moveCost = 0; 
+    int moveCost = 0;
 
-      if (terrain == EnumTerrain.scrub) {
-        moveCost = constScrubMoveCost;
-      } else if (terrain == EnumTerrain.brush) {
-        moveCost = constBrushMoveCost;
-      } else if (terrain == EnumTerrain.hills) {
-        moveCost = constHillsMoveCost;
-      } else if (terrain == EnumTerrain.rough) {
-        moveCost = constRoughMoveCost;
-      }
+    if (terrain == EnumTerrain.scrub) {
+      moveCost = constScrubMoveCost;
+    } else if (terrain == EnumTerrain.brush) {
+      moveCost = constBrushMoveCost;
+    } else if (terrain == EnumTerrain.hills) {
+      moveCost = constHillsMoveCost;
+    } else if (terrain == EnumTerrain.rough) {
+      moveCost = constRoughMoveCost;
+    }
 
-    return moveCost; 
-
+    return moveCost;
   }
 
   // ************************
   // return stealth number based on terrain
   // ************************
   static int getStealthCost(EnumTerrain terrain) {
-    int stealthCost = 0; 
+    int stealthCost = 0;
 
-      if (terrain == EnumTerrain.scrub) {
-        stealthCost = constScrubStealthCost;
-      } else if (terrain == EnumTerrain.brush) {
-        stealthCost = constBrushStealthCost;
-      } else if (terrain == EnumTerrain.hills) {
-        stealthCost = constHillsStealthCost;
-      } else if (terrain == EnumTerrain.rough) {
-        stealthCost = constRoughStealthCost;
-      }
+    if (terrain == EnumTerrain.scrub) {
+      stealthCost = constScrubStealthCost;
+    } else if (terrain == EnumTerrain.brush) {
+      stealthCost = constBrushStealthCost;
+    } else if (terrain == EnumTerrain.hills) {
+      stealthCost = constHillsStealthCost;
+    } else if (terrain == EnumTerrain.rough) {
+      stealthCost = constRoughStealthCost;
+    }
 
-    return stealthCost; 
-
+    return stealthCost;
   }
 
   // ************************
-  // return rest number based on terrain 
+  // return rest number based on terrain
   // ************************
   static int getRestCost(EnumTerrain terrain) {
-    int restCost = 0; 
+    int restCost = 0;
 
-      if (terrain == EnumTerrain.scrub) {
-        restCost = constScrubRestCost;
-      } else if (terrain == EnumTerrain.brush) {
-        restCost = constBrushRestCost;
-      } else if (terrain == EnumTerrain.hills) {
-        restCost = constHillsRestCost;
-      } else if (terrain == EnumTerrain.rough) {
-        restCost = constRoughRestCost;
-      }
+    if (terrain == EnumTerrain.scrub) {
+      restCost = constScrubRestCost;
+    } else if (terrain == EnumTerrain.brush) {
+      restCost = constBrushRestCost;
+    } else if (terrain == EnumTerrain.hills) {
+      restCost = constHillsRestCost;
+    } else if (terrain == EnumTerrain.rough) {
+      restCost = constRoughRestCost;
+    }
 
-    return restCost; 
-
+    return restCost;
   }
 
-
   // ************************
-  // how far are we from the starting hex?  
+  // how far are we from the starting hex?
   // ************************
   static int getDistanceBetweenHexes(MapHex startHex, MapHex destHex) {
     // figure out the distance between starting hex and destination (current one)
@@ -104,45 +99,27 @@ class MapFactory {
   }
 
   // ************************
-  // how far are we from the starting hex?  
+  // how far are we from the starting hex?
   // ************************
   static MapHex moveRandomSteps(int currentRow, int currentCol, int numSteps) {
-    int nextRow = 0;
-    int nextCol = 0; 
-    bool rowUp = false; 
-    bool colUp = false; 
+    int finalRow = 0;
+    int finalCol = 0;
+    int rowChange = 0;
 
-    for (int i = 1; i <= numSteps; i++) {
-      // get a random direction to move up  
-      rowUp = Random().nextBool();
-      colUp = Random().nextBool();
+    // go numsteps columns away, but if that goes over the max, make it the max
+    currentCol + numSteps > constMapCols
+        ? finalCol = constMapCols
+        : finalCol = currentCol + numSteps;
 
-      // going up or down from current column 
-      colUp ? nextCol = currentCol + 1 : nextCol = currentCol; 
-      // but check bounds 
-      if (nextCol > constMapCols) { nextCol = currentCol; }
-
-      // going up or down rows depends on whether column is even or odd 
-      if (currentCol % 2 == 0) {
-        // if even, down is row-1, up is same row
-        rowUp ? nextRow = currentRow : nextRow = currentRow - 1;  
-      }
-      else { 
-        // if odd, down is same row, up row+1
-        rowUp ? nextRow = currentRow + 1: nextRow = currentRow;  
-      }
-      // check bounds
-      if ((nextRow < 0) || (nextRow == constMapRows)) { nextRow = currentRow; }
-
-      // so we've found a safe spot, so swap value and iterate again 
-      currentCol = nextCol;
-      currentRow = nextRow; 
-
+    // randomly move up or down a row as we go across columns
+    rowChange = Random().nextInt(2) - 1; // -1, 0, or +1
+    finalRow = currentRow + rowChange;
+    // check bounds
+    if ((finalRow < 0) || (finalRow >= constMapRows)) {
+      finalRow = currentRow;
     }
 
     // ok, now we have the map spot so send out a hex
-    return MapHex(constFakeHex, currentCol, currentRow);
-
+    return MapHex(constFakeHex, finalCol, finalRow);
   }
-
 }
