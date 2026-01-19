@@ -24,6 +24,19 @@ const constImagePlayerLocation = "assets/images/lf_american_flag_small.gif";
 const constImageUnknown = "assets/images/lf_terrain_unknown.jpg";
 const constImageEncounters = "assets/images/lf_enc_";
 
+// descriptions
+const constTerrainUnkown = "You cannot see what lies ahead here yet.";
+const constTerrainScrub =
+    "Scrub is easiest for movement and rest, but offers little concealment.";
+const constTerrainBrush =
+    "Brush is slightly tougher to move through or rest in, but offers some hiding spots.";
+const constTerrainRough =
+    "Rough terrain is harder to travel through and limits rest, but it does offer better concealment.";
+const constTerrainHills =
+    "Hills are difficult to cross which hampers movement and rest, but they offer excellent places to hide.";
+const constTerrainVillage =
+    "Villages can provide sanctuary or bring danger, so think carefully before you enter one.";
+
 // messages
 const constDiceAllocationMessage1 = "You have";
 const constDiceAllocationMessage2 =

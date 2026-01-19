@@ -4,6 +4,9 @@ import 'package:lost_falcon/const.dart';
 import 'package:lost_falcon/models/encounter_model.dart';
 import '../models/map_model.dart';
 import '../models/pilot_model.dart';
+import '../dialogs/terrain_dialog.dart';
+import '../dialogs/ailments_dialog.dart';
+import '../dialogs/inventory_dialog.dart';
 import 'dart:math';
 import 'dart:async';
 
@@ -244,7 +247,12 @@ class _ImageCyclerOverlayState extends State<ImageCyclerOverlay>
         });
 
         return _returnContinueButton();
+      } else if (encounter == EnumEncounter.rockslide) {
+        // rockslide
+        _afflications.add(EnumAffliction.brokenfoot);
+        return _returnContinueButton();
       }
+
       // catch all (remove later)
       else {
         return _returnContinueButton();
@@ -1360,6 +1368,11 @@ class _GameScreenState extends State<GameScreen> {
     // if encounter phase, decide if they had an encounter
     if (_phase == EnumPhase.encounter) {
       _showEncounterOverlay(context);
+      // they just closed the encounter overlay, so for some encounters, need to pop up a dialog for next steps
+      if (_currentEncounterIndex == EnumEncounter.dust.index) {
+        // display dialog asking what they want to do
+      }
+
       setState(() {
         // TBD
       });
@@ -1617,9 +1630,11 @@ class _GameScreenState extends State<GameScreen> {
   }
 
   // ************************
+  // pop up with terrain information
+  // ************************
   void _showMapHexInfo(int row, int col) {
-    // show pop-up with terrain info or anything else
-    debugPrint("_showMapHexInfo long press");
+    int id = _getIdFromColRow(col, row);
+    showTerrainInfoDialog(context, _map[id].terrain);
   }
 
   // ************************
@@ -1960,7 +1975,7 @@ class _GameScreenState extends State<GameScreen> {
                                 alignment: Alignment.center,
                                 child: Text(
                                   constQuitText,
-                                  style: const TextStyle(
+                                  style: TextStyle(
                                       fontFamily: constAppTextFont,
                                       color: Colors.black,
                                       fontWeight: FontWeight.bold,
