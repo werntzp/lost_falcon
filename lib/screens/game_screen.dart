@@ -5,7 +5,7 @@ import 'package:lost_falcon/models/encounter_model.dart';
 import '../models/map_model.dart';
 import '../models/pilot_model.dart';
 import '../dialogs/terrain_dialog.dart';
-import '../dialogs/ailments_dialog.dart';
+import '../dialogs/afflictions_dialog.dart';
 import '../dialogs/inventory_dialog.dart';
 import 'dart:math';
 import 'dart:async';
@@ -68,7 +68,7 @@ class _ImageCyclerOverlayState extends State<ImageCyclerOverlay>
   int index = 0;
   bool ready = false;
   Timer? timer;
-  String message = "";
+  String message = constEncountersMessage;
   bool handleEncounter = false;
 
   // ************************
@@ -356,18 +356,7 @@ class _ImageCyclerOverlayState extends State<ImageCyclerOverlay>
                     mainAxisSize: MainAxisSize.min,
                     children: [
                       const SizedBox(height: 12),
-                      const Text(
-                        constEncountersMessage,
-                        style: TextStyle(
-                            color: Colors.white,
-                            fontFamily: constAppTextFont,
-                            fontSize: 15),
-                        textAlign: TextAlign.center,
-                      ),
-                      const Padding(
-                        padding: EdgeInsets.all(10.0),
-                      ),
-                      Container(
+                       Container(
                         color: Colors.black54,
                         alignment: Alignment.center,
                         height: 225,
@@ -750,6 +739,7 @@ class _GameScreenState extends State<GameScreen> {
         // did they choose a six?
         if (value == 6) {
           _pilot.setHealth(EnumDirection.decrement);
+          await _failedOverlayMessage(constMoveSixMessage);
         }
         // did they enter a village? that brings a whole new thing to check
         if (_map[_selectedHex].terrain == EnumTerrain.village) {
@@ -763,10 +753,11 @@ class _GameScreenState extends State<GameScreen> {
       if (value >= target) {
         if (value == 6) {
           _pilot.setHealth(EnumDirection.decrement);
+          await _failedOverlayMessage(constStealthSixMessage);          
         }
       } else {
         _pilot.setProximity(EnumDirection.decrement);
-        await _failedOverlayMessage(constStealthFailedMessage);
+        await _failedOverlayMessage(constRestFailedMessage);
       }
     } else {
       // rest
@@ -775,6 +766,7 @@ class _GameScreenState extends State<GameScreen> {
         // did they choose a six?
         if (value == 6) {
           _pilot.setHealth(EnumDirection.decrement);
+          await _failedOverlayMessage(constRestSixMessage);
         }
       } else {
         _pilot.setEndurance(EnumDirection.decrement);
@@ -1682,6 +1674,42 @@ class _GameScreenState extends State<GameScreen> {
   }
 
   // ************************
+  // if they have items, display dialog
+  // ************************
+  void _handleInventoryTap() { 
+    showInventoryDialog(context);
+  }
+
+  // ************************
+  // if they have afflictions, display dialog
+  // ************************
+  void _handleAfflictionsTap() {
+    showAfflictionsDialog(context);
+  }
+  
+  // ************************
+  // return inventory color based on whether they have items
+  // ************************
+  Color _returnInventoryColor() {
+    Color result = const Color.fromARGB(255, 68, 68, 68);
+
+    if (_inventory.isNotEmpty) { result = Colors.white; }
+    return result; 
+
+  }
+
+  // ************************
+  // return ailments color based on whether they have items
+  // ************************
+  Color _returnAfflictionsColor() {
+    Color result = const Color.fromARGB(255, 68, 68, 68);
+
+    if (_afflications.isNotEmpty) { result = Colors.white; }
+    return result; 
+
+  }
+
+  // ************************
   // build
   // ************************
   @override
@@ -1893,26 +1921,48 @@ class _GameScreenState extends State<GameScreen> {
                   const Padding(
                     padding: EdgeInsets.all(8.0),
                   ),
-                  const Row(
+                  Row(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
-                      Icon(Icons.hiking, size: 30, color: Colors.black),
-                      SizedBox(width: 1), // spacing column
-                      Text(constInventoryText,
-                          textAlign: TextAlign.center,
-                          style: TextStyle(
-                              fontWeight: FontWeight.bold,
-                              fontFamily: constAppTextFont,
-                              fontSize: 15.0)),
-                      SizedBox(width: 25), // middle spacing column
-                      Icon(Icons.healing, size: 30, color: Colors.black),
-                      SizedBox(width: 1), // spacing column
-                      Text(constAfflictionsText,
-                          textAlign: TextAlign.center,
-                          style: TextStyle(
-                              fontWeight: FontWeight.bold,
-                              fontFamily: constAppTextFont,
-                              fontSize: 15.0)),
+                      GestureDetector(
+                        onTap: () {
+                          _handleInventoryTap();
+                        },
+                        child: 
+                          Column(
+                            children: [
+                              Icon(Icons.hiking, size: 30, color: _returnInventoryColor()),
+                              const SizedBox(width: 1), // spacing column
+                              Text(constInventoryText,
+                                  textAlign: TextAlign.center,
+                                  style: TextStyle(
+                                      color: _returnInventoryColor(),
+                                      fontWeight: FontWeight.bold,
+                                      fontFamily: constAppTextFont,
+                                      fontSize: 15.0)),
+                            ]
+                          )
+                        ),
+                      const SizedBox(width: 80,), 
+                     GestureDetector(
+                        onTap: () {
+                          _handleAfflictionsTap();
+                        },
+                        child: 
+                         Column(
+                        children: [
+                          Icon(Icons.healing, size: 30, color: _returnAfflictionsColor()),
+                          const SizedBox(width: 1), // spacing column
+                          Text(constAfflictionsText,
+                              textAlign: TextAlign.center,
+                              style: TextStyle(
+                                  color: _returnAfflictionsColor(),
+                                  fontWeight: FontWeight.bold,
+                                  fontFamily: constAppTextFont,
+                                  fontSize: 15.0)),
+                        ],
+                      ),
+                     ),
                     ],
                   ),
                   const Padding(

@@ -78,6 +78,9 @@ const constRestFailedMessage =
     "You were unable to rest and keep up your strength. Lose one Endurance.";
 const constNoDiceAllocatedForRestMessage =
     "You lost one Endurance due to fatigue.";
+const constMoveSixMessage = "You were successful at moving to a new space, but still lost Health due to some minor injuries.";
+const constStealthSixMessage = "You were successful at hiding, but still lost Health due to some minor injuries.";
+const constRestSixMessage = "You were successful at keeping up your Endurance, but still lost Health due to some minor injuries.";
 
 // encounters
 const constEncountersMessage =

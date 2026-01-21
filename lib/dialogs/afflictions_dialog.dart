@@ -1,7 +1,7 @@
 import '../const.dart';
 import 'package:flutter/material.dart';
 
-void showAilmentsDialog(BuildContext context) {
+void showAfflictionsDialog(BuildContext context) {
   showDialog<String>(
     context: context,
     barrierDismissible: false,
@@ -17,7 +17,7 @@ void showAilmentsDialog(BuildContext context) {
               crossAxisAlignment: CrossAxisAlignment.start,
               mainAxisSize: MainAxisSize.min,
               children: [
-                Text("ailments",
+                Text("afflictions",
                     style:
                         TextStyle(fontFamily: constAppTextFont, fontSize: 18)),
               ],
