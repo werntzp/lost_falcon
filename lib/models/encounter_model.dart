@@ -76,84 +76,84 @@ class EncounterFactory {
 
     enc = EnumEncounter.apc.name;
     _paths.add("$constImageEncounters$enc.jpg");
-    _messages.add(apcEncounterMessage);
+    _messages.add(constApcEncounterMessage);
 
     enc = EnumEncounter.dust.name;
     _paths.add("$constImageEncounters$enc.jpg");
-    _messages.add(dustEncounterMessage);
+    _messages.add(constDustEncounterMessage);
 
     enc = EnumEncounter.chemicals.name;
     _paths.add("$constImageEncounters$enc.jpg");
-    _messages.add(chemicalsEncounterMessage);
+    _messages.add(constChemicalsEncounterMessage);
 
     enc = EnumEncounter.thorns.name;
     _paths.add("$constImageEncounters$enc.jpg");
-    _messages.add(thornsEncounterMessage);
+    _messages.add(constThornsEncounterMessage);
 
     enc = EnumEncounter.rockslide.name;
     _paths.add("$constImageEncounters$enc.jpg");
-    _messages.add(rockslideEncounterMessage);
+    _messages.add(constRockslideEncounterMessage);
 
     enc = EnumEncounter.highground.name;
     _paths.add("$constImageEncounters$enc.jpg");
-    _messages.add(highgroundEncounterMessage);
+    _messages.add(constHighgroundEncounterMessage);
 
     enc = EnumEncounter.building.name;
     _paths.add("$constImageEncounters$enc.jpg");
-    _messages.add(buildingEncounterMessage);
+    _messages.add(constBuildingEncounterMessage);
 
     enc = EnumEncounter.road.name;
     _paths.add("$constImageEncounters$enc.jpg");
-    _messages.add(roadEncounterMessage);
+    _messages.add(constRoadEncounterMessage);
 
     enc = EnumEncounter.soldier.name;
     _paths.add("$constImageEncounters$enc.jpg");
-    _messages.add(soldierEncounterMessage);
+    _messages.add(constSoldierEncounterMessage);
 
     enc = EnumEncounter.snake.name;
     _paths.add("$constImageEncounters$enc.jpg");
-    _messages.add(snakeEncounterMessage);
+    _messages.add(constSnakeEncounterMessage);
 
     enc = EnumEncounter.wolf.name;
     _paths.add("$constImageEncounters$enc.jpg");
-    _messages.add(wolfEncounterMessage);
+    _messages.add(constWolfEncounterMessage);
     ;
 
     enc = EnumEncounter.mortar.name;
     _paths.add("$constImageEncounters$enc.jpg");
-    _messages.add(mortarEncounterMessage);
+    _messages.add(constMortarEncounterMessage);
 
     enc = EnumEncounter.helicopter.name;
     _paths.add("$constImageEncounters$enc.jpg");
-    _messages.add(helicopterEncounterMessage);
+    _messages.add(constHelicopterEncounterMessage);
 
     enc = EnumEncounter.cave.name;
     _paths.add("$constImageEncounters$enc.jpg");
-    _messages.add(caveEncounterMessage);
+    _messages.add(constCaveEncounterMessage);
 
     enc = EnumEncounter.gunships.name;
     _paths.add("$constImageEncounters$enc.jpg");
-    _messages.add(gunshipsEncounterMessage);
+    _messages.add(constGunshipsEncounterMessage);
 
     enc = EnumEncounter.minefield.name;
     _paths.add("$constImageEncounters$enc.jpg");
-    _messages.add(minefieldEncounterMessage);
+    _messages.add(constMinefieldEncounterMessage);
 
     enc = EnumEncounter.sniper.name;
     _paths.add("$constImageEncounters$enc.jpg");
-    _messages.add(sniperEncounterMessage);
+    _messages.add(constSniperEncounterMessage);
 
     enc = EnumEncounter.milepost.name;
     _paths.add("$constImageEncounters$enc.jpg");
-    _messages.add(milepostEncounterMessage);
+    _messages.add(constMilepostEncounterMessage);
 
     enc = EnumEncounter.tributary.name;
     _paths.add("$constImageEncounters$enc.jpg");
-    _messages.add(tributaryEncounterMessage);
+    _messages.add(constTributaryEncounterMessage);
 
     enc = EnumEncounter.none.name;
     _paths.add("$constImageEncounters$enc.jpg");
-    _messages.add(noEncounterMessage);
+    _messages.add(constNoEncounterMessage);
   }
 
   // ************************

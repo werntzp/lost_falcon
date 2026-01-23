@@ -1,14 +1,50 @@
+import 'package:flutter/services.dart';
+
 import '../const.dart';
 import 'package:flutter/material.dart';
 
-void showAfflictionsDialog(BuildContext context) {
+String _buildMessage(Set<EnumAffliction> afflictions) {
+  final message = <String>[];
+
+  // see which afflictions they have, and put those together with
+  // descriptions into a message displayed on the dialog 
+  if (afflictions.contains(EnumAffliction.brokenfoot)) {
+    message.add(constAfflictionBrokenFoot);
+  }
+
+  if (afflictions.contains(EnumAffliction.burn)) {
+    message.add(constAfflictionBurn);
+  }
+
+  if (afflictions.contains(EnumAffliction.deepcut)) {
+    message.add(constAfflictionDeepCut);
+  }
+
+  if (afflictions.contains(EnumAffliction.fever)) {
+    message.add(constAfflictionFever);
+  }
+
+  if (afflictions.contains(EnumAffliction.gunshotwound)) {
+    message.add(constAfflictionGunShotWound);
+  }
+
+  final result = message.join("; ");
+  return constAfflictions + result; 
+
+}
+
+void showAfflictionsDialog(BuildContext context, Set<EnumAffliction> afflictions) {
+  String message; 
+
+  message = afflictions.isNotEmpty ? _buildMessage(afflictions) : constNoAfflictions;
+
   showDialog<String>(
     context: context,
     barrierDismissible: false,
     barrierColor: Colors.black54,
     builder: (BuildContext context) => AlertDialog(
       backgroundColor: const Color.fromARGB(255, 173, 147, 62),
-      content: const Row(
+      content: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           // Right column: Text
@@ -17,9 +53,9 @@ void showAfflictionsDialog(BuildContext context) {
               crossAxisAlignment: CrossAxisAlignment.start,
               mainAxisSize: MainAxisSize.min,
               children: [
-                Text("afflictions",
+                Text(message,
                     style:
-                        TextStyle(fontFamily: constAppTextFont, fontSize: 18)),
+                        const TextStyle(fontFamily: constAppTextFont, fontSize: 18)),
               ],
             ),
           ),

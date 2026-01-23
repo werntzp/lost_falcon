@@ -1,7 +1,7 @@
 import '../const.dart';
 import 'package:flutter/material.dart';
 
-void showInventoryDialog(BuildContext context) {
+void showInventoryDialog(BuildContext context, Set<EnumInventory> inventory) {
   showDialog<String>(
     context: context,
     barrierDismissible: false,

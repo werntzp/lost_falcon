@@ -85,44 +85,46 @@ const constRestSixMessage = "You were successful at keeping up your Endurance, b
 // encounters
 const constEncountersMessage =
     "Let's see if you had any encounters this round!";
-const dustEncounterMessage =
+const constDustEncounterMessage =
     "A dust storm kicks up obstructing your view while the strong wind and harsh blowing sand wears you down.";
-const chemicalsEncounterMessage =
+const constChemicalsEncounterMessage =
     "You have to cross through a field full of chemical munitions which burns and irritates your skin.";
-const thornsEncounterMessage =
+const constThornsEncounterMessage =
     "Your progress has been halted by these half-inch thorns.";
-const rockslideEncounterMessage =
+const constRockslideEncounterMessage =
     "As you are climbing, a rockslide carries you down you the hill and you suffer a broken foot in the tumble.";
-const highgroundEncounterMessage =
+const constHighgroundEncounterMessage =
     "From this vantage you can see for miles, including a bustling village that may be welcoming.";
-const buildingEncounterMessage =
+const constBuildingEncounterMessage =
     "It appears that this building has been abandoned. The burn marks and bullet holes present this as another casualty of war.";
-const roadEncounterMessage =
+const constRoadEncounterMessage =
     "A flat stretch of road provides an easier path to move on.";
-const soldierEncounterMessage =
+const constSoldierEncounterMessage =
     "A fallen soldier lies facedown hidden in the brush.";
-const snakeEncounterMessage =
+const constSnakeEncounterMessage =
     "As you trek across the desert, you disturb a sleeping snake. You jerk away but it is too late.";
-const wolfEncounterMessage =
+const constWolfEncounterMessage =
     "A low, menacing growl startles you as a   lunges out.";
-const mortarEncounterMessage =
-    "The familiar whistle announces the arrival of mortar rounds falling around you.";
-const helicopterEncounterMessage =
+const constMortarEncounterMessage =
+    "A piercing whistle announces the arrival of mortar rounds falling around you. You can:";
+const constMortarOption1 = "Sprint to a new hex, getting wounded, and losing Endurance";
+const constMortarOption2 = "Drop into cover, losing Proximity";
+const constHelicopterEncounterMessage =
     "You stumble upon a crashed and abandoned Blackhawk that looks like it has been stripped clean.";
-const apcEncounterMessage =
+const constApcEncounterMessage =
     "The hulk of an armored personnel carrier sits quietly. The insides have been thoroughly stripped.";
-const caveEncounterMessage =
+const constCaveEncounterMessage =
     "This small cave may have served as a hiding spot for rebel forces before being abandoned.";
-const gunshipsEncounterMessage =
+const constGunshipsEncounterMessage =
     "Roaring overhead is a flight of attack helicopters intent on ruining someone's day.";
-const minefieldEncounterMessage = "Mines block your way.";
-const sniperEncounterMessage =
+const constMinefieldEncounterMessage = "Mines block your way.";
+const constSniperEncounterMessage =
     "You work your way across an open area that gives a perfect field of fire for snipers. A round strikes you in the shoulder.";
-const milepostEncounterMessage =
+const constMilepostEncounterMessage =
     "You come to an intersection that provides several safe looking options to move quickly down.";
-const tributaryEncounterMessage =
+const constTributaryEncounterMessage =
     "You come across a stream that provides needed water and is easy to move along.";
-const noEncounterMessage =
+const constNoEncounterMessage =
     "Nothing but blue skies and empty desert ahead of you.";
 
 // village actions
@@ -144,6 +146,21 @@ const constVillageAlliedAfflictions =
     "A doctor in the village heals an affliction before you leave. Gain Health, Proximity, and Endurance. Move to any adjacent spot.";
 const constVillageAlliedNoAfflications =
     "A doctor in the village treats you. Gain Health, Proximity, and Endurance. Move to any adjacent spot.";
+
+// afflictions
+
+const constAfflictions = "The following afflictions are impacting you: ";
+const constNoAfflictions = "Other than some minor scrapes and bruises, you are in good shape.";
+const constAfflictionFever = "a high fever blurring your focus and impacting your ability to move, rest, or hide";
+const constAfflictionGunShotWound = "a bullet wound dramatically lowering your Health";
+const constAfflictionBrokenFoot = "a broken foot hobbling your every step which limits your movement";
+const constAfflictionBurn = "a burn which continues to send shocks of pain through you reducing your Endurance";
+const constAfflictionDeepCut = "a deep cut straining every moment and eroding your Health";
+
+// inventory
+const constInventory = "You have collected the following items: ";
+const constNoInventory = "Unfortunately, you have no items or gear to use.";
+
 
 // buttons and labels
 const constMoveText = "Move";

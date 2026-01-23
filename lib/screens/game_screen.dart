@@ -31,7 +31,7 @@ bool _allowedToReRoll = false;
 int _currentEncounterIndex = 1;
 List<Image> _encounterImages = [];
 Set<EnumInventory> _inventory = {};
-Set<EnumAffliction> _afflications = {};
+Set<EnumAffliction> _afflictions = {};
 EnumVillageReactions _villageReaction = EnumVillageReactions.none;
 
 // extension used to capitalize the first letter of a word
@@ -184,6 +184,99 @@ class _ImageCyclerOverlayState extends State<ImageCyclerOverlay>
   }
 
   // *********************************************
+  //  run to next hex
+  // *********************************************
+  void  _doMortarRun() {
+    int newId = _getIdFromColRow(_map[_selectedHex].col+1, _map[_selectedHex].row);
+
+    _hexesTraveled.add(_selectedHex);
+    _map[_selectedHex].current = false; 
+    _map[newId].current = true; 
+    _pilot.setEndurance(EnumDirection.decrement);
+    _afflictions.add(EnumAffliction.gunshotwound);
+  }
+  
+  // *********************************************
+  //  drop
+  // *********************************************
+  void  _doMortarDrop() {
+    _pilot.setProximity(EnumDirection.decrement);
+  }  
+  
+
+
+  // *********************************************
+  //  choose what happens when mortars rain down
+  // *********************************************
+  Widget _returnMortar() {
+    return 
+      Column(
+        children: [
+        SizedBox(
+            width: 250.0,
+            height: 70.0,
+            child: OutlinedButton(
+              style: OutlinedButton.styleFrom(
+                foregroundColor: Colors.black, // Text and icon color
+                backgroundColor: Colors.white, // Background color
+                overlayColor: Colors.blueAccent.withValues(), // pressed ripple
+                side: const BorderSide(
+                  color: Colors.black,
+                  width: 3.0,
+                ), // Border color
+              ),
+              child: const Align(
+                  alignment: Alignment.center,
+                  child: Text(
+                    constMortarOption1,
+                    style: TextStyle(
+                        fontFamily: constAppTextFont,
+                        color: Colors.black,
+                        fontSize: 12.0),
+                  )),
+              onPressed: () {
+                // run! 
+                _doMortarRun();
+                widget.onClose();
+              },
+            )),
+         SizedBox(
+            width: 250.0,
+            height: 70.0,
+            child: OutlinedButton(
+              style: OutlinedButton.styleFrom(
+                foregroundColor: Colors.black, // Text and icon color
+                backgroundColor: Colors.white, // Background color
+                overlayColor: Colors.blueAccent.withValues(), // pressed ripple
+                side: const BorderSide(
+                  color: Colors.black,
+                  width: 3.0,
+                ), // Border color
+              ),
+              child: const Align(
+                  alignment: Alignment.center,
+                  child: Text(
+                    constMortarOption2,
+                    style: TextStyle(
+                        fontFamily: constAppTextFont,
+                        color: Colors.black,
+                        fontSize: 12.0),
+                  )),
+              onPressed: () {
+                // drop into cover
+                _doMortarDrop();
+                widget.onClose();
+              },
+            )),           
+
+        ]
+      );
+
+
+
+  }
+
+  // *********************************************
   //  pass back button to close the overlay
   // *********************************************
   Widget _returnContinueButton() {
@@ -249,10 +342,14 @@ class _ImageCyclerOverlayState extends State<ImageCyclerOverlay>
         return _returnContinueButton();
       } else if (encounter == EnumEncounter.rockslide) {
         // rockslide
-        _afflications.add(EnumAffliction.brokenfoot);
+        _afflictions.add(EnumAffliction.brokenfoot);
         return _returnContinueButton();
-      }
+ 
+      } else if (encounter == EnumEncounter.mortar) {
+        // mortar fire
+        return _returnMortar(); 
 
+      }
       // catch all (remove later)
       else {
         return _returnContinueButton();
@@ -315,7 +412,7 @@ class _ImageCyclerOverlayState extends State<ImageCyclerOverlay>
           _currentEncounterIndex =
               _encounterFactory.getRandomEncounter(_map[_selectedHex]);
           // hardcode this for testing!
-          // _currentEncounterIndex = 5; // highground
+          _currentEncounterIndex = EnumEncounter.mortar.index; 
           message =
               _encounterFactory.getEncounterDescription(_currentEncounterIndex);
         });
@@ -684,15 +781,15 @@ class _GameScreenState extends State<GameScreen> {
       _pilot.setProximity(EnumDirection.increment);
     } else {
       _villageReaction = EnumVillageReactions.allied;
-      if (_afflications.isNotEmpty) {
+      if (_afflictions.isNotEmpty) {
         message = constVillageAlliedAfflictions;
         // heal one affliction
-        if (_afflications.length == 1) {
-          _afflications.clear();
+        if (_afflictions.length == 1) {
+          _afflictions.clear();
         } else {
           EnumAffliction item =
-              _afflications.elementAt(Random().nextInt(_afflications.length));
-          _afflications.remove(item);
+              _afflictions.elementAt(Random().nextInt(_afflictions.length));
+          _afflictions.remove(item);
         }
       } else {
         message = constVillageAlliedNoAfflications;
@@ -757,7 +854,7 @@ class _GameScreenState extends State<GameScreen> {
         }
       } else {
         _pilot.setProximity(EnumDirection.decrement);
-        await _failedOverlayMessage(constRestFailedMessage);
+        await _failedOverlayMessage(constStealthFailedMessage);
       }
     } else {
       // rest
@@ -817,7 +914,10 @@ class _GameScreenState extends State<GameScreen> {
             _tapDice(phase, value, target);
           },
           onDoubleTap: () {
-            _reRoll(index);
+            // can only reroll during stealth phase if they successfully moved
+            if ((_phase == EnumPhase.stealth) && (_allowedToReRoll)) { 
+              _allowedToReRoll = false; 
+              _reRoll(index); }
           },
           child: Image.asset(
             'assets/images/dice_face_white_$value.jpg',
@@ -1360,13 +1460,9 @@ class _GameScreenState extends State<GameScreen> {
     // if encounter phase, decide if they had an encounter
     if (_phase == EnumPhase.encounter) {
       _showEncounterOverlay(context);
-      // they just closed the encounter overlay, so for some encounters, need to pop up a dialog for next steps
-      if (_currentEncounterIndex == EnumEncounter.dust.index) {
-        // display dialog asking what they want to do
-      }
 
       setState(() {
-        // TBD
+        _doMappingPhase(); 
       });
     }
 
@@ -1677,14 +1773,18 @@ class _GameScreenState extends State<GameScreen> {
   // if they have items, display dialog
   // ************************
   void _handleInventoryTap() { 
-    showInventoryDialog(context);
+    if (_inventory.isNotEmpty) {
+      showInventoryDialog(context, _inventory);
+    }
   }
 
   // ************************
   // if they have afflictions, display dialog
   // ************************
   void _handleAfflictionsTap() {
-    showAfflictionsDialog(context);
+    if (_afflictions.isNotEmpty) {
+      showAfflictionsDialog(context, _afflictions);
+    }
   }
   
   // ************************
@@ -1704,7 +1804,7 @@ class _GameScreenState extends State<GameScreen> {
   Color _returnAfflictionsColor() {
     Color result = const Color.fromARGB(255, 68, 68, 68);
 
-    if (_afflications.isNotEmpty) { result = Colors.white; }
+    if (_afflictions.isNotEmpty) { result = Colors.white; }
     return result; 
 
   }
