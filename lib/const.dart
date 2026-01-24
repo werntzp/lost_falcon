@@ -151,8 +151,8 @@ const constVillageAlliedNoAfflications =
 
 const constAfflictions = "The following afflictions are impacting you: ";
 const constNoAfflictions = "Other than some minor scrapes and bruises, you are in good shape.";
-const constAfflictionFever = "a high fever blurring your focus and impacting your ability to move, rest, or hide";
-const constAfflictionGunShotWound = "a bullet wound dramatically lowering your Health";
+const constAfflictionFever = "a high fever limiting your ability to move, rest, or hide";
+const constAfflictionGunShotWound = "a horrible wound dramatically lowering your Health";
 const constAfflictionBrokenFoot = "a broken foot hobbling your every step which limits your movement";
 const constAfflictionBurn = "a burn which continues to send shocks of pain through you reducing your Endurance";
 const constAfflictionDeepCut = "a deep cut straining every moment and eroding your Health";

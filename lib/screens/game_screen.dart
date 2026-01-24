@@ -188,12 +188,19 @@ class _ImageCyclerOverlayState extends State<ImageCyclerOverlay>
   // *********************************************
   void  _doMortarRun() {
     int newId = _getIdFromColRow(_map[_selectedHex].col+1, _map[_selectedHex].row);
-
+    int hurt = Random().nextInt(4) + 1; 
+    
     _hexesTraveled.add(_selectedHex);
     _map[_selectedHex].current = false; 
+    _hexesTraveled.add(newId);
     _map[newId].current = true; 
     _pilot.setEndurance(EnumDirection.decrement);
     _afflictions.add(EnumAffliction.gunshotwound);
+    // decrement health based on how bad wound is 
+    for (int i = 1; i <= hurt; i++) {
+      _pilot.setHealth(EnumDirection.decrement);
+    }
+
   }
   
   // *********************************************
@@ -916,8 +923,8 @@ class _GameScreenState extends State<GameScreen> {
           onDoubleTap: () {
             // can only reroll during stealth phase if they successfully moved
             if ((_phase == EnumPhase.stealth) && (_allowedToReRoll)) { 
-              _allowedToReRoll = false; 
-              _reRoll(index); }
+              _reRoll(index);
+            }
           },
           child: Image.asset(
             'assets/images/dice_face_white_$value.jpg',
@@ -1106,17 +1113,23 @@ class _GameScreenState extends State<GameScreen> {
   // *********************************************
   // this needs to be called to insert the encounter overlay
   // *********************************************
-  void _showEncounterOverlay(BuildContext context) {
+  Future<void> _showEncounterOverlay(BuildContext context) async {
+    final completer = Completer<void>(); 
     final overlay = Overlay.of(context);
     late OverlayEntry entry;
 
     entry = OverlayEntry(
       builder: (_) => ImageCyclerOverlay(
-        onClose: () => entry.remove(),
+        onClose: () { 
+          entry.remove();
+          completer.complete();
+        }
       ),
     );
 
-    overlay.insert(entry);
+    Overlay.of(context).insert(entry!);
+    return completer.future;
+    //overlay.insert(entry);
   }
 
   // ************************
@@ -1459,7 +1472,7 @@ class _GameScreenState extends State<GameScreen> {
 
     // if encounter phase, decide if they had an encounter
     if (_phase == EnumPhase.encounter) {
-      _showEncounterOverlay(context);
+      await _showEncounterOverlay(context);
 
       setState(() {
         _doMappingPhase(); 
