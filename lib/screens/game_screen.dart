@@ -5,8 +5,7 @@ import 'package:lost_falcon/models/encounter_model.dart';
 import '../models/map_model.dart';
 import '../models/pilot_model.dart';
 import '../dialogs/terrain_dialog.dart';
-import '../dialogs/afflictions_dialog.dart';
-import '../dialogs/inventory_dialog.dart';
+import '../dialogs/info_dialog.dart';
 import 'dart:math';
 import 'dart:async';
 
@@ -30,8 +29,9 @@ Timer? _rollTimer;
 bool _allowedToReRoll = false;
 int _currentEncounterIndex = 1;
 List<Image> _encounterImages = [];
-Set<EnumInventory> _inventory = {};
-Set<EnumAffliction> _afflictions = {};
+bool _skipRest = false;
+bool _skipStealh = false; 
+
 EnumVillageReactions _villageReaction = EnumVillageReactions.none;
 
 // extension used to capitalize the first letter of a word
@@ -188,18 +188,14 @@ class _ImageCyclerOverlayState extends State<ImageCyclerOverlay>
   // *********************************************
   void  _doMortarRun() {
     int newId = _getIdFromColRow(_map[_selectedHex].col+1, _map[_selectedHex].row);
-    int hurt = Random().nextInt(4) + 1; 
     
     _hexesTraveled.add(_selectedHex);
     _map[_selectedHex].current = false; 
     _hexesTraveled.add(newId);
     _map[newId].current = true; 
     _pilot.setEndurance(EnumDirection.decrement);
-    _afflictions.add(EnumAffliction.gunshotwound);
-    // decrement health based on how bad wound is 
-    for (int i = 1; i <= hurt; i++) {
-      _pilot.setHealth(EnumDirection.decrement);
-    }
+    _pilot.setAffliction(EnumAffliction.gunshotwound);
+
   }
 
   // *********************************************
@@ -369,16 +365,358 @@ class _ImageCyclerOverlayState extends State<ImageCyclerOverlay>
   }
 
   // *********************************************
+  //  building - make a bandage
+  // *********************************************
+  void  _doBuildingBandage() {
+
+    // gain 2 health back
+    _pilot.setHealth(EnumDirection.increment);
+    _pilot.setHealth(EnumDirection.increment);
+
+  }
+
+  // *********************************************
+  //  building - extra rest
+  // *********************************************
+  void  _doBuildingRest() {
+
+    // gain 1 endurance
+    _pilot.setEndurance(EnumDirection.increment);
+
+  }
+
+  // *********************************************
+  //  building - get machete
+  // *********************************************
+  void  _doBuildingMachete() {
+
+    // gain 1 endurance
+    _pilot.addInventoryItem(EnumInventory.machete);
+
+  }
+
+  // *********************************************
+  //  building - if they don't already have a machete, can get one 
+  // *********************************************
+  Widget _checkBuildingMachete() {
+
+    if (_pilot.hasAnInventoryItem(EnumInventory.machete)) {
+      return Container(); 
+    }
+    else {
+      return SizedBox(
+            width: 250.0,
+            height: 70.0,
+            child: OutlinedButton(
+              style: OutlinedButton.styleFrom(
+                foregroundColor: Colors.black, // Text and icon color
+                backgroundColor: Colors.white, // Background color
+                overlayColor: Colors.blueAccent.withValues(), // pressed ripple
+                side: const BorderSide(
+                  color: Colors.black,
+                  width: 3.0,
+                ), // Border color
+              ),
+              child: const Align(
+                  alignment: Alignment.center,
+                  child: Text(
+                    constBuildingOption3,
+                    style: TextStyle(
+                        fontFamily: constAppTextFont,
+                        color: Colors.black,
+                        fontSize: 12.0),
+                  )),
+              onPressed: () {
+                _doBuildingMachete();
+                widget.onClose();
+              },
+            ));         
+
+    }
+
+  }
+
+  // *********************************************
+  //  road - move
+  // *********************************************
+  void  _doRoadMove() {
+
+    // can keep on moving
+    _moveAllowed = true; 
+
+  }
+
+  // *********************************************
+  //  road - proximity
+  // *********************************************
+  void  _doRoadProximity() {
+
+    // Increase
+    _pilot.setProximity(EnumDirection.increment);
+
+  }
+
+
+  // *********************************************
+  //  an empty building
+  // *********************************************
+  Widget _returnBuilding() {
+
+    return 
+      Column(
+        children: [
+        SizedBox(
+            width: 250.0,
+            height: 70.0,
+            child: OutlinedButton(
+              style: OutlinedButton.styleFrom(
+                foregroundColor: Colors.black, // Text and icon color
+                backgroundColor: Colors.white, // Background color
+                overlayColor: Colors.blueAccent.withValues(), // pressed ripple
+                side: const BorderSide(
+                  color: Colors.black,
+                  width: 3.0,
+                ), // Border color
+              ),
+              child: const Align(
+                  alignment: Alignment.center,
+                  child: Text(
+                    constBuildingOption1,
+                    style: TextStyle(
+                        fontFamily: constAppTextFont,
+                        color: Colors.black,
+                        fontSize: 12.0),
+                  )),
+              onPressed: () {
+                _doBuildingBandage();
+                widget.onClose();
+              },
+            )),
+         SizedBox(
+            width: 250.0,
+            height: 70.0,
+            child: OutlinedButton(
+              style: OutlinedButton.styleFrom(
+                foregroundColor: Colors.black, // Text and icon color
+                backgroundColor: Colors.white, // Background color
+                overlayColor: Colors.blueAccent.withValues(), // pressed ripple
+                side: const BorderSide(
+                  color: Colors.black,
+                  width: 3.0,
+                ), // Border color
+              ),
+              child: const Align(
+                  alignment: Alignment.center,
+                  child: Text(
+                    constBuildingOption2,
+                    style: TextStyle(
+                        fontFamily: constAppTextFont,
+                        color: Colors.black,
+                        fontSize: 12.0),
+                  )),
+              onPressed: () {
+                _doBuildingRest();
+                widget.onClose();
+              },
+            )),           
+            _checkBuildingMachete(),
+        ]
+      );
+
+  }
+
+  // *********************************************
+  // road - which way to go 
+  // *********************************************
+  Widget _returnRoad() {
+
+    return 
+      Column(
+        children: [
+        SizedBox(
+            width: 250.0,
+            height: 70.0,
+            child: OutlinedButton(
+              style: OutlinedButton.styleFrom(
+                foregroundColor: Colors.black, // Text and icon color
+                backgroundColor: Colors.white, // Background color
+                overlayColor: Colors.blueAccent.withValues(), // pressed ripple
+                side: const BorderSide(
+                  color: Colors.black,
+                  width: 3.0,
+                ), // Border color
+              ),
+              child: const Align(
+                  alignment: Alignment.center,
+                  child: Text(
+                    constRoadOption1,
+                    style: TextStyle(
+                        fontFamily: constAppTextFont,
+                        color: Colors.black,
+                        fontSize: 12.0),
+                  )),
+              onPressed: () {
+                _doRoadMove();
+                widget.onClose();
+              },
+            )),
+         SizedBox(
+            width: 250.0,
+            height: 70.0,
+            child: OutlinedButton(
+              style: OutlinedButton.styleFrom(
+                foregroundColor: Colors.black, // Text and icon color
+                backgroundColor: Colors.white, // Background color
+                overlayColor: Colors.blueAccent.withValues(), // pressed ripple
+                side: const BorderSide(
+                  color: Colors.black,
+                  width: 3.0,
+                ), // Border color
+              ),
+              child: const Align(
+                  alignment: Alignment.center,
+                  child: Text(
+                    constRoadOption2,
+                    style: TextStyle(
+                        fontFamily: constAppTextFont,
+                        color: Colors.black,
+                        fontSize: 12.0),
+                  )),
+              onPressed: () {
+                _doRoadProximity();
+                widget.onClose();
+              },
+            )),           
+
+        ]
+      );
+
+  }
+
+
+
+  // *********************************************
+  //  thorns -- either go back, or chop/skip
+  // *********************************************
+  void  _doThorns1() {
+
+    // if machete, 
+    if (_pilot.hasAnInventoryItem(EnumInventory.machete)) {
+      // set flags to skip stealth and rest 
+      _skipStealh = true;
+      _skipRest = true; 
+    }
+    else {
+      _map[_oldHex].current = true;
+      _map[_selectedHex].current = false;
+      _hexesImpassable.add(_selectedHex);
+    }
+
+  }
+
+  // *********************************************
+  //  thorns -- push on or chop/keep
+  // *********************************************
+  void  _doThorns2() {
+
+    // if machete, 
+    if (_pilot.hasAnInventoryItem(EnumInventory.machete)) {
+      // just continue on like normal 
+    }
+    else {
+      // they fight through, so add deep cut
+      _pilot.setAffliction(EnumAffliction.deepcut);
+    }
+
+  }
+
+  // *********************************************
+  //  see what happens if they are blocked by thorns
+  // *********************************************
+  Widget _returnThorns() {
+    String option1 = constThornsOption1;
+    String option2 = constThornsOption2;
+
+    if (_pilot.hasAnInventoryItem(EnumInventory.machete)) {
+      option1 = constThornsOption3;
+      option2 = constThornsOption4;
+    }
+
+    return 
+      Column(
+        children: [
+        SizedBox(
+            width: 250.0,
+            height: 70.0,
+            child: OutlinedButton(
+              style: OutlinedButton.styleFrom(
+                foregroundColor: Colors.black, // Text and icon color
+                backgroundColor: Colors.white, // Background color
+                overlayColor: Colors.blueAccent.withValues(), // pressed ripple
+                side: const BorderSide(
+                  color: Colors.black,
+                  width: 3.0,
+                ), // Border color
+              ),
+              child: Align(
+                  alignment: Alignment.center,
+                  child: Text(
+                    option1,
+                    style: const TextStyle(
+                        fontFamily: constAppTextFont,
+                        color: Colors.black,
+                        fontSize: 12.0),
+                  )),
+              onPressed: () {
+                _doThorns1();
+                widget.onClose();
+              },
+            )),
+         SizedBox(
+            width: 250.0,
+            height: 70.0,
+            child: OutlinedButton(
+              style: OutlinedButton.styleFrom(
+                foregroundColor: Colors.black, // Text and icon color
+                backgroundColor: Colors.white, // Background color
+                overlayColor: Colors.blueAccent.withValues(), // pressed ripple
+                side: const BorderSide(
+                  color: Colors.black,
+                  width: 3.0,
+                ), // Border color
+              ),
+              child: Align(
+                  alignment: Alignment.center,
+                  child: Text(
+                    option2,
+                    style: const TextStyle(
+                        fontFamily: constAppTextFont,
+                        color: Colors.black,
+                        fontSize: 12.0),
+                  )),
+              onPressed: () {
+                _doThorns2();
+                widget.onClose();
+              },
+            )),           
+
+        ]
+      );
+
+  }
+
+
+  // *********************************************
   //  see what happens if they come across chemical munitions
   // *********************************************
   Widget _returnChemicals() {
     // if theyhave a wound or cut, lose further health 
-    if ((_afflictions.contains(EnumAffliction.burn)) || (_afflictions.contains(EnumAffliction.gunshotwound))) {
+    if ((_pilot.hasAnAffliction(EnumAffliction.burn)) || (_pilot.hasAnAffliction(EnumAffliction.gunshotwound))) {
       _pilot.setHealth(EnumDirection.decrement);
       _pilot.setHealth(EnumDirection.decrement);
     }
     else { 
-      _afflictions.add(EnumAffliction.burn);
+      _pilot.setAffliction(EnumAffliction.burn);
 
     }
 
@@ -475,7 +813,7 @@ class _ImageCyclerOverlayState extends State<ImageCyclerOverlay>
 
         return _returnContinueButton();
       } else if (encounter == EnumEncounter.rockslide) {
-        _afflictions.add(EnumAffliction.brokenfoot);
+        _pilot.setAffliction(EnumAffliction.brokenfoot);
         return _returnContinueButton();
  
       } else if (encounter == EnumEncounter.mortar) {
@@ -486,6 +824,15 @@ class _ImageCyclerOverlayState extends State<ImageCyclerOverlay>
 
       } else if (encounter == EnumEncounter.chemicals) {
         return _returnChemicals(); 
+
+      } else if (encounter == EnumEncounter.thorns) {
+        return _returnThorns(); 
+
+      } else if (encounter == EnumEncounter.building) {
+        return _returnBuilding(); 
+
+      } else if (encounter == EnumEncounter.road) {
+        return _returnRoad(); 
 
       }
       // catch all (remove later)
@@ -550,7 +897,7 @@ class _ImageCyclerOverlayState extends State<ImageCyclerOverlay>
           _currentEncounterIndex =
               _encounterFactory.getRandomEncounter(_map[_selectedHex]);
           // hardcode this for testing!
-          _currentEncounterIndex = EnumEncounter.chemicals.index; 
+          _currentEncounterIndex = EnumEncounter.building.index; 
           message =
               _encounterFactory.getEncounterDescription(_currentEncounterIndex);
         });
@@ -870,9 +1217,9 @@ class _GameScreenState extends State<GameScreen> {
       // robbed
       _villageReaction = EnumVillageReactions.robbed;
       // if they had items, they are all lost
-      if (_inventory.isNotEmpty) {
+      if (_pilot.hasAnyInventory()) {
         message = constVillageRobbedItems;
-        _inventory.clear();
+        _pilot.clearInventory();
       } else {
         message = constVillageRobbedNoItems;
       }
@@ -919,16 +1266,10 @@ class _GameScreenState extends State<GameScreen> {
       _pilot.setProximity(EnumDirection.increment);
     } else {
       _villageReaction = EnumVillageReactions.allied;
-      if (_afflictions.isNotEmpty) {
+      // heal an affliction
+      if (_pilot.hasAnyAfflictions()) {
+        _pilot.healAffliction();
         message = constVillageAlliedAfflictions;
-        // heal one affliction
-        if (_afflictions.length == 1) {
-          _afflictions.clear();
-        } else {
-          EnumAffliction item =
-              _afflictions.elementAt(Random().nextInt(_afflictions.length));
-          _afflictions.remove(item);
-        }
       } else {
         message = constVillageAlliedNoAfflications;
       }
@@ -1893,19 +2234,20 @@ class _GameScreenState extends State<GameScreen> {
               ),
               child: Image.asset(constImagePlayerLocation, fit: BoxFit.cover)));
     }
+    // else if player cannot travel through this hex, show close icon
+    else if ((_hexesImpassable.isNotEmpty) && (_hexesImpassable.contains(id))) {
+      return const Positioned(
+          top: 25,
+          left: 32,
+          child: Icon(Icons.cancel_outlined, color: Colors.red, size: 50));
+    }
+
     // else if player traveled through hex, show person icon
     else if (_hexesTraveled.contains(id)) {
       return const Positioned(
           top: 25,
           left: 32,
           child: Icon(Icons.directions_run, color: Colors.black, size: 50));
-    }
-    // else if player cannot travel through this hex, show close icon
-    else if ((_hexesImpassable.isNotEmpty) && (_hexesImpassable.contains(id))) {
-      return const Positioned(
-          top: 25,
-          left: 32,
-          child: Icon(Icons.cancel, color: Colors.red, size: 50));
     }
 
     // else, just an empty container
@@ -1918,8 +2260,8 @@ class _GameScreenState extends State<GameScreen> {
   // if they have items, display dialog
   // ************************
   void _handleInventoryTap() { 
-    if (_inventory.isNotEmpty) {
-      showInventoryDialog(context, _inventory);
+    if (_pilot.hasAnyInventory()) {
+      showInfoDialog(context, _pilot.describeInventory());
     }
   }
 
@@ -1927,8 +2269,8 @@ class _GameScreenState extends State<GameScreen> {
   // if they have afflictions, display dialog
   // ************************
   void _handleAfflictionsTap() {
-    if (_afflictions.isNotEmpty) {
-      showAfflictionsDialog(context, _afflictions);
+    if (_pilot.hasAnyAfflictions()) {
+      showInfoDialog(context, _pilot.describeAfflictions());
     }
   }
   
@@ -1938,7 +2280,7 @@ class _GameScreenState extends State<GameScreen> {
   Color _returnInventoryColor() {
     Color result = const Color.fromARGB(255, 68, 68, 68);
 
-    if (_inventory.isNotEmpty) { result = Colors.white; }
+    if (_pilot.hasAnyInventory()) { result = Colors.white; }
     return result; 
 
   }
@@ -1949,7 +2291,7 @@ class _GameScreenState extends State<GameScreen> {
   Color _returnAfflictionsColor() {
     Color result = const Color.fromARGB(255, 68, 68, 68);
 
-    if (_afflictions.isNotEmpty) { result = Colors.white; }
+    if (_pilot.hasAnyAfflictions()) { result = Colors.white; }
     return result; 
 
   }

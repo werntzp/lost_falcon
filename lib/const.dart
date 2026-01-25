@@ -85,20 +85,34 @@ const constRestSixMessage = "You were successful at keeping up your Endurance, b
 // encounters
 const constEncountersMessage =
     "Let's see if you had any encounters this round!";
+
 const constDustEncounterMessage =
     "A dust storm kicks up obstructing your view while the strong wind and harsh blowing sand wears you down.";
 const constDustOption1 = "Stumble backward to your last location";
 const constDustOption2 = "Lose 2 Endurance continuing through the storm";    
+
 const constChemicalsEncounterMessage =
     "You have to cross through a field full of chemical munitions which burns and irritates your skin.";
+
 const constThornsEncounterMessage =
-    "Your progress has been halted by these half-inch thorns.";
+    "Your progress has been halted by dense, unpassable heavy brush covered in half-inch thorns.";
+const constThornsOption1 = "Give up and move backward to your last location";
+const constThornsOption2 = "Push through but take a deep cut";    
+const constThornsOption3 = "Cut a path with your machete skipping Stealth and Rest phases";
+const constThornsOption4 = "Cut a path with your machete keeping Stealth and Rest phases";
+
 const constRockslideEncounterMessage =
     "As you are climbing, a rockslide carries you down you the hill and you suffer a broken foot in the tumble.";
+
 const constHighgroundEncounterMessage =
     "From this vantage you can see for miles, including a bustling village that may be welcoming.";
+
 const constBuildingEncounterMessage =
     "It appears that this building has been abandoned. The burn marks and bullet holes present this as another casualty of war.";
+const constBuildingOption1 = "Scavenge some materials to make a bandage and gain 2 Health";
+const constBuildingOption2 = "Spend some quiet time here to gain 1 Endurance";
+const constBuildingOption3 = "Find a usable machete";    
+
 const constRoadEncounterMessage =
     "A flat stretch of road provides an easier path to move on.";
 const constSoldierEncounterMessage =
@@ -185,6 +199,7 @@ const constStartRow = 0;
 const constStartCol = 0;
 const constNoDice = 0;
 const constDieSides = 6;
+const constZero = 0; 
 
 const constScrubMoveCost = 2;
 const constBrushMoveCost = 3;

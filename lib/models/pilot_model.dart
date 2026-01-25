@@ -1,4 +1,5 @@
 import 'package:lost_falcon/const.dart';
+import 'dart:math';
 
 class PilotException implements Exception {
   final EnumGameOver reason;
@@ -14,11 +15,8 @@ class Pilot {
   int _health = 6;
   int _proximity = 6;
   int _endurance = 6;
-  bool _hasFever = false;
-  bool _hasGunshotWound = false;
-  bool _hasBrokenFoot = false;
-  bool _hasBurn = false;
-  bool _hasDeepCut = false;
+  Set<EnumInventory> _inventory = {};
+  Set<EnumAffliction> _afflictions = {};
 
   // ************************
   // constructor
@@ -28,11 +26,7 @@ class Pilot {
     _health = 6;
     _proximity = 6;
     _endurance = 6;
-    _hasFever = false;
-    _hasGunshotWound = false;
-    _hasBrokenFoot = false;
-    _hasBurn = false;
-    _hasDeepCut = false;
+
   }
 
   // ************************
@@ -110,41 +104,161 @@ class Pilot {
   }
 
   // ************************
-  // return whether the pilot has this affliction
+  // return if they have any afflictions
   // ************************
-  bool hasAffliction(EnumAffliction affliction) {
-    bool result = false;
+  bool hasAnyAfflictions() {
 
-    if ((affliction == EnumAffliction.fever) && (_hasFever)) {
-      result == true;
-    } else if ((affliction == EnumAffliction.gunshotwound) &&
-        (_hasGunshotWound)) {
-      result == true;
-    } else if ((affliction == EnumAffliction.brokenfoot) && (_hasBrokenFoot)) {
-      result == true;
-    } else if ((affliction == EnumAffliction.burn) && (_hasBurn)) {
-      result == true;
-    } else if ((affliction == EnumAffliction.deepcut) && (_hasDeepCut)) {
-      result == true;
-    }
+    return _afflictions.isNotEmpty ? true : false; 
 
-    return result;
+  }
+
+
+  // ************************
+  // return whether the pilot has a specific affliction
+  // ************************
+  bool hasAnAffliction(EnumAffliction affliction) {
+
+    return _afflictions.contains(affliction) ? true : false; 
   }
 
   // ************************
   // set a new affliction
   // ************************
-  void newAffliction(EnumAffliction affliction) {
-    if (affliction == EnumAffliction.fever) {
-      _hasFever = true;
-    } else if (affliction == EnumAffliction.gunshotwound) {
-      _hasGunshotWound == true;
-    } else if (affliction == EnumAffliction.brokenfoot) {
-      _hasBrokenFoot == true;
-    } else if (affliction == EnumAffliction.burn) {
-      _hasBurn == true;
-    } else if (affliction == EnumAffliction.deepcut) {
-      _hasDeepCut == true;
+  void setAffliction(EnumAffliction affliction) {
+    int hurt = 0; 
+
+    // can only have each affliction once, so they get a fever on 2nd
+    if (_afflictions.contains(affliction)) {
+      _afflictions.add(EnumAffliction.fever);
     }
+    else {
+      _afflictions.add(affliction);
+      // depending on affliction, do other things
+      if (affliction == EnumAffliction.deepcut) {
+        setHealth(EnumDirection.decrement);
+        setHealth(EnumDirection.decrement);
+      }
+      else if (affliction == EnumAffliction.gunshotwound) {
+        // decrement health based on how bad wound is 
+        hurt = Random().nextInt(4) + 1; 
+        for (int i = 1; i <= hurt; i++) {
+          setHealth(EnumDirection.decrement);
+        }
+      }
+
+    }
+
+
   }
+
+  // ************************
+  // heal an affliction
+  // ************************
+  void healAffliction() {
+
+    // if only one clear, otherwise pick a random one
+    if (_afflictions.length == 1) {
+      _afflictions.clear();
+    }
+    else { 
+      EnumAffliction item = _afflictions.elementAt(Random().nextInt(_afflictions.length));
+      _afflictions.remove(item);
+
+    }
+
+  }
+
+  // ************************
+  // list the afflictions in a friendly message
+  // ************************
+  String describeAfflictions() {
+  final message = <String>[];
+
+  if (_afflictions.isNotEmpty) {
+    // see which afflictions they have, and put those together with
+    // descriptions into a message displayed on the dialog 
+    if (_afflictions.contains(EnumAffliction.brokenfoot)) {
+      message.add(constAfflictionBrokenFoot);
+    }
+
+    if (_afflictions.contains(EnumAffliction.burn)) {
+      message.add(constAfflictionBurn);
+    }
+
+    if (_afflictions.contains(EnumAffliction.deepcut)) {
+      message.add(constAfflictionDeepCut);
+    }
+
+    if (_afflictions.contains(EnumAffliction.fever)) {
+      message.add(constAfflictionFever);
+    }
+
+    if (_afflictions.contains(EnumAffliction.gunshotwound)) {
+      message.add(constAfflictionGunShotWound);
+    }
+
+    final result = message.join("; ");
+    return constAfflictions + result; 
+  }
+  else {
+    return constNoAfflictions;
+  }
+
+}
+
+  // ************************
+  // return if they have any inventory
+  // ************************
+  bool hasAnyInventory() {
+
+    return _inventory.isNotEmpty ? true : false; 
+  }
+
+    // ************************
+  // return if they have a specific item
+  // ************************
+  bool hasAnInventoryItem(EnumInventory item) {
+
+    return _inventory.contains(item) ? true : false; 
+  }
+
+  // ************************
+  // drop all items
+  // ************************
+  void clearInventory() {
+
+    _inventory.clear();
+
+  }
+
+  // ************************
+  // drop an item
+  // ************************
+  void dropInventoryItem(EnumInventory item) {
+
+    _inventory.remove(item);
+
+  }
+
+  // ************************
+  // add an item
+  // ************************
+  void addInventoryItem(EnumInventory item) {
+
+    if (!_inventory.contains(item)) {
+      _inventory.add(item);
+    }
+
+  }
+
+
+  // ************************
+  // list the inventory in a friendly message
+  // ************************
+  String describeInventory() {
+
+    return constNoInventory; 
+
+  }
+
 }
