@@ -87,6 +87,8 @@ const constEncountersMessage =
     "Let's see if you had any encounters this round!";
 const constDustEncounterMessage =
     "A dust storm kicks up obstructing your view while the strong wind and harsh blowing sand wears you down.";
+const constDustOption1 = "Stumble backward to your last location";
+const constDustOption2 = "Lose 2 Endurance continuing through the storm";    
 const constChemicalsEncounterMessage =
     "You have to cross through a field full of chemical munitions which burns and irritates your skin.";
 const constThornsEncounterMessage =

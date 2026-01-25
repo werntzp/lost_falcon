@@ -184,7 +184,7 @@ class _ImageCyclerOverlayState extends State<ImageCyclerOverlay>
   }
 
   // *********************************************
-  //  run to next hex
+  //  mortar - run to next hex
   // *********************************************
   void  _doMortarRun() {
     int newId = _getIdFromColRow(_map[_selectedHex].col+1, _map[_selectedHex].row);
@@ -200,20 +200,17 @@ class _ImageCyclerOverlayState extends State<ImageCyclerOverlay>
     for (int i = 1; i <= hurt; i++) {
       _pilot.setHealth(EnumDirection.decrement);
     }
-
   }
-  
+
   // *********************************************
-  //  drop
+  //  mortar - drop
   // *********************************************
   void  _doMortarDrop() {
     _pilot.setProximity(EnumDirection.decrement);
   }  
-  
-
-
+ 
   // *********************************************
-  //  choose what happens when mortars rain down
+  //  mortar - choose what happens when mortars rain down
   // *********************************************
   Widget _returnMortar() {
     return 
@@ -279,8 +276,138 @@ class _ImageCyclerOverlayState extends State<ImageCyclerOverlay>
         ]
       );
 
+  }
 
+  // *********************************************
+  //  dust - keep going 
+  // *********************************************
+  void  _doDustForward() {
+    
+    // lose endurance fighting the storm 
+    _pilot.setEndurance(EnumDirection.decrement);
+    _pilot.setEndurance(EnumDirection.decrement);
+  } 
 
+  // *********************************************
+  //  dust - go back
+  // *********************************************
+  void  _doDustBack() {
+
+    // move the back to last spot
+    _map[_oldHex].current = true;
+    _map[_selectedHex].current = false;
+
+  }
+
+  // *********************************************
+  //  dust - choose what happens when you get caught in storm 
+  // *********************************************
+  Widget _returnDust() {
+    return 
+      Column(
+        children: [
+        SizedBox(
+            width: 250.0,
+            height: 70.0,
+            child: OutlinedButton(
+              style: OutlinedButton.styleFrom(
+                foregroundColor: Colors.black, // Text and icon color
+                backgroundColor: Colors.white, // Background color
+                overlayColor: Colors.blueAccent.withValues(), // pressed ripple
+                side: const BorderSide(
+                  color: Colors.black,
+                  width: 3.0,
+                ), // Border color
+              ),
+              child: const Align(
+                  alignment: Alignment.center,
+                  child: Text(
+                    constDustOption1,
+                    style: TextStyle(
+                        fontFamily: constAppTextFont,
+                        color: Colors.black,
+                        fontSize: 12.0),
+                  )),
+              onPressed: () {
+                // run! 
+                _doDustBack();
+                widget.onClose();
+              },
+            )),
+         SizedBox(
+            width: 250.0,
+            height: 70.0,
+            child: OutlinedButton(
+              style: OutlinedButton.styleFrom(
+                foregroundColor: Colors.black, // Text and icon color
+                backgroundColor: Colors.white, // Background color
+                overlayColor: Colors.blueAccent.withValues(), // pressed ripple
+                side: const BorderSide(
+                  color: Colors.black,
+                  width: 3.0,
+                ), // Border color
+              ),
+              child: const Align(
+                  alignment: Alignment.center,
+                  child: Text(
+                    constDustOption2,
+                    style: TextStyle(
+                        fontFamily: constAppTextFont,
+                        color: Colors.black,
+                        fontSize: 12.0),
+                  )),
+              onPressed: () {
+                // drop into cover
+                _doDustForward();
+                widget.onClose();
+              },
+            )),           
+
+        ]
+      );
+
+  }
+
+  // *********************************************
+  //  see what happens if they come across chemical munitions
+  // *********************************************
+  Widget _returnChemicals() {
+    // if theyhave a wound or cut, lose further health 
+    if ((_afflictions.contains(EnumAffliction.burn)) || (_afflictions.contains(EnumAffliction.gunshotwound))) {
+      _pilot.setHealth(EnumDirection.decrement);
+      _pilot.setHealth(EnumDirection.decrement);
+    }
+    else { 
+      _afflictions.add(EnumAffliction.burn);
+
+    }
+
+    return SizedBox(
+        width: 160.0,
+        height: 55.0,
+        child: OutlinedButton(
+          style: OutlinedButton.styleFrom(
+            foregroundColor: Colors.black, // Text and icon color
+            backgroundColor: Colors.white, // Background color
+            overlayColor: Colors.blueAccent.withValues(), // pressed ripple
+            side: const BorderSide(
+              color: Colors.black,
+              width: 3.0,
+            ), // Border color
+          ),
+          child: const Align(
+              alignment: Alignment.center,
+              child: Text(
+                constContinueText,
+                style: TextStyle(
+                    fontFamily: constAppTextFont,
+                    color: Colors.black,
+                    fontSize: 18.0),
+              )),
+          onPressed: () {
+            widget.onClose();
+          },
+        ));
   }
 
   // *********************************************
@@ -348,13 +475,17 @@ class _ImageCyclerOverlayState extends State<ImageCyclerOverlay>
 
         return _returnContinueButton();
       } else if (encounter == EnumEncounter.rockslide) {
-        // rockslide
         _afflictions.add(EnumAffliction.brokenfoot);
         return _returnContinueButton();
  
       } else if (encounter == EnumEncounter.mortar) {
-        // mortar fire
         return _returnMortar(); 
+
+      } else if (encounter == EnumEncounter.dust) {
+        return _returnDust(); 
+
+      } else if (encounter == EnumEncounter.chemicals) {
+        return _returnChemicals(); 
 
       }
       // catch all (remove later)
@@ -419,7 +550,7 @@ class _ImageCyclerOverlayState extends State<ImageCyclerOverlay>
           _currentEncounterIndex =
               _encounterFactory.getRandomEncounter(_map[_selectedHex]);
           // hardcode this for testing!
-          _currentEncounterIndex = EnumEncounter.mortar.index; 
+          _currentEncounterIndex = EnumEncounter.chemicals.index; 
           message =
               _encounterFactory.getEncounterDescription(_currentEncounterIndex);
         });
@@ -850,6 +981,7 @@ class _GameScreenState extends State<GameScreen> {
           _handleVillage();
         }
       } else {
+        _allowedToReRoll = false;
         await _failedOverlayMessage(constMoveFailedMessage);
       }
     } else if (phase == EnumPhase.stealth) {
