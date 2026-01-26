@@ -67,7 +67,7 @@ const constDiceRollStealthMessage4 =
 const constStealthFailedMessage =
     "You failed in an attempt to keep ahead of your pursuers. Lose one Proximity.";
 const constNoDiceAllocatedForStealthMessage =
-    "You lost one Proximity as your pursuers gained ground.";
+    "You lost one Proximity as your pursuers gained ground."; 
 
 const constDiceRollRestMessage1 = "You need to roll a";
 const constDiceRollRestMessage2 =
@@ -115,8 +115,14 @@ const constBuildingOption3 = "Find a usable machete";
 
 const constRoadEncounterMessage =
     "A flat stretch of road provides an easier path to move on.";
+const constRoadOption1 = "Immediately move to an adjacent hex";
+const constRoadOption2 = "Increase your Proximity by 1";
+
 const constSoldierEncounterMessage =
     "A fallen soldier lies facedown hidden in the brush.";
+const constSoldierOption1 = "Find a working AK-47 with several rounds left in the magazine";
+const constSoldierOption2 = "Find a map in his pocket with directions to a crashed helicopter";
+
 const constSnakeEncounterMessage =
     "As you trek across the desert, you disturb a sleeping snake. You jerk away but it is too late.";
 const constWolfEncounterMessage =
