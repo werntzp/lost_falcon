@@ -124,14 +124,23 @@ const constSoldierOption1 = "Find a working AK-47 with several rounds left in th
 const constSoldierOption2 = "Find a map in his pocket with directions to a crashed helicopter";
 
 const constSnakeEncounterMessage =
-    "As you trek across the desert, you disturb a sleeping snake. You jerk away but it is too late.";
+    "As you trek across the desert, you disturb a sleeping snake.";
+const constSnakeOption1 = "It strikes quickly, but luckily the bite is just a superficial wound.";
+const constSnakeOption2 = "It strikes quickly, and unfortunately the bite brings on a raging fever.";
+const constSnakeOption3 = "Before it can bite you, you are able to use your machete and kill it.";
+
 const constWolfEncounterMessage =
-    "A low, menacing growl startles you as a   lunges out.";
+    "A low, menacing growl startles you as a wolf lunges out of the twilight.";
+const constWolfOption1 = "It kocks you down, but races away leaving you with just a superficial wound.";
+const constWolfOption2 = "It knocks you down and tears into you before running off, resulting in a deep cut.";
+const constWolfOption3 = "You are able to strike it with your machete and drive it off, but during the scuffle, your machete snaps at the handle.";
+
 const constMortarEncounterMessage =
     "A piercing whistle announces the arrival of mortar rounds falling around you. You can:";
 const constMortarOption1 = "Sprint to a new hex, getting wounded, and losing Endurance";
 const constMortarOption2 = "Drop into cover, losing Proximity";
-const constHelicopterEncounterMessage =
+
+const constHelicopterEncounterMessage = 
     "You stumble upon a crashed and abandoned Blackhawk that looks like it has been stripped clean.";
 const constApcEncounterMessage =
     "The hulk of an armored personnel carrier sits quietly. The insides have been thoroughly stripped.";

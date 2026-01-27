@@ -185,6 +185,95 @@ class _ImageCyclerOverlayState extends State<ImageCyclerOverlay>
   }
 
   // *********************************************
+  //  wolf - growl
+  // *********************************************
+  Widget _returnWolf() {
+    String message = "";
+
+    // decide on what message to put up
+    if (_pilot.hasAnInventoryItem(EnumInventory.machete)) {
+      message = constWolfOption3;
+      // but lose the machete 
+      _pilot.dropInventoryItem(EnumInventory.machete);
+    }
+    else if (_moveDice >= 3) {
+      message = constWolfOption1;
+      // superficial wound 
+      _pilot.setHealth(EnumDirection.decrement);
+    }
+    else { 
+      message = constWolfOption2; 
+      _pilot.setAffliction(EnumAffliction.deepcut);
+    }
+
+    return 
+      Column(
+        children: [
+        const Padding(
+          padding: EdgeInsets.all(5.0),
+        ),
+        Text(
+          message,
+          style: const TextStyle(
+              color: Colors.white,
+              fontFamily: constAppTextFont,
+              fontSize: 15),
+          textAlign: TextAlign.center,
+        ),
+        const Padding(
+          padding: EdgeInsets.all(10.0),
+        ),
+         _returnContinueButton(),
+
+        ]
+      );
+
+  }
+
+  // *********************************************
+  //  snake - ssssssssssssssssss
+  // *********************************************
+  Widget _returnSnake() {
+    String message = "";
+
+    // decide on what message to put up
+    if (_pilot.hasAnInventoryItem(EnumInventory.machete)) {
+      message = constSnakeOption3;
+    }
+    else if (_map[_selectedHex].terrain == EnumTerrain.scrub) {
+      message = constSnakeOption1; 
+      _pilot.setHealth(EnumDirection.decrement);
+    }
+    else { 
+      message = constSnakeOption2; 
+      _pilot.setAffliction(EnumAffliction.fever);
+    }
+
+    return 
+      Column(
+        children: [
+        const Padding(
+          padding: EdgeInsets.all(5.0),
+        ),
+        Text(
+          message,
+          style: const TextStyle(
+              color: Colors.white,
+              fontFamily: constAppTextFont,
+              fontSize: 15),
+          textAlign: TextAlign.center,
+        ),
+        const Padding(
+          padding: EdgeInsets.all(10.0),
+        ),
+         _returnContinueButton(),
+
+        ]
+      );
+
+  }
+
+  // *********************************************
   //  mortar - run to next hex
   // *********************************************
   void  _doMortarRun() {
@@ -936,6 +1025,13 @@ class _ImageCyclerOverlayState extends State<ImageCyclerOverlay>
       // dead soldier
       } else if (encounter == EnumEncounter.soldier) {
         return _returnSoldier(); 
+      // snake
+      } else if (encounter == EnumEncounter.snake) {
+        return _returnSnake(); 
+      // wolf
+      } else if (encounter == EnumEncounter.wolf) {
+        return _returnWolf(); 
+
 
       }
       // catch all (remove later)
@@ -1017,7 +1113,7 @@ class _ImageCyclerOverlayState extends State<ImageCyclerOverlay>
             _currentEncounterIndex =
                 _encounterFactory.getRandomEncounter(_map[_selectedHex]);
             // hardcode this for testing!
-            _currentEncounterIndex = EnumEncounter.helicopter.index; 
+            _currentEncounterIndex = EnumEncounter.wolf.index; 
             message =
                 _encounterFactory.getEncounterDescription(_currentEncounterIndex);
           }
@@ -1482,11 +1578,15 @@ class _GameScreenState extends State<GameScreen> {
   // reroll one die
   // *********************************************
   void _reRoll(int index) {
+    int mod = 0; 
+    // if they have a fever, impacts all die rolls 
+    if (_pilot.hasAnAffliction(EnumAffliction.fever)) { mod = 1; }
+
     // only do this if they are allowed, and then flip that flag
     if (_allowedToReRoll) {
       _allowedToReRoll = false;
       setState(() {
-        _rollingDice[index] = Random().nextInt(6) + 1;
+        _rollingDice[index] = (Random().nextInt(6) + 1 - mod).clamp(1,6); 
       });
       _overlayEntry?.markNeedsBuild(); // forces overlay to redraw
     }
@@ -1496,8 +1596,14 @@ class _GameScreenState extends State<GameScreen> {
   // give dice new values
   // *********************************************
   void _rollDice() {
+    int mod = 0;
+
+    // if they have a fever, impacts all die rolls 
+    if (_pilot.hasAnAffliction(EnumAffliction.fever)) { mod = 1; }
+
     setState(() {
-      _rollingDice = _rollingDice.map((_) => Random().nextInt(6) + 1).toList();
+      // the clamp usage ensures keeps it between 1 and 6 
+      _rollingDice = _rollingDice.map((_) => (Random().nextInt(6) + 1 - mod).clamp(1,6)).toList();
     });
   }
 
