@@ -46,6 +46,56 @@ extension StringExtension on String {
 }
 
 // *********************************************
+//  class to render decision button
+// *********************************************
+class ActionButton extends StatelessWidget {
+  final String message;
+  final VoidCallback onAction;
+  final VoidCallback onCloseRequest; 
+
+  const ActionButton({
+    super.key,
+    required this.message,
+    required this.onAction,
+    required this.onCloseRequest
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return 
+    SizedBox(
+            width: 250.0,
+            height: 70.0,
+            child: OutlinedButton(
+              style: OutlinedButton.styleFrom(
+                foregroundColor: Colors.black, // Text and icon color
+                backgroundColor: Colors.white, // Background color
+                overlayColor: Colors.blueAccent.withValues(), // pressed ripple
+                side: const BorderSide(
+                  color: Colors.black,
+                  width: 3.0,
+                ), // Border color
+              ),
+              onPressed: () { 
+                onAction();
+                onCloseRequest();
+              },
+              child: Align(
+                  alignment: Alignment.center,
+                  child: Text(
+                    message,
+                    style: const TextStyle(
+                        fontFamily: constAppTextFont,
+                        color: Colors.black,
+                        fontSize: 12.0),
+                  )),
+            ));
+  }
+}
+
+
+
+// *********************************************
 //  class to cycle images in the overlay
 // *********************************************
 class ImageCyclerOverlay extends StatefulWidget {
@@ -185,6 +235,39 @@ class _ImageCyclerOverlayState extends State<ImageCyclerOverlay>
   }
 
   // *********************************************
+  //  apc - find a first aid kit
+  // *********************************************
+  void  _doApcKit() {
+    _pilot.healAffliction();
+    _pilot.setHealth(EnumDirection.increment);
+  }  
+
+  // *********************************************
+  //  apc - rest
+  // *********************************************
+  void  _doApcRest() {
+    _pilot.setProximity(EnumDirection.increment);
+    _pilot.setEndurance(EnumDirection.increment);
+
+  }  
+
+  // *********************************************
+  //  helicopter - find a flare gun
+  // *********************************************
+  void  _doHelicopterFlare() {
+    _pilot.addInventoryItem(EnumInventory.flaregun);
+  }  
+
+  // *********************************************
+  //  helicopter - rest
+  // *********************************************
+  void  _doHelicopterRest() {
+    _pilot.setEndurance(EnumDirection.increment);
+    _pilot.setEndurance(EnumDirection.increment);
+
+  }  
+
+  // *********************************************
   //  wolf - growl
   // *********************************************
   Widget _returnWolf() {
@@ -296,75 +379,6 @@ class _ImageCyclerOverlayState extends State<ImageCyclerOverlay>
   }  
  
   // *********************************************
-  //  mortar - choose what happens when mortars rain down
-  // *********************************************
-  Widget _returnMortar() {
-    return 
-      Column(
-        children: [
-        SizedBox(
-            width: 250.0,
-            height: 70.0,
-            child: OutlinedButton(
-              style: OutlinedButton.styleFrom(
-                foregroundColor: Colors.black, // Text and icon color
-                backgroundColor: Colors.white, // Background color
-                overlayColor: Colors.blueAccent.withValues(), // pressed ripple
-                side: const BorderSide(
-                  color: Colors.black,
-                  width: 3.0,
-                ), // Border color
-              ),
-              child: const Align(
-                  alignment: Alignment.center,
-                  child: Text(
-                    constMortarOption1,
-                    style: TextStyle(
-                        fontFamily: constAppTextFont,
-                        color: Colors.black,
-                        fontSize: 12.0),
-                  )),
-              onPressed: () {
-                // run! 
-                _doMortarRun();
-                widget.onClose();
-              },
-            )),
-         SizedBox(
-            width: 250.0,
-            height: 70.0,
-            child: OutlinedButton(
-              style: OutlinedButton.styleFrom(
-                foregroundColor: Colors.black, // Text and icon color
-                backgroundColor: Colors.white, // Background color
-                overlayColor: Colors.blueAccent.withValues(), // pressed ripple
-                side: const BorderSide(
-                  color: Colors.black,
-                  width: 3.0,
-                ), // Border color
-              ),
-              child: const Align(
-                  alignment: Alignment.center,
-                  child: Text(
-                    constMortarOption2,
-                    style: TextStyle(
-                        fontFamily: constAppTextFont,
-                        color: Colors.black,
-                        fontSize: 12.0),
-                  )),
-              onPressed: () {
-                // drop into cover
-                _doMortarDrop();
-                widget.onClose();
-              },
-            )),           
-
-        ]
-      );
-
-  }
-
-  // *********************************************
   //  dust - keep going 
   // *********************************************
   void  _doDustForward() {
@@ -385,74 +399,6 @@ class _ImageCyclerOverlayState extends State<ImageCyclerOverlay>
 
   }
 
-  // *********************************************
-  //  dust - choose what happens when you get caught in storm 
-  // *********************************************
-  Widget _returnDust() {
-    return 
-      Column(
-        children: [
-        SizedBox(
-            width: 250.0,
-            height: 70.0,
-            child: OutlinedButton(
-              style: OutlinedButton.styleFrom(
-                foregroundColor: Colors.black, // Text and icon color
-                backgroundColor: Colors.white, // Background color
-                overlayColor: Colors.blueAccent.withValues(), // pressed ripple
-                side: const BorderSide(
-                  color: Colors.black,
-                  width: 3.0,
-                ), // Border color
-              ),
-              child: const Align(
-                  alignment: Alignment.center,
-                  child: Text(
-                    constDustOption1,
-                    style: TextStyle(
-                        fontFamily: constAppTextFont,
-                        color: Colors.black,
-                        fontSize: 12.0),
-                  )),
-              onPressed: () {
-                // run! 
-                _doDustBack();
-                widget.onClose();
-              },
-            )),
-         SizedBox(
-            width: 250.0,
-            height: 70.0,
-            child: OutlinedButton(
-              style: OutlinedButton.styleFrom(
-                foregroundColor: Colors.black, // Text and icon color
-                backgroundColor: Colors.white, // Background color
-                overlayColor: Colors.blueAccent.withValues(), // pressed ripple
-                side: const BorderSide(
-                  color: Colors.black,
-                  width: 3.0,
-                ), // Border color
-              ),
-              child: const Align(
-                  alignment: Alignment.center,
-                  child: Text(
-                    constDustOption2,
-                    style: TextStyle(
-                        fontFamily: constAppTextFont,
-                        color: Colors.black,
-                        fontSize: 12.0),
-                  )),
-              onPressed: () {
-                // drop into cover
-                _doDustForward();
-                widget.onClose();
-              },
-            )),           
-
-        ]
-      );
-
-  }
   
   // *********************************************
   //  soldier - get a rifle
@@ -483,76 +429,6 @@ class _ImageCyclerOverlayState extends State<ImageCyclerOverlay>
         setState(() {
           _setTerrainAroundSpot(newHex.col, newHex.row);
         });
-
-  }
-
-
-
-  // *********************************************
-  // soldier - dead guy 
-  // *********************************************
-  Widget _returnSoldier() {
-
-    return 
-      Column(
-        children: [
-        SizedBox(
-            width: 250.0,
-            height: 70.0,
-            child: OutlinedButton(
-              style: OutlinedButton.styleFrom(
-                foregroundColor: Colors.black, // Text and icon color
-                backgroundColor: Colors.white, // Background color
-                overlayColor: Colors.blueAccent.withValues(), // pressed ripple
-                side: const BorderSide(
-                  color: Colors.black,
-                  width: 3.0,
-                ), // Border color
-              ),
-              child: const Align(
-                  alignment: Alignment.center,
-                  child: Text(
-                    constSoldierOption1,
-                    style: TextStyle(
-                        fontFamily: constAppTextFont,
-                        color: Colors.black,
-                        fontSize: 12.0),
-                  )),
-              onPressed: () {
-                _doSoldierRifle();
-                widget.onClose();
-              },
-            )),
-         SizedBox(
-            width: 250.0,
-            height: 70.0,
-            child: OutlinedButton(
-              style: OutlinedButton.styleFrom(
-                foregroundColor: Colors.black, // Text and icon color
-                backgroundColor: Colors.white, // Background color
-                overlayColor: Colors.blueAccent.withValues(), // pressed ripple
-                side: const BorderSide(
-                  color: Colors.black,
-                  width: 3.0,
-                ), // Border color
-              ),
-              child: const Align(
-                  alignment: Alignment.center,
-                  child: Text(
-                    constSoldierOption2,
-                    style: TextStyle(
-                        fontFamily: constAppTextFont,
-                        color: Colors.black,
-                        fontSize: 12.0),
-                  )),
-              onPressed: () {
-                _doSoldierMap();
-                widget.onClose();
-              },
-            )),           
-
-        ]
-      );
 
   }
 
@@ -596,33 +472,7 @@ class _ImageCyclerOverlayState extends State<ImageCyclerOverlay>
       return Container(); 
     }
     else {
-      return SizedBox(
-            width: 250.0,
-            height: 70.0,
-            child: OutlinedButton(
-              style: OutlinedButton.styleFrom(
-                foregroundColor: Colors.black, // Text and icon color
-                backgroundColor: Colors.white, // Background color
-                overlayColor: Colors.blueAccent.withValues(), // pressed ripple
-                side: const BorderSide(
-                  color: Colors.black,
-                  width: 3.0,
-                ), // Border color
-              ),
-              child: const Align(
-                  alignment: Alignment.center,
-                  child: Text(
-                    constBuildingOption3,
-                    style: TextStyle(
-                        fontFamily: constAppTextFont,
-                        color: Colors.black,
-                        fontSize: 12.0),
-                  )),
-              onPressed: () {
-                _doBuildingMachete();
-                widget.onClose();
-              },
-            ));         
+      return ActionButton(message: constBuildingOption3, onAction: _doBuildingMachete, onCloseRequest: widget.onClose);
 
     }
 
@@ -647,145 +497,6 @@ class _ImageCyclerOverlayState extends State<ImageCyclerOverlay>
     _pilot.setProximity(EnumDirection.increment);
 
   }
-
-
-  // *********************************************
-  //  an empty building
-  // *********************************************
-  Widget _returnBuilding() {
-
-    return 
-      Column(
-        children: [
-        SizedBox(
-            width: 250.0,
-            height: 70.0,
-            child: OutlinedButton(
-              style: OutlinedButton.styleFrom(
-                foregroundColor: Colors.black, // Text and icon color
-                backgroundColor: Colors.white, // Background color
-                overlayColor: Colors.blueAccent.withValues(), // pressed ripple
-                side: const BorderSide(
-                  color: Colors.black,
-                  width: 3.0,
-                ), // Border color
-              ),
-              child: const Align(
-                  alignment: Alignment.center,
-                  child: Text(
-                    constBuildingOption1,
-                    style: TextStyle(
-                        fontFamily: constAppTextFont,
-                        color: Colors.black,
-                        fontSize: 12.0),
-                  )),
-              onPressed: () {
-                _doBuildingBandage();
-                widget.onClose();
-              },
-            )),
-         SizedBox(
-            width: 250.0,
-            height: 70.0,
-            child: OutlinedButton(
-              style: OutlinedButton.styleFrom(
-                foregroundColor: Colors.black, // Text and icon color
-                backgroundColor: Colors.white, // Background color
-                overlayColor: Colors.blueAccent.withValues(), // pressed ripple
-                side: const BorderSide(
-                  color: Colors.black,
-                  width: 3.0,
-                ), // Border color
-              ),
-              child: const Align(
-                  alignment: Alignment.center,
-                  child: Text(
-                    constBuildingOption2,
-                    style: TextStyle(
-                        fontFamily: constAppTextFont,
-                        color: Colors.black,
-                        fontSize: 12.0),
-                  )),
-              onPressed: () {
-                _doBuildingRest();
-                widget.onClose();
-              },
-            )),           
-            _checkBuildingMachete(),
-        ]
-      );
-
-  }
-
-  // *********************************************
-  // road - which way to go 
-  // *********************************************
-  Widget _returnRoad() {
-
-    return 
-      Column(
-        children: [
-        SizedBox(
-            width: 250.0,
-            height: 70.0,
-            child: OutlinedButton(
-              style: OutlinedButton.styleFrom(
-                foregroundColor: Colors.black, // Text and icon color
-                backgroundColor: Colors.white, // Background color
-                overlayColor: Colors.blueAccent.withValues(), // pressed ripple
-                side: const BorderSide(
-                  color: Colors.black,
-                  width: 3.0,
-                ), // Border color
-              ),
-              child: const Align(
-                  alignment: Alignment.center,
-                  child: Text(
-                    constRoadOption1,
-                    style: TextStyle(
-                        fontFamily: constAppTextFont,
-                        color: Colors.black,
-                        fontSize: 12.0),
-                  )),
-              onPressed: () {
-                _doRoadMove();
-                widget.onClose();
-              },
-            )),
-         SizedBox(
-            width: 250.0,
-            height: 70.0,
-            child: OutlinedButton(
-              style: OutlinedButton.styleFrom(
-                foregroundColor: Colors.black, // Text and icon color
-                backgroundColor: Colors.white, // Background color
-                overlayColor: Colors.blueAccent.withValues(), // pressed ripple
-                side: const BorderSide(
-                  color: Colors.black,
-                  width: 3.0,
-                ), // Border color
-              ),
-              child: const Align(
-                  alignment: Alignment.center,
-                  child: Text(
-                    constRoadOption2,
-                    style: TextStyle(
-                        fontFamily: constAppTextFont,
-                        color: Colors.black,
-                        fontSize: 12.0),
-                  )),
-              onPressed: () {
-                _doRoadProximity();
-                widget.onClose();
-              },
-            )),           
-
-        ]
-      );
-
-  }
-
-
 
   // *********************************************
   //  thorns -- either go back, or chop/skip
@@ -823,124 +534,6 @@ class _ImageCyclerOverlayState extends State<ImageCyclerOverlay>
   }
 
   // *********************************************
-  //  see what happens if they are blocked by thorns
-  // *********************************************
-  Widget _returnThorns() {
-    String option1 = constThornsOption1;
-    String option2 = constThornsOption2;
-
-    if (_pilot.hasAnInventoryItem(EnumInventory.machete)) {
-      option1 = constThornsOption3;
-      option2 = constThornsOption4;
-    }
-
-    return 
-      Column(
-        children: [
-        SizedBox(
-            width: 250.0,
-            height: 70.0,
-            child: OutlinedButton(
-              style: OutlinedButton.styleFrom(
-                foregroundColor: Colors.black, // Text and icon color
-                backgroundColor: Colors.white, // Background color
-                overlayColor: Colors.blueAccent.withValues(), // pressed ripple
-                side: const BorderSide(
-                  color: Colors.black,
-                  width: 3.0,
-                ), // Border color
-              ),
-              child: Align(
-                  alignment: Alignment.center,
-                  child: Text(
-                    option1,
-                    style: const TextStyle(
-                        fontFamily: constAppTextFont,
-                        color: Colors.black,
-                        fontSize: 12.0),
-                  )),
-              onPressed: () {
-                _doThorns1();
-                widget.onClose();
-              },
-            )),
-         SizedBox(
-            width: 250.0,
-            height: 70.0,
-            child: OutlinedButton(
-              style: OutlinedButton.styleFrom(
-                foregroundColor: Colors.black, // Text and icon color
-                backgroundColor: Colors.white, // Background color
-                overlayColor: Colors.blueAccent.withValues(), // pressed ripple
-                side: const BorderSide(
-                  color: Colors.black,
-                  width: 3.0,
-                ), // Border color
-              ),
-              child: Align(
-                  alignment: Alignment.center,
-                  child: Text(
-                    option2,
-                    style: const TextStyle(
-                        fontFamily: constAppTextFont,
-                        color: Colors.black,
-                        fontSize: 12.0),
-                  )),
-              onPressed: () {
-                _doThorns2();
-                widget.onClose();
-              },
-            )),           
-
-        ]
-      );
-
-  }
-
-
-  // *********************************************
-  //  see what happens if they come across chemical munitions
-  // *********************************************
-  Widget _returnChemicals() {
-    // if theyhave a wound or cut, lose further health 
-    if ((_pilot.hasAnAffliction(EnumAffliction.burn)) || (_pilot.hasAnAffliction(EnumAffliction.gunshotwound))) {
-      _pilot.setHealth(EnumDirection.decrement);
-      _pilot.setHealth(EnumDirection.decrement);
-    }
-    else { 
-      _pilot.setAffliction(EnumAffliction.burn);
-
-    }
-
-    return SizedBox(
-        width: 160.0,
-        height: 55.0,
-        child: OutlinedButton(
-          style: OutlinedButton.styleFrom(
-            foregroundColor: Colors.black, // Text and icon color
-            backgroundColor: Colors.white, // Background color
-            overlayColor: Colors.blueAccent.withValues(), // pressed ripple
-            side: const BorderSide(
-              color: Colors.black,
-              width: 3.0,
-            ), // Border color
-          ),
-          child: const Align(
-              alignment: Alignment.center,
-              child: Text(
-                constContinueText,
-                style: TextStyle(
-                    fontFamily: constAppTextFont,
-                    color: Colors.black,
-                    fontSize: 18.0),
-              )),
-          onPressed: () {
-            widget.onClose();
-          },
-        ));
-  }
-
-  // *********************************************
   //  pass back button to close the overlay
   // *********************************************
   Widget _returnContinueButton() {
@@ -968,7 +561,7 @@ class _ImageCyclerOverlayState extends State<ImageCyclerOverlay>
               )),
           onPressed: () {
             widget.onClose();
-          },
+          }, 
         ));
   }
 
@@ -979,12 +572,15 @@ class _ImageCyclerOverlayState extends State<ImageCyclerOverlay>
     EnumEncounter encounter = EnumEncounter.values[_currentEncounterIndex];
     late MapHex newHex;
     int id = 0;
+    String option1 = "";
+    String option2 = "";
 
     if (handleEncounter) {
       // no encounter
       if (encounter == EnumEncounter.none) {
         return _returnContinueButton();
       }
+      
       // highground
       else if (encounter == EnumEncounter.highground) {
         // add a village 4 spaces away and surround it with brush or scrub
@@ -998,41 +594,116 @@ class _ImageCyclerOverlayState extends State<ImageCyclerOverlay>
         setState(() {
           _setTerrainAroundSpot(newHex.col, newHex.row);
         });
-
         return _returnContinueButton();
+      
       // broken foot
       } else if (encounter == EnumEncounter.rockslide) {
         _pilot.setAffliction(EnumAffliction.brokenfoot);
         return _returnContinueButton();
+      
       // mortar fire
       } else if (encounter == EnumEncounter.mortar) {
-        return _returnMortar(); 
+        return 
+          Column(
+            children: [
+              ActionButton(message: constMortarOption1, onAction: _doMortarRun, onCloseRequest: widget.onClose),
+              ActionButton(message: constMortarOption2, onAction: _doMortarDrop, onCloseRequest: widget.onClose)
+            ]);
+      
       // dust storm
       } else if (encounter == EnumEncounter.dust) {
-        return _returnDust(); 
+        return 
+          Column(
+            children: [
+              ActionButton(message: constDustOption1, onAction: _doDustBack, onCloseRequest: widget.onClose),
+              ActionButton(message: constDustOption2, onAction: _doDustForward, onCloseRequest: widget.onClose)
+            ]);
+      
       // chemical weapons
       } else if (encounter == EnumEncounter.chemicals) {
-        return _returnChemicals(); 
+        // if theyhave a wound or cut, lose further health 
+        if ((_pilot.hasAnAffliction(EnumAffliction.burn)) || (_pilot.hasAnAffliction(EnumAffliction.gunshotwound))) {
+          _pilot.setHealth(EnumDirection.decrement);
+          _pilot.setHealth(EnumDirection.decrement);
+        }
+        else { 
+          _pilot.setAffliction(EnumAffliction.burn);
+
+        }
+        return _returnContinueButton();
+
       // thorny briars
       } else if (encounter == EnumEncounter.thorns) {
-        return _returnThorns(); 
+        if (_pilot.hasAnInventoryItem(EnumInventory.machete)) {
+          option1 = constThornsOption3;
+          option2 = constThornsOption4;
+        } else {
+          option1 = constThornsOption1;
+          option2 = constThornsOption2;         
+        }
+
+        return 
+          Column(
+            children: [
+              ActionButton(message: option1, onAction: _doThorns1, onCloseRequest: widget.onClose),
+              ActionButton(message: option2, onAction: _doThorns2, onCloseRequest: widget.onClose)
+            ]);
+      
+      
       // building
       } else if (encounter == EnumEncounter.building) {
-        return _returnBuilding(); 
+        return 
+          Column(
+            children: [
+              ActionButton(message: constHelicopterOption1, onAction: _doBuildingBandage, onCloseRequest: widget.onClose),
+              ActionButton(message: constHelicopterOption2, onAction: _doBuildingRest, onCloseRequest: widget.onClose),
+              _checkBuildingMachete(), 
+            ]);
+
       // road
       } else if (encounter == EnumEncounter.road) {
-        return _returnRoad(); 
+        return 
+          Column(
+            children: [
+              ActionButton(message: constRoadOption1, onAction: _doRoadMove, onCloseRequest: widget.onClose),
+              ActionButton(message: constRoadOption2, onAction: _doRoadProximity, onCloseRequest: widget.onClose),
+              _checkBuildingMachete(), 
+            ]);
+
       // dead soldier
       } else if (encounter == EnumEncounter.soldier) {
-        return _returnSoldier(); 
+        return 
+          Column(
+            children: [
+              ActionButton(message: constSoldierOption1, onAction: _doSoldierRifle, onCloseRequest: widget.onClose),
+              ActionButton(message: constSoldierOption2, onAction: _doSoldierMap, onCloseRequest: widget.onClose),
+              _checkBuildingMachete(), 
+            ]);
+
       // snake
       } else if (encounter == EnumEncounter.snake) {
-        return _returnSnake(); 
+        return _returnSnake();
+
       // wolf
       } else if (encounter == EnumEncounter.wolf) {
         return _returnWolf(); 
 
-
+      // helicopter
+      } else if (encounter == EnumEncounter.helicopter) {
+        return 
+          Column(
+            children: [
+              ActionButton(message: constHelicopterOption1, onAction: _doHelicopterFlare, onCloseRequest: widget.onClose),
+              ActionButton(message: constHelicopterOption2, onAction: _doHelicopterRest, onCloseRequest: widget.onClose)
+            ]);
+      // apc
+      } else if (encounter == EnumEncounter.apc) {
+        return 
+          Column(
+            children: [
+              ActionButton(message: constApcOption1, onAction: _doApcKit, onCloseRequest: widget.onClose),
+              ActionButton(message: constApcOption2, onAction: _doApcRest, onCloseRequest: widget.onClose)
+            ]);
       }
       // catch all (remove later)
       else {
@@ -1113,7 +784,7 @@ class _ImageCyclerOverlayState extends State<ImageCyclerOverlay>
             _currentEncounterIndex =
                 _encounterFactory.getRandomEncounter(_map[_selectedHex]);
             // hardcode this for testing!
-            _currentEncounterIndex = EnumEncounter.wolf.index; 
+            // _currentEncounterIndex = EnumEncounter.apc.index; 
             message =
                 _encounterFactory.getEncounterDescription(_currentEncounterIndex);
           }

@@ -142,8 +142,14 @@ const constMortarOption2 = "Drop into cover, losing Proximity";
 
 const constHelicopterEncounterMessage = 
     "You stumble upon a crashed and abandoned Blackhawk that looks like it has been stripped clean.";
+const constHelicopterOption1 = "You manage to find a working flare gun";
+const constHelicopterOption2 = "You find nothing of value, but use it as shelter and gain 2 Endurance";
+
 const constApcEncounterMessage =
     "The hulk of an armored personnel carrier sits quietly. The insides have been thoroughly stripped.";
+const constApcOption1 = "You miraculously find a first aid kit and use it to heal up";
+const constApcOption2 = "You find nothing of value, but the cabin offers a silent sanctuary. Gain 1 Proximity and Endurance";
+
 const constCaveEncounterMessage =
     "This small cave may have served as a hiding spot for rebel forces before being abandoned.";
 const constGunshipsEncounterMessage =
