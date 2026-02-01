@@ -25,6 +25,7 @@ bool _moveAllowed = false;
 Set<int> _hexesTraveled = {};
 Set<int> _hexesImpassable = {};
 Set<int> _hexesCrashedChopper = {}; 
+Set<int> _hexesTributary= {}; 
 List<int> _rollingDice = [];
 Timer? _rollTimer;
 bool _allowedToReRoll = false;
@@ -32,6 +33,9 @@ int _currentEncounterIndex = 1;
 List<Image> _encounterImages = [];
 bool _skipRest = false;
 bool _skipStealh = false; 
+bool _rescued = false; 
+bool _milepostFriendlyTerrain = false; 
+bool _movementBonus = false; 
 
 EnumVillageReactions _villageReaction = EnumVillageReactions.none;
 
@@ -399,6 +403,39 @@ class _ImageCyclerOverlayState extends State<ImageCyclerOverlay>
 
   }
 
+  // *********************************************
+  //  cave - get a binos
+  // *********************************************
+  void  _doCaveBinos() {
+
+    // add an AK
+    _pilot.addInventoryItem(EnumInventory.binoculars);
+
+  }
+
+  // *********************************************
+  //  cave - find a map
+  // *********************************************
+  void  _doCaveMap() {
+    late MapHex newHex; 
+    int id = 0; 
+
+      // add a village 4 spaces away and surround it with brush or scrub
+        newHex = MapFactory.moveRandomSteps(
+            _map[_selectedHex].row, _map[_selectedHex].col, 3);
+        id = _getIdFromColRow(newHex.col, newHex.row);
+        _map[id].terrain = EnumTerrain.brush;
+        _map[id].visible = true;
+        // make that open and mark it where a tributary is  
+        _hexesTributary.add(id);
+        // walk around it to make bordering spaces either scrub or brush if they are empty
+        setState(() {
+          _setTerrainAroundSpot(newHex.col, newHex.row);
+        });
+
+  }
+
+
   
   // *********************************************
   //  soldier - get a rifle
@@ -429,6 +466,54 @@ class _ImageCyclerOverlayState extends State<ImageCyclerOverlay>
         setState(() {
           _setTerrainAroundSpot(newHex.col, newHex.row);
         });
+
+  }
+
+  // *********************************************
+  //  gunships - increase proximity
+  // *********************************************
+  void  _doGunshipsProximity() {
+
+    // increase 2 proximity
+    _pilot.setProximity(EnumDirection.increment);
+    _pilot.setProximity(EnumDirection.increment);
+
+  }
+
+  // *********************************************
+  //  gunships - extra rest
+  // *********************************************
+  void  _doGunshipsRest() {
+
+    // gain 2 helath and 1 endurance
+    _pilot.setHealth(EnumDirection.increment);
+    _pilot.setHealth(EnumDirection.increment);    
+    _pilot.setEndurance(EnumDirection.increment);
+
+  }
+
+  // *********************************************
+  //  gunships - use flare gun 
+  // *********************************************
+  void  _doGunshipsFlareGun() {
+
+    // win! 
+    _rescued = true; 
+
+  }
+
+  // *********************************************
+  //  gunships - if they have flaregun, add option
+  // *********************************************
+  Widget _checkGunshipsFlareGun() {
+
+    if (_pilot.hasAnInventoryItem(EnumInventory.flaregun)) {
+      return Container(); 
+    }
+    else {
+      return ActionButton(message: constGunshipsOption3, onAction: _doGunshipsFlareGun, onCloseRequest: widget.onClose);
+
+    }
 
   }
 
@@ -479,6 +564,24 @@ class _ImageCyclerOverlayState extends State<ImageCyclerOverlay>
   }
 
   // *********************************************
+  //  tributary - move
+  // *********************************************
+  void  _doTributaryMove() {
+    _moveAllowed = true; 
+
+  }
+
+  // *********************************************
+  //  tributary - rest
+  // *********************************************
+  void  _doTributaryRest() {
+    _pilot.setHealth(EnumDirection.increment);
+    _pilot.setEndurance(EnumDirection.increment);
+
+  }
+
+
+  // *********************************************
   //  road - move
   // *********************************************
   void  _doRoadMove() {
@@ -495,6 +598,89 @@ class _ImageCyclerOverlayState extends State<ImageCyclerOverlay>
 
     // Increase
     _pilot.setProximity(EnumDirection.increment);
+
+  }
+
+  // *********************************************
+  //  sniper - run
+  // *********************************************
+  void  _doSniperRun() {
+
+    // take 2 gunshot wounds!
+    _pilot.setAffliction(EnumAffliction.gunshotwound); 
+    _pilot.setAffliction(EnumAffliction.gunshotwound); 
+    // then run 
+    _moveAllowed = true; 
+
+  }
+
+  // *********************************************
+  //  sniper - retreat
+  // *********************************************
+  void  _doSniperRetreat() {
+
+    _pilot.setAffliction(EnumAffliction.deepcut);
+    _map[_oldHex].current = true;
+    _map[_selectedHex].current = false;
+    _hexesImpassable.add(_selectedHex);
+
+  }
+
+  // *********************************************
+  //  minefield - retreat
+  // *********************************************
+  void  _doMinefieldRetreat() {
+
+      _map[_oldHex].current = true;
+      _map[_selectedHex].current = false;
+      _hexesImpassable.add(_selectedHex);
+
+  }
+
+  // *********************************************
+  //  minefield - move through
+  // *********************************************
+  void  _doMinefieldMove() {
+
+    _pilot.setProximity(EnumDirection.decrement);
+
+  }
+
+  // *********************************************
+  //  milepost - friendly terrain
+  // *********************************************
+  void  _doMilepostFriendlyTerrain() {
+    _milepostFriendlyTerrain = true; 
+
+
+  }
+
+  // *********************************************
+  //  milepost - new village 
+  // *********************************************
+  void  _doMilepostNewVillage() {
+    late MapHex newHex; 
+    int id = 0; 
+
+        newHex = MapFactory.moveRandomSteps(
+            _map[_selectedHex].row, _map[_selectedHex].col, 4);
+        // make that a village
+        id = _getIdFromColRow(newHex.col, newHex.row);
+        _map[id].terrain = EnumTerrain.village;
+        _map[id].visible = true;
+        // walk around it to make bordering spaces either scrub or brush if they are empty
+        setState(() {
+          _setTerrainAroundSpot(newHex.col, newHex.row);
+        });
+
+  }
+
+  // *********************************************
+  //  milepost - extra movement
+  // *********************************************
+  void  _doMilepostMovementBonus() {
+
+    _movementBonus = true; 
 
   }
 
@@ -696,6 +882,7 @@ class _ImageCyclerOverlayState extends State<ImageCyclerOverlay>
               ActionButton(message: constHelicopterOption1, onAction: _doHelicopterFlare, onCloseRequest: widget.onClose),
               ActionButton(message: constHelicopterOption2, onAction: _doHelicopterRest, onCloseRequest: widget.onClose)
             ]);
+
       // apc
       } else if (encounter == EnumEncounter.apc) {
         return 
@@ -705,8 +892,67 @@ class _ImageCyclerOverlayState extends State<ImageCyclerOverlay>
               ActionButton(message: constApcOption2, onAction: _doApcRest, onCloseRequest: widget.onClose)
             ]);
       }
+
+      // cave
+      else if (encounter == EnumEncounter.cave) {
+        return 
+          Column(
+            children: [
+              ActionButton(message: constCaveOption1, onAction: _doCaveMap, onCloseRequest: widget.onClose),
+              ActionButton(message: constCaveOption2, onAction: _doCaveBinos, onCloseRequest: widget.onClose)
+            ]);
+
+      // gunships
+      } else if (encounter == EnumEncounter.gunships) {
+        return 
+          Column(
+            children: [
+              ActionButton(message: constGunshipsOption1, onAction: _doGunshipsProximity, onCloseRequest: widget.onClose),
+              ActionButton(message: constGunshipsOption2, onAction: _doGunshipsRest, onCloseRequest: widget.onClose),
+              _checkGunshipsFlareGun(), 
+            ]);
+
+      // minefield
+      } else if (encounter == EnumEncounter.minefield) {
+        return 
+          Column(
+            children: [
+              ActionButton(message: constMinefieldOption1, onAction: _doMinefieldMove, onCloseRequest: widget.onClose),
+              ActionButton(message: constMinefieldOption2, onAction: _doMinefieldRetreat, onCloseRequest: widget.onClose)
+            ]);
+
+      // sniper
+      } else if (encounter == EnumEncounter.sniper) {
+        return 
+          Column(
+            children: [
+              ActionButton(message: constSniperOption1, onAction: _doSniperRun, onCloseRequest: widget.onClose),
+              ActionButton(message: constSniperOption2, onAction: _doSniperRetreat, onCloseRequest: widget.onClose)
+            ]);
+
+      // milepost
+      } else if (encounter == EnumEncounter.milepost) {
+        // no matter what, they can move again 
+        _moveAllowed = true; 
+        return 
+          Column(
+            children: [
+              ActionButton(message: constMilepostOption1, onAction: _doMilepostFriendlyTerrain, onCloseRequest: widget.onClose),
+              ActionButton(message: constMilepostOption2, onAction: _doMilepostNewVillage, onCloseRequest: widget.onClose),
+              ActionButton(message: constMilepostOption3, onAction: _doMilepostMovementBonus, onCloseRequest: widget.onClose)
+            ]);
+
+      // tributary
+      } else if (encounter == EnumEncounter.tributary) {
+        return 
+          Column(
+            children: [
+              ActionButton(message: constTributaryOption1, onAction: _doTributaryMove, onCloseRequest: widget.onClose),
+              ActionButton(message: constTributaryOption2, onAction: _doTributaryRest, onCloseRequest: widget.onClose)
+            ]);
+
       // catch all (remove later)
-      else {
+      } else {
         return _returnContinueButton();
       }
     } else {
@@ -722,7 +968,7 @@ class _ImageCyclerOverlayState extends State<ImageCyclerOverlay>
 
     // set a flag here in case we're in a hex which a preset encounter
     // is going to happen in
-    if (_hexesCrashedChopper.contains(_selectedHex)) {
+    if ((_hexesCrashedChopper.contains(_selectedHex)) || (_hexesTributary.contains(_selectedHex)))  {
       skipDueToEncounter = true; 
     }
 
@@ -754,7 +1000,8 @@ class _ImageCyclerOverlayState extends State<ImageCyclerOverlay>
           _currentEncounterIndex = rand.nextInt(_encounterImages.length);
         }
         else {
-          _currentEncounterIndex = EnumEncounter.helicopter.index; 
+          // are we finding a crashed helicopter or a tributary? 
+          _currentEncounterIndex = _hexesCrashedChopper.contains(_selectedHex) ? EnumEncounter.helicopter.index : EnumEncounter.tributary.index;
           message =
               _encounterFactory.getEncounterDescription(_currentEncounterIndex);          
         }
@@ -768,6 +1015,12 @@ class _ImageCyclerOverlayState extends State<ImageCyclerOverlay>
           if (!mounted) return;
           setState(() {
             _currentEncounterIndex = rand.nextInt(_encounterImages.length);
+            // if we find a cave, it can't be in scrub or brush, so just flip to no encounter
+            if (EnumEncounter.values[_currentEncounterIndex] == EnumEncounter.cave) {
+              if ((_map[_selectedHex].terrain == EnumTerrain.scrub) || (_map[_selectedHex].terrain == EnumTerrain.brush)) {
+                _currentEncounterIndex = EnumEncounter.none.index;
+              }
+            }
             controller.forward(from: 0);
           });
         });
@@ -1268,13 +1521,20 @@ class _GameScreenState extends State<GameScreen> {
   // *********************************************
   void _rollDice() {
     int mod = 0;
+    int bonus = 0; 
 
     // if they have a fever, impacts all die rolls 
     if (_pilot.hasAnAffliction(EnumAffliction.fever)) { mod = 1; }
 
+    // if they have movement bonus due to milestone encounter, add + 2
+    if (_movementBonus) {
+      bonus = 2; 
+      _movementBonus = false; 
+    }
+
     setState(() {
       // the clamp usage ensures keeps it between 1 and 6 
-      _rollingDice = _rollingDice.map((_) => (Random().nextInt(6) + 1 - mod).clamp(1,6)).toList();
+      _rollingDice = _rollingDice.map((_) => (Random().nextInt(6) + 1 - mod + bonus).clamp(1,6)).toList();
     });
   }
 
@@ -1664,6 +1924,7 @@ class _GameScreenState extends State<GameScreen> {
     MapHex currentHex = _getCurrentHex();
     int row = currentHex.row;
     int col = currentHex.col;
+    late MapHex randomHex; 
 
     // pick terrain for the next three hexes based on random roll
     if (die == 1) {
@@ -1690,6 +1951,15 @@ class _GameScreenState extends State<GameScreen> {
       hex1 = EnumTerrain.rough;
       hex2 = EnumTerrain.village;
       hex3 = EnumTerrain.rough;
+    }
+
+    // special case -- if this is a result of the milepost encounter, everything is scrub
+    if (_milepostFriendlyTerrain == true) {
+      _milepostFriendlyTerrain = false; 
+      hex1 = EnumTerrain.scrub; 
+      hex2 = EnumTerrain.scrub; 
+      hex3 = EnumTerrain.scrub; 
+
     }
 
     // start with first hex
@@ -1810,6 +2080,27 @@ class _GameScreenState extends State<GameScreen> {
           hexCount++;
         }
       }
+    }
+
+    // if the player has binoculars, they also randomly map two more hexes three spots away
+    if (_pilot.hasAnInventoryItem(EnumInventory.binoculars)) {
+      // hex 1
+      randomHex = MapFactory.moveRandomSteps(currentHex.row, currentHex.col, 3);
+      // if not visible, make it so
+      if (!randomHex.visible) {
+        // randomly select one of the first five
+        _map[_getIdFromColRow(randomHex.col, randomHex.row)].visible = true;
+        _map[_getIdFromColRow(randomHex.col, randomHex.row)].terrain = EnumTerrain.values[Random().nextInt(5)];
+      }
+      // hex 2
+      randomHex = MapFactory.moveRandomSteps(currentHex.row, currentHex.col, 3);
+      // if not visible, make it so
+      if (!randomHex.visible) {
+        // randomly select one of the first five
+        _map[_getIdFromColRow(randomHex.col, randomHex.row)].visible = true;
+        _map[_getIdFromColRow(randomHex.col, randomHex.row)].terrain = EnumTerrain.values[Random().nextInt(5)];
+      }
+
     }
 
     setState(() {
@@ -2161,6 +2452,13 @@ class _GameScreenState extends State<GameScreen> {
     }
     // else if this hex contains a crashed chopper
     else if ((_hexesCrashedChopper.isNotEmpty) && (_hexesCrashedChopper.contains(id))) {
+      return const Positioned(
+          top: 25,
+          left: 32,
+          child: Icon(Icons.place, color: Colors.yellow, size: 50));
+    }
+    // else if this hex contains a crashed chopper
+    else if ((_hexesTributary.isNotEmpty) && (_hexesTributary.contains(id))) {
       return const Positioned(
           top: 25,
           left: 32,

@@ -121,7 +121,7 @@ const constRoadOption2 = "Increase your Proximity by 1";
 const constSoldierEncounterMessage =
     "A fallen soldier lies facedown hidden in the brush.";
 const constSoldierOption1 = "Find a working AK-47 with several rounds left in the magazine";
-const constSoldierOption2 = "Find a map in his pocket with directions to a crashed helicopter";
+const constSoldierOption2 = "Find a map show the location of a crashed helicopter";
 
 const constSnakeEncounterMessage =
     "As you trek across the desert, you disturb a sleeping snake.";
@@ -143,24 +143,44 @@ const constMortarOption2 = "Drop into cover, losing Proximity";
 const constHelicopterEncounterMessage = 
     "You stumble upon a crashed and abandoned Blackhawk that looks like it has been stripped clean.";
 const constHelicopterOption1 = "You manage to find a working flare gun";
-const constHelicopterOption2 = "You find nothing of value, but use it as shelter and gain 2 Endurance";
+const constHelicopterOption2 = "Use it as shelter to gain 2 Endurance";
 
 const constApcEncounterMessage =
     "The hulk of an armored personnel carrier sits quietly. The insides have been thoroughly stripped.";
 const constApcOption1 = "You miraculously find a first aid kit and use it to heal up";
-const constApcOption2 = "You find nothing of value, but the cabin offers a silent sanctuary. Gain 1 Proximity and Endurance";
+const constApcOption2 = "Use it as a shelter to gain 1 Proximity and Endurance";
 
 const constCaveEncounterMessage =
     "This small cave may have served as a hiding spot for rebel forces before being abandoned.";
+const constCaveOption1 = "Find a map showing a source of water";
+const constCaveOption2 = "Find a pair of powerful binoculars";
+
 const constGunshipsEncounterMessage =
-    "Roaring overhead is a flight of attack helicopters intent on ruining someone's day.";
-const constMinefieldEncounterMessage = "Mines block your way.";
+    "Roaring overhead comes a flight of attack helicopters firing rockets which pin down your pursuers.";
+const constGunshipsOption1 = "Use the opportunity to gain 2 Proximity";
+const constGunshipsOption2 = "Rest up to gain 2 Health and 1 Endurance";
+const constGunshipsOption3 = "Signal your exact position with the flare gun and be rescued";
+
+const constMinefieldEncounterMessage = "A large, well marked minefield block your way.";
+const constMinefieldOption1 = "Pass through slowly, losing 1 Prximity";
+const constMinefieldOption2 = "Return to your last spot and this becomes impassable";
+
 const constSniperEncounterMessage =
-    "You work your way across an open area that gives a perfect field of fire for snipers. A round strikes you in the shoulder.";
+    "As you work your way across an open area a high powered sniper round strikes you in the shoulder!";
+const constSniperOption1 = "Make a run for it, but take another hit";
+const constSniperOption2 = "Fall back into cover and this becomes impassable";
+
 const constMilepostEncounterMessage =
-    "You come to an intersection that provides several safe looking options to move quickly down.";
+    "You come to an intersection that provides several safe looking movement options.";
+const constMilepostOption1 = "Terrain ahead becomes favorable";
+const constMilepostOption2 = "A village is nearby";
+const constMilepostOption3 = "Gain +2 to your next movement roll";
+
 const constTributaryEncounterMessage =
     "You come across a stream that provides needed water and is easy to move along.";
+const constTributaryOption1 = "Follow the stream and move again";
+const constTributaryOption2 = "A refreshing rest in the water gains 1 Health and Endurance";
+
 const constNoEncounterMessage =
     "Nothing but blue skies and empty desert ahead of you.";
 
