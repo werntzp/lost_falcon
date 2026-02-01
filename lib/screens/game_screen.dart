@@ -619,6 +619,7 @@ class _ImageCyclerOverlayState extends State<ImageCyclerOverlay>
   // *********************************************
   void  _doSniperRetreat() {
 
+    _pilot.setAffliction(EnumAffliction.gunshotwound); 
     _pilot.setAffliction(EnumAffliction.deepcut);
     _map[_oldHex].current = true;
     _map[_selectedHex].current = false;
@@ -2455,14 +2456,14 @@ class _GameScreenState extends State<GameScreen> {
       return const Positioned(
           top: 25,
           left: 32,
-          child: Icon(Icons.place, color: Colors.yellow, size: 50));
+          child: Icon(Icons.place, color: Colors.yellow, size: 75));
     }
     // else if this hex contains a crashed chopper
     else if ((_hexesTributary.isNotEmpty) && (_hexesTributary.contains(id))) {
       return const Positioned(
           top: 25,
           left: 32,
-          child: Icon(Icons.place, color: Colors.yellow, size: 50));
+          child: Icon(Icons.place, color: Colors.yellow, size: 75));
     }
 
     // else if player cannot travel through this hex, show close icon
@@ -2470,7 +2471,7 @@ class _GameScreenState extends State<GameScreen> {
       return const Positioned(
           top: 25,
           left: 32,
-          child: Icon(Icons.block, color: Colors.red, size: 50));
+          child: Icon(Icons.block, color: Colors.red, size: 75));
     }
 
     // else if player traveled through hex, show person icon
@@ -2478,7 +2479,7 @@ class _GameScreenState extends State<GameScreen> {
       return const Positioned(
           top: 25,
           left: 32,
-          child: Icon(Icons.directions_run, color: Colors.black, size: 50));
+          child: Icon(Icons.directions_run, color: Colors.black, size: 60));
     }
 
     // else, just an empty container
