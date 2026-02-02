@@ -98,7 +98,7 @@ class MapFactory {
     return distance;
   }
 
-  // ************************
+  // ************************ 
   // how far are we from the starting hex?
   // ************************
   static MapHex moveRandomSteps(int currentRow, int currentCol, int numSteps) {

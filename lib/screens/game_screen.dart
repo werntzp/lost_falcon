@@ -1201,7 +1201,7 @@ class _GameScreenState extends State<GameScreen> {
                             textAlign: TextAlign.center,
                           ),
                           const Padding(
-                            padding: EdgeInsets.all(10.0),
+                            padding: EdgeInsets.all(12.0),
                           ),
                           Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
@@ -1233,7 +1233,7 @@ class _GameScreenState extends State<GameScreen> {
                                   ],
                                 ),
                               ),
-                              const SizedBox(height: 5),
+                              const SizedBox(height: 8),
                               GestureDetector(
                                 onTap: () {
                                   _changeStealth(EnumDirection.increment);
@@ -1261,7 +1261,7 @@ class _GameScreenState extends State<GameScreen> {
                                   ],
                                 ),
                               ),
-                              const SizedBox(height: 5),
+                              const SizedBox(height: 8),
                               GestureDetector(
                                 onTap: () {
                                   _changeRest(EnumDirection.increment);
@@ -2317,7 +2317,7 @@ class _GameScreenState extends State<GameScreen> {
     // get current hex
     MapHex h = _getCurrentHex();
     // save that for the moment
-    _oldHex = h.id;
+    _oldHex = h.id; 
     // get the id of the hex they selected
     _selectedHex = _getIdFromColRow(col, row);
     // get distance between hexes
@@ -2438,11 +2438,11 @@ class _GameScreenState extends State<GameScreen> {
     // if player in current hex, show american flag
     if (isCurrentPlayerLocation) {
       return Positioned(
-          top: 30,
-          left: 35,
+          top: 27,
+          left: 30,
           child: Container(
-              height: 35,
-              width: 45,
+              height: 40,
+              width: 50,
               decoration: BoxDecoration(
                 border: Border.all(
                   color: Colors.black,
@@ -2454,32 +2454,32 @@ class _GameScreenState extends State<GameScreen> {
     // else if this hex contains a crashed chopper
     else if ((_hexesCrashedChopper.isNotEmpty) && (_hexesCrashedChopper.contains(id))) {
       return const Positioned(
-          top: 25,
-          left: 32,
+          top: 10,
+          left: 15,
           child: Icon(Icons.place, color: Colors.yellow, size: 75));
     }
     // else if this hex contains a crashed chopper
     else if ((_hexesTributary.isNotEmpty) && (_hexesTributary.contains(id))) {
       return const Positioned(
-          top: 25,
-          left: 32,
+          top: 10,
+          left: 15,
           child: Icon(Icons.place, color: Colors.yellow, size: 75));
     }
 
     // else if player cannot travel through this hex, show close icon
     else if ((_hexesImpassable.isNotEmpty) && (_hexesImpassable.contains(id))) {
       return const Positioned(
-          top: 25,
-          left: 32,
+          top: 10,
+          left: 15,
           child: Icon(Icons.block, color: Colors.red, size: 75));
     }
 
     // else if player traveled through hex, show person icon
     else if (_hexesTraveled.contains(id)) {
       return const Positioned(
-          top: 25,
-          left: 32,
-          child: Icon(Icons.directions_run, color: Colors.black, size: 60));
+          top: 10,
+          left: 15,
+          child: Icon(Icons.directions_run, color: Colors.black, size: 75));
     }
 
     // else, just an empty container
