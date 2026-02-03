@@ -47,8 +47,8 @@ class Pilot {
       }
     } else {
       _health--;
-      if (_health == 0) {
-        throw PilotException(EnumGameOver.health, constGameOverHealth);
+      if (_health < 0) {
+        _health = 0; 
       }
     }
   }
@@ -71,8 +71,8 @@ class Pilot {
       }
     } else {
       _proximity--;
-      if (_proximity == 0) {
-        throw PilotException(EnumGameOver.proximity, constGameOverProximity);
+      if (_proximity <= 0) {
+        _proximity = 0; 
       }
     }
   }

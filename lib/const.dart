@@ -7,6 +7,7 @@ const sdsLogo = "assets/images/sds_logo.png";
 const constAppTextFont = "Lemonada";
 
 // images
+const constAssetsImagesFolder = "assets/images/"; 
 const constImageDie = "assets/images/lf_die_";
 const constImageStatus = "assets/images/lf_status_";
 const constImageScrub = "assets/images/lf_terrain_scrub.jpg";
@@ -23,6 +24,14 @@ const constImageRescue = "assets/images/lf_rescue.jpg";
 const constImagePlayerLocation = "assets/images/lf_american_flag_small.gif";
 const constImageUnknown = "assets/images/lf_terrain_unknown.jpg";
 const constImageEncounters = "assets/images/lf_enc_";
+const constImageRescued = "rescued.jpg";
+const constImageCaptured = "captured.jpg";
+const constImageKilled = "dead.jpg";
+
+// phases
+const constMovePhase = "Move Phase";
+const constStealthPhase = "Stealth Phase";
+const constRestPhase = "Rest Phase";
 
 // descriptions
 const constTerrainUnkown = "You cannot see what lies ahead here yet.";
@@ -38,49 +47,54 @@ const constTerrainVillage =
     "Villages can provide sanctuary or bring danger, so think carefully before you enter one.";
 
 // messages
+const constSameHexPickedMessage = "Choose a new spot for movement, or press Continue if you don't want to move this turn";
+const constHexTooFarMessage = "You can only move to an adjacent hex";
+const constHexImpassableMessage = "You cannot move into an impassable hex";
+
 const constDiceAllocationMessage1 = "You have";
 const constDiceAllocationMessage2 =
     "dice to allocate. Tap once to increment, and long press to decrement.";
 
-const constGameOverHealth = "You died.";
-const constGameOverProximity = "You were captured.";
-const constGameOverEncounter = "You were killed.";
+const constGameOverRescued = "Rescued";
+const constGameOverCaptured = "Captured";
+const constGameOverKilled = "Killed";
 
-const constDiceRollMoveMessage1 = "You need to roll a";
+const constDiceRollMoveMessage1 = "It is not easy navigating across the terrain. In order to keep your bearing and move forward, you must roll a";
 const constDiceRollMoveMessage2 =
-    "or higher to move from your current location.";
-const constDiceRollMoveMessage3 =
-    "However, if you choose a 6, your Health is reduced by one point.";
-const constDiceRollMoveMessage4 =
-    "Moving successfully allows you to re-roll one die during the Stealth phase.";
+    "(or higher) to get out of the hex you are currently in.";
 const constMoveFailedMessage =
-    "You failed in the attempt to move from your current location.";
-const constNoDiceAllocatedForMoveMessage = "You are unable to move this round.";
+    "You failed in the attempt to move from this hex";
+const constNoDiceAllocatedForMoveMessage = "You are unable to move this round";
+const constMoveSuccessMessage =
+    "Moved successfully to a new hex, and you can now re-roll one die during Stealth phase";
 
-const constDiceRollStealthMessage1 = "You need to roll a";
+const constDiceRollStealthMessage1 = "Various factions know that your F-16 was shot down and are actively looking for a survivor. They will steadily close in on your position unless you roll a"; 
 const constDiceRollStealthMessage2 =
-    "or higher to remain hidden from your pursuers.";
-const constDiceRollStealthMessage3 =
-    "However, if you choose a 6, your Health is reduced by one point.";
+    "(or higher) to stay ahead of them.";
 const constDiceRollStealthMessage4 =
-    "Since you were successful at moving across the map, you can re-roll one die by double tapping on it.";
+    " You can re-roll one die by double tapping on it.";
 const constStealthFailedMessage =
-    "You failed in an attempt to keep ahead of your pursuers. Lose one Proximity.";
+    "You failed in an attempt to keep ahead of your pursuers and lose 1 Proximity";
 const constNoDiceAllocatedForStealthMessage =
-    "You lost one Proximity as your pursuers gained ground."; 
+    "You lost 1 Proximity as your pursuers gained ground"; 
+const constStealthSuccessMessage =
+    "Your stealthy movement kept distance between you and your pursuers";
 
-const constDiceRollRestMessage1 = "You need to roll a";
+const constDiceRollRestMessage1 = "Endurance is the key to your survival. As it lowers, you lose dice to assign in the Allocation Phase. Rolling a";
 const constDiceRollRestMessage2 =
-    "or higher to successfully rest and improve your Endurance by one.";
-const constDiceRollRestMessage3 =
-    "However, if you choose a 6, your Health is reduced by one point.";
+    "(or higher) means you successfully rested and thus raise your Endurance by one.";
 const constRestFailedMessage =
-    "You were unable to rest and keep up your strength. Lose one Endurance.";
+    "You were unable to rest to keep up your strength, and lose 1 Endurance";
 const constNoDiceAllocatedForRestMessage =
-    "You lost one Endurance due to fatigue.";
-const constMoveSixMessage = "You were successful at moving to a new space, but still lost Health due to some minor injuries.";
-const constStealthSixMessage = "You were successful at hiding, but still lost Health due to some minor injuries.";
-const constRestSixMessage = "You were successful at keeping up your Endurance, but still lost Health due to some minor injuries.";
+    "You lost 1 Endurance due to fatigue";
+const constRestSuccessMessage =
+    "You were able to rest successfully";
+
+const constDiceRollPickSix =
+    "If you choose a 6, your Health is reduced by one point.";
+const constMoveSixMessage = "You were successful at moving, but still lost Health due to some minor injuries";
+const constStealthSixMessage = "You were successful at hiding, but still lost Health due to some minor injuries";
+const constRestSixMessage = "You were successful at resting, but still lost Health due to some minor injuries";
 
 // encounters
 const constEncountersMessage =
@@ -88,15 +102,15 @@ const constEncountersMessage =
 
 const constDustEncounterMessage =
     "A dust storm kicks up obstructing your view while the strong wind and harsh blowing sand wears you down.";
-const constDustOption1 = "Stumble backward to your last location";
-const constDustOption2 = "Lose 2 Endurance continuing through the storm";    
+const constDustOption1 = "Stumble backward to the previous hex";
+const constDustOption2 = "Lose 2 Endurance pushing through";    
 
 const constChemicalsEncounterMessage =
-    "You have to cross through a field full of chemical munitions which burns and irritates your skin.";
+    "You have to cross through a field full of chemical munitions which burns and irritates your skin, resulting in injuries.";
 
 const constThornsEncounterMessage =
     "Your progress has been halted by dense, unpassable heavy brush covered in half-inch thorns.";
-const constThornsOption1 = "Give up and move backward to your last location";
+const constThornsOption1 = "Give up and move back to the previous hex";
 const constThornsOption2 = "Push through but take a deep cut";    
 const constThornsOption3 = "Cut a path with your machete skipping Stealth and Rest phases";
 const constThornsOption4 = "Cut a path with your machete keeping Stealth and Rest phases";
@@ -136,18 +150,18 @@ const constWolfOption2 = "It knocks you down and tears into you before running o
 const constWolfOption3 = "You are able to strike it with your machete and drive it off, but during the scuffle, your machete snaps at the handle.";
 
 const constMortarEncounterMessage =
-    "A piercing whistle announces the arrival of mortar rounds falling around you. You can:";
-const constMortarOption1 = "Sprint to a new hex, getting wounded, and losing Endurance";
-const constMortarOption2 = "Drop into cover, losing Proximity";
+    "A piercing whistle announces the arrival of mortar rounds falling around you.";
+const constMortarOption1 = "Move to a new hex, but get wounded and lose 1 Endurance";
+const constMortarOption2 = "Drop into cover, losing 1 Proximity";
 
 const constHelicopterEncounterMessage = 
-    "You stumble upon a crashed and abandoned Blackhawk that looks like it has been stripped clean.";
-const constHelicopterOption1 = "You manage to find a working flare gun";
+    "You stumble upon a crashed and abandoned Blackhawk helicopter.";
+const constHelicopterOption1 = "Find a working flare gun";
 const constHelicopterOption2 = "Use it as shelter to gain 2 Endurance";
 
 const constApcEncounterMessage =
-    "The hulk of an armored personnel carrier sits quietly. The insides have been thoroughly stripped.";
-const constApcOption1 = "You miraculously find a first aid kit and use it to heal up";
+    "The hulk of an armored personnel carrier sits quietly.";
+const constApcOption1 = "Find a first aid kit and use it to heal up";
 const constApcOption2 = "Use it as a shelter to gain 1 Proximity and Endurance";
 
 const constCaveEncounterMessage =
@@ -163,12 +177,12 @@ const constGunshipsOption3 = "Signal your exact position with the flare gun and 
 
 const constMinefieldEncounterMessage = "A large, well marked minefield block your way.";
 const constMinefieldOption1 = "Pass through slowly, losing 1 Prximity";
-const constMinefieldOption2 = "Return to your last spot and this becomes impassable";
+const constMinefieldOption2 = "Return to your last spot and this hex becomes impassable";
 
 const constSniperEncounterMessage =
     "As you work your way across an open area a high powered sniper round strikes you in the shoulder!";
 const constSniperOption1 = "Make a run for it, but take another hit";
-const constSniperOption2 = "Fall back into cover and this becomes impassable";
+const constSniperOption2 = "Fall back into cover and this hex becomes impassable";
 
 const constMilepostEncounterMessage =
     "You come to an intersection that provides several safe looking movement options.";
@@ -186,26 +200,25 @@ const constNoEncounterMessage =
 
 // village actions
 const constVillageRobbedItems =
-    "You were robbed in the village and lost your items! Move to an adjacent, mapped spot.";
+    "You were robbed in the village and lost your items! Move to a new hex.";
 const constVillageRobbedNoItems =
-    "The villagers looked pretty threatening, so you decide to leave. Move to an adjacent, mapped spot.";
+    "The villagers looked pretty threatening, so you decide to leave. Move to a new hex.";
 const constVillageDelayed =
-    "The villagers do not harm you, but purposefull slow you down which lets your pursuers get closer. Lose Proximity and Endurance. Move to an adjacent, mapped spot";
+    "The villagers do not harm you, but purposefull slow you down which lets your pursuers get closer. Lose Proximity and Endurance. Move to a new hex.";
 const constVillageKickedOut =
     "You are forcibly kicked out of the village and cannot enter here again.";
 const constVillageUntrusting =
-    "Everyone warily ignores you and lets you pass through. Move to any adjacent spot.";
+    "Everyone in the village warily ignores you and lets you pass through. Move to a new hex.";
 const constVillagePeaceful =
-    "You are offered sanctuary. Gain Endurance and move to an adjacent, mapped spot.";
+    "You are offered sanctuary. Gain Endurance and move to a new hex.";
 const constVillageHelpful =
     "A villager gives you an old motorcycle. You gain Proximity and can drive three map spots in any direction before it runs out of gas.";
 const constVillageAlliedAfflictions =
-    "A doctor in the village heals an affliction before you leave. Gain Health, Proximity, and Endurance. Move to any adjacent spot.";
+    "A doctor in the village heals an affliction before you leave. Gain Health, Proximity, and Endurance. Move to a new hex.";
 const constVillageAlliedNoAfflications =
-    "A doctor in the village treats you. Gain Health, Proximity, and Endurance. Move to any adjacent spot.";
+    "A doctor in the village treats you. Gain Health, Proximity, and Endurance. Move to a new hex.";
 
 // afflictions
-
 const constAfflictions = "The following afflictions are impacting you: ";
 const constNoAfflictions = "Other than some minor scrapes and bruises, you are in good shape.";
 const constAfflictionFever = "a high fever limiting your ability to move, rest, or hide";
@@ -217,7 +230,6 @@ const constAfflictionDeepCut = "a deep cut straining every moment and eroding yo
 // inventory
 const constInventory = "You have collected the following items: ";
 const constNoInventory = "Unfortunately, you have no items or gear to use.";
-
 
 // buttons and labels
 const constMoveText = "Move";
@@ -232,6 +244,9 @@ const constAfflictionsText = "Afflictions";
 const constQuitText = "Quit";
 const constContinueText = "Continue";
 const constOKText = "OK";
+
+const constDieFaceRed = "assets/images/dice_face_red_";
+const constDieFaceWhite = "assets/images/dice_face_white_";
 
 const constMapRows = 5;
 const constMapCols = 15;
@@ -257,9 +272,11 @@ const constBrushRestCost = 3;
 const constHillsRestCost = 5;
 const constRoughRestCost = 4;
 
+enum EnumMessageType { success, fail }
+
 enum EnumDirection { increment, decrement }
 
-enum EnumGameOver { health, proximity, encounter }
+enum EnumGameOver { rescued, captured, killed }
 
 enum EnumPhase { mapping, encounter, allocate, move, stealth, rest }
 
