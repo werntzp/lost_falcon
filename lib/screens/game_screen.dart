@@ -40,6 +40,7 @@ bool _milepostFriendlyTerrain = false;
 bool _movementBonus = false; 
 int _reRolledDiceIndex = -1; 
 String _sixMessage = ""; 
+bool _forcesPatrollingUp = true; 
 
 EnumVillageReactions _villageReaction = EnumVillageReactions.none;
  
@@ -102,6 +103,40 @@ class ActionButton extends StatelessWidget {
   }
 }
 
+// *********************************************
+//  generic message overlay 
+// *********************************************
+class MessageOverlay extends StatelessWidget {
+  final VoidCallback onFinished; 
+  final EnumMessageType messageType; 
+  final String message; 
+
+  const MessageOverlay({super.key, required this.onFinished, required this.messageType, required this.message});
+
+  @override
+  Widget build(BuildContext context) {
+    return Stack(children: [
+              const ModalBarrier(
+                dismissible: false,
+                color: Colors.black12),
+              Align(
+                  alignment: Alignment.center,
+                  child: Card(
+                      elevation: 8.0,
+                      color: (messageType == EnumMessageType.success) ? Colors.green : Colors.red,
+                      child: Padding(
+                          padding: const EdgeInsets.all(10.0),
+                          child: Text(message,
+                              style: const TextStyle(
+                                  fontFamily: constAppTextFont,
+                                  fontSize: 18,
+                                  fontWeight: FontWeight.bold,
+                                  color: Colors.white),
+                              textAlign: TextAlign.center))))
+            ]);
+  }
+
+}
 
 
 // *********************************************
@@ -1149,19 +1184,6 @@ class _GameScreenState extends State<GameScreen> {
   }
 
   // *********************************************
-  // finished allocatiing dice
-  // *********************************************
-  void _closeDiceAllocationOverlay() {
-    _overlayEntry?.remove();
-    _completer?.complete();
-    _overlayEntry = null;
-    _completer = null;
-    setState(() {
-      // do nothing
-    });
-  }
-
-  // *********************************************
   // display overlay to get dice allocation
   // *********************************************
   Future<void> _diceAllocationOverlay() async {
@@ -1341,7 +1363,7 @@ class _GameScreenState extends State<GameScreen> {
   }
 
   // *********************************************
-  // close out overlay
+  // close out overlays
   // *********************************************
   void _genericCloseOverlay() {
     _overlayEntry?.remove();
@@ -1455,13 +1477,24 @@ class _GameScreenState extends State<GameScreen> {
           _hexesTraveled.add(_selectedHex);
           _allowedToReRoll = true;
         }
+
+        // special case, if they moved into the rescue hex, then just end the game successfully
+        _checkRescueConditions(); 
         // map out next hexes
         _doMappingPhase();
-        // for now, assume they can't move again
-        _moveAllowed = false;
+        // for now, assume they can't move again 
         // did they choose a six?
         if (value == 6) {
           _pilot.setHealth(EnumDirection.decrement);
+          if (_pilot.getHealth() == 0) {
+            Navigator.push(
+              context,
+                  MaterialPageRoute(builder: (context) => 
+                    GameOverScreen(gameOverReason: EnumGameOver.killed, hexesTraveled: _hexesTraveled.length, totalPoints: _totalUpPoints(EnumGameOver.killed),)),
+              );
+          } else { 
+            await _overlayMessage(constMoveSixMessage, EnumMessageType.fail);
+          }
           await _overlayMessage(constMoveSixMessage, EnumMessageType.fail);
         }
         else { 
@@ -1761,36 +1794,18 @@ class _GameScreenState extends State<GameScreen> {
     if (_overlayEntry != null) return; // Prevent stacking
 
     _overlayEntry = OverlayEntry(
-        builder: (context) => Stack(children: [
-              const ModalBarrier(
-                dismissible: false,
-                color: Colors.black12),
-              Align(
-                  alignment: Alignment.center,
-                  child: Card(
-                      elevation: 8.0,
-                      color: (type == EnumMessageType.success) ? Colors.green : Colors.red,
-                      child: Padding(
-                          padding: const EdgeInsets.all(10.0),
-                          child: Text(message,
-                              style: const TextStyle(
-                                  fontFamily: constAppTextFont,
-                                  fontSize: 18,
-                                  fontWeight: FontWeight.bold,
-                                  color: Colors.white),
-                              textAlign: TextAlign.center))))
-            ]));
+      builder: (_) => MessageOverlay(onFinished: _genericCloseOverlay, messageType: type, message: message,),
+    );
 
     Overlay.of(context).insert(_overlayEntry!);
 
     Future.delayed(const Duration(seconds: 3), () {
-      _overlayEntry?.remove();
-      _completer?.complete();
-      _overlayEntry = null;
-      _completer = null;
-    });
+        _genericCloseOverlay();
+      }
+    );
 
-    await _completer!.future;
+    return _completer?.future; 
+
   }
 
   // *********************************************
@@ -1798,7 +1813,6 @@ class _GameScreenState extends State<GameScreen> {
   // *********************************************
   Future<void> _showEncounterOverlay(BuildContext context) async {
     final completer = Completer<void>(); 
-    final overlay = Overlay.of(context);
     late OverlayEntry entry;
 
     entry = OverlayEntry(
@@ -1810,9 +1824,8 @@ class _GameScreenState extends State<GameScreen> {
       ),
     );
 
-    Overlay.of(context).insert(entry!);
+    Overlay.of(context).insert(entry);
     return completer.future;
-    //overlay.insert(entry);
   }
 
   // ************************
@@ -1885,8 +1898,6 @@ class _GameScreenState extends State<GameScreen> {
   // set up a new game
   // ************************
   void _newGame() async {
-    // set up the map
-    _initMap();
 
     // clear stuff out
     _map.clear(); 
@@ -1894,6 +1905,11 @@ class _GameScreenState extends State<GameScreen> {
     _hexesImpassable.clear();
     _hexesCrashedChopper.clear(); 
     _hexesTributary.clear(); 
+
+    // get an initialized map from the factory
+    _map = MapFactory.initMap();
+    // add the starting hex to the list the player travels
+    _hexesTraveled.add(_getIdFromColRow(constStartCol, constStartRow));
 
     // initial values
     _round = 1;
@@ -1973,14 +1989,29 @@ class _GameScreenState extends State<GameScreen> {
   }
 
   // ************************
-  // _displayTurn
+  // friendly display of the round 
   // ************************
   String _displayRound() {
     return _round.toString();
   }
 
   // ************************
-  // _doMappingPhase
+  // total up end game points 
+  // ************************
+  int _totalUpPoints(EnumGameOver gameOverReason) { 
+    int hexCount = _hexesTraveled.length; 
+
+    // if they won, bonus is remaining health + proximinty + endurance
+    int bonus = (gameOverReason == EnumGameOver.rescued) ? (_pilot.getHealth() + _pilot.getProximity() + _pilot.getEndurance()) : 0; 
+
+    return hexCount + bonus; 
+
+  }
+
+
+
+  // ************************
+  // map next three hexes
   // ************************
   void _doMappingPhase() {
     int die = Random().nextInt(6) + 1;
@@ -2177,12 +2208,58 @@ class _GameScreenState extends State<GameScreen> {
   }
 
   // ************************
+  // move the u.s. patrol along the outer column 
+  // ************************
+  void _moveUSForces() {
+    int col = constMapCols-1; // they are always in the last column 
+    late int row; 
+
+    // figure out current row
+    for (int i=1; i < constMapRows; i++) {
+      if (_map[_getIdFromColRow(col, i)].terrain == EnumTerrain.rescue) { 
+        _map[_getIdFromColRow(col, i)].terrain = EnumTerrain.unknown; // reset it while here        
+        _map[_getIdFromColRow(col, i)].visible = false; // reset it while here            
+        row = i;
+        break;
+      }
+    }
+
+    // move up or down depending on which way they are going
+    if (_forcesPatrollingUp) { 
+      row--;
+      if (row <= constStartRow) {
+        _forcesPatrollingUp = false; 
+        row = 2; 
+      }
+    }
+    else { 
+      row++;
+      if (row >= constMapRows) {
+        _forcesPatrollingUp = true; 
+        row = 3; 
+      }
+    }
+
+    // now update them on the map 
+    _map[_getIdFromColRow(col, row)].terrain = EnumTerrain.rescue;    
+    _map[_getIdFromColRow(col, row)].visible = true;        
+
+    setState(() {
+      // redraw
+    });
+
+  }
+
+  // ************************
   // advance through phases 
   // ************************
   void _continueButtonPress() async {
     // increment the phase from current one since they moved to the next
     try {
-      _phase = EnumPhase.values[_phase.index + 1];
+      // and increment the turn
+      setState(() {
+        _phase = EnumPhase.values[_phase.index + 1];
+      });
     } catch (e) {
       // if we hit the end of the phases, go back to the beginning
       _phase = EnumPhase.encounter;
@@ -2194,7 +2271,6 @@ class _GameScreenState extends State<GameScreen> {
 
     // always set these to false to start
     _moveAllowed = false;
-
  
     // if encounter phase, decide if they had an encounter
     if (_phase == EnumPhase.encounter) {
@@ -2204,15 +2280,22 @@ class _GameScreenState extends State<GameScreen> {
       if (_pilot.getHealth() == 0) {
         Navigator.push(
           context,
-              MaterialPageRoute(builder: (context) => const GameOverScreen(gameOverReason: EnumGameOver.killed,)),
+              MaterialPageRoute(builder: (context) => 
+                GameOverScreen(gameOverReason: EnumGameOver.killed, hexesTraveled: _hexesTraveled.length, totalPoints: _totalUpPoints(EnumGameOver.killed),)),
           );
       }
       if (_pilot.getProximity() == 0) {
         Navigator.push(
           context,
-              MaterialPageRoute(builder: (context) => const GameOverScreen(gameOverReason: EnumGameOver.captured,)),
+              MaterialPageRoute(builder: (context) =>
+                GameOverScreen(gameOverReason: EnumGameOver.captured, hexesTraveled: _hexesTraveled.length, totalPoints: _totalUpPoints(EnumGameOver.captured),)),
           );
       }
+
+      // clear out the dice numbers
+      _moveDice = 0;
+      _stealthDice = 0;
+      _restDice = 0; 
 
       setState(() {
         _doMappingPhase(); 
@@ -2231,6 +2314,8 @@ class _GameScreenState extends State<GameScreen> {
 
     // if move phase, just set the flag allowing them to move (when they pick a new hex)
     if (_phase == EnumPhase.move) {
+      // move the u.s. forces up or down
+      _moveUSForces(); 
       // reset village flags and counters
       _villageReaction = EnumVillageReactions.none;
       _motorcycleMoves = 0;
@@ -2244,7 +2329,7 @@ class _GameScreenState extends State<GameScreen> {
       else { 
         await _overlayMessage(constNoDiceAllocatedForMoveMessage, EnumMessageType.fail);
         _allowedToReRoll = false; 
-        _continueButtonPress(); 
+        //_continueButtonPress(); 
       }
     }
 
@@ -2262,8 +2347,18 @@ class _GameScreenState extends State<GameScreen> {
       } else {
         _pilot.setProximity(EnumDirection.decrement);
         await _overlayMessage(constStealthFailedMessage, EnumMessageType.fail);
-        _continueButtonPress(); 
+        //_continueButtonPress(); 
       }
+
+      // do a game over check to see if the pilot was captured 
+      if (_pilot.getProximity() == 0) {
+        Navigator.push(
+          context,
+              MaterialPageRoute(builder: (context) =>
+                GameOverScreen(gameOverReason: EnumGameOver.captured, hexesTraveled: _hexesTraveled.length, totalPoints: _totalUpPoints(EnumGameOver.captured),)),
+          );
+      }
+
     }
 
     // if rest phase, decide whether they lose any endurance
@@ -2279,7 +2374,7 @@ class _GameScreenState extends State<GameScreen> {
       } else {
         _pilot.setEndurance(EnumDirection.decrement);
         await _overlayMessage(constRestFailedMessage, EnumMessageType.fail);
-        _continueButtonPress();         
+        //_continueButtonPress();         
       }
     }
 
@@ -2360,6 +2455,8 @@ class _GameScreenState extends State<GameScreen> {
       }
     } else if (enumTerrain == EnumTerrain.rescue) {
       asset = constImageRescue;
+    } else if (enumTerrain == EnumTerrain.background) {
+      asset = constImageBackground;
     } else {
       asset = constImageUnknown;
     }
@@ -2368,34 +2465,18 @@ class _GameScreenState extends State<GameScreen> {
   }
 
   // ************************
-  // _initMap
+  // check if rescued
   // ************************
-  void _initMap() {
-    int counter = 0;
+  void _checkRescueConditions() {
 
-    // loop through and create initial map
-    for (int c = 0; c < constMapCols; c++) {
-      for (int r = 0; r < constMapRows; r++) {
-        MapHex m = MapHex(counter, c, r);
-        _map.add(m);
-        // increment the counter
-        counter++;
-      }
-    }
-
-    // now go through and set up a few initial spots
-    _map[_getIdFromColRow(constStartCol, constStartRow)].current =
-        true; // start post
-    _map[_getIdFromColRow(constStartCol, constStartRow)].terrain =
-        EnumTerrain.scrub; // start in scrub
-    _map[_getIdFromColRow(constStartCol, constStartRow)].visible = true;
-
-    // add the starting hex to the list the player travels
-    _hexesTraveled.add(_getIdFromColRow(constStartCol, constStartRow));
-
-    // rescue hex
-    _map[_getIdFromColRow(14, 4)].terrain = EnumTerrain.rescue;
-    _map[_getIdFromColRow(14, 4)].visible = true;
+        // special case, if they moved into the rescue hex, then just end the game successfully
+        if (_map[_selectedHex].terrain == EnumTerrain.rescue) {
+          Navigator.push(
+              context,
+                  MaterialPageRoute(builder: (context) => 
+                    GameOverScreen(gameOverReason: EnumGameOver.rescued, hexesTraveled: _hexesTraveled.length, totalPoints: _totalUpPoints(EnumGameOver.rescued),)),
+          );
+        }
   }
 
   // ************************
@@ -2428,6 +2509,11 @@ class _GameScreenState extends State<GameScreen> {
         return;     
     }
 
+    // third check, if they picked a special background hex that's not obvious, bail right out
+    if (_map[_selectedHex].terrain == EnumTerrain.background) {
+      return; 
+    }
+
     // if this is move phase, do all the logic
     if ((_phase == EnumPhase.move) && (_moveAllowed)) {
       // is the hex too far away?
@@ -2435,7 +2521,6 @@ class _GameScreenState extends State<GameScreen> {
         await _overlayMessage(constHexTooFarMessage, EnumMessageType.fail);
         return;
       }
-
       // special case -- crashed helicopter due to encounter
       if (_hexesCrashedChopper.contains(_selectedHex)) {
         // they just move, no roll or anything 
@@ -2443,6 +2528,9 @@ class _GameScreenState extends State<GameScreen> {
         _map[_selectedHex].current = true;
         _hexesTraveled.add(_selectedHex);
         _hexesTraveled.add(_oldHex);
+        // special case, check if game over in case they moved into rescue hex
+        _checkRescueConditions(); 
+
       }
       // regular move
       else if (_villageReaction == EnumVillageReactions.none) {
@@ -2471,6 +2559,9 @@ class _GameScreenState extends State<GameScreen> {
             _map[_selectedHex].current = true;
             _hexesTraveled.add(_selectedHex);
             _hexesTraveled.add(_oldHex);
+            // special case, check if game over in case they moved into rescue hex
+            _checkRescueConditions(); 
+            // map out next spaces 
             _doMappingPhase();
           }
         } else {
@@ -2479,6 +2570,9 @@ class _GameScreenState extends State<GameScreen> {
           _map[_selectedHex].current = true;
           _hexesTraveled.add(_selectedHex);
           _hexesTraveled.add(_oldHex);
+          // special case, check if game over in case they moved into rescue hex
+          _checkRescueConditions(); 
+          // map out next spaces 
           _doMappingPhase();
         }
 
@@ -2514,6 +2608,9 @@ class _GameScreenState extends State<GameScreen> {
       _map[_selectedHex].current = true;
       _hexesTraveled.add(_selectedHex);
       _hexesTraveled.add(_oldHex); 
+      // special case, check if game over in case they moved into rescue hex
+      _checkRescueConditions(); 
+      // map out next spaces 
       _doMappingPhase();
 
     }

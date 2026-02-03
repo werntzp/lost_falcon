@@ -1,6 +1,14 @@
 import 'package:lost_falcon/const.dart';
 import 'dart:math';
 
+class Cube {
+  final int x;
+  final int y;
+  final int z;
+
+  const Cube(this.x, this.y, this.z);
+}
+
 class MapHex {
   final int id;
   final int col; // col
@@ -14,6 +22,7 @@ class MapHex {
 }
 
 class MapFactory {
+
   // ************************
   // return move number based on terrain
   // ************************
@@ -75,27 +84,30 @@ class MapFactory {
   // how far are we from the starting hex?
   // ************************
   static int getDistanceBetweenHexes(MapHex startHex, MapHex destHex) {
-    // figure out the distance between starting hex and destination (current one)
-    int distance = 0;
+  
+    final startCube = _offsetToCube(startHex.col, startHex.row);
+    final destCube = _offsetToCube(destHex.col, destHex.row);
+    return _cubeDistance(startCube, destCube);
 
-    if (startHex.row == destHex.row) {
-      // if same row, just count across columns
-      distance = (destHex.col - startHex.col).abs();
-    } else if (startHex.col == destHex.col) {
-      // if same column, just count across rows
-      distance = (destHex.row - startHex.row).abs();
-    } else {
-      // this is where it gets tricky
-      int dx = (destHex.row - startHex.row).abs();
-      int dy = (destHex.col - startHex.col).abs();
-      if (startHex.col < destHex.col) {
-        distance = dx + dy - (dx / 2.0).ceil();
-      } else {
-        distance = dx + dy - (dx / 2.0).floor();
-      }
-    }
+  }
 
-    return distance;
+  // ************************
+  // build and return a cube 
+  // ************************
+  static Cube _offsetToCube(int col, int row) {
+    final x = col;
+    final z = row - ((col & 1) == 0 ? col ~/ 2 : (col + 1) ~/ 2);
+    final y = -x - z;
+    return Cube(x, y, z);
+  }
+
+  // ************************
+  // figure out distance between cubes 
+  // ************************
+  static int _cubeDistance(Cube a, Cube b) {
+    return ((a.x - b.x).abs() +
+            (a.y - b.y).abs() +
+            (a.z - b.z).abs()) ~/ 2;
   }
 
   // ************************ 
@@ -122,4 +134,73 @@ class MapFactory {
     // ok, now we have the map spot so send out a hex
     return MapHex(constFakeHex, finalCol, finalRow);
   }
+
+  // ************************
+  // get an id from the column and row 
+  // ************************
+  static int _getIdFromColRow(List<MapHex> map, int col, int row) {
+    int id = 0;
+
+    for (MapHex m in map) {
+      if ((m.row == row) && (m.col == col)) {
+        id = m.id;
+        break;
+      }
+    }
+    return id;
+  }
+
+  // ************************
+  // return an initialized map
+  // ************************
+  static List<MapHex> initMap() { 
+    List<MapHex> map = [];
+    int counter = 0; 
+
+    // loop through and create initial map
+    for (int c = 0; c < constMapCols; c++) {
+      for (int r = 0; r < constMapRows; r++) {
+        MapHex mh = MapHex(counter, c, r);
+        map.add(mh);
+        // increment the counter
+        counter++;
+      }
+    }
+
+    // now go through and set up a few initial spots
+    map[_getIdFromColRow(map, constStartCol, constStartRow)].current =
+        true; // start post
+    map[_getIdFromColRow(map, constStartCol, constStartRow)].terrain =
+        EnumTerrain.scrub; // start in scrub
+    map[_getIdFromColRow(map, constStartCol, constStartRow)].visible = true;
+
+    // rescue hex
+    map[_getIdFromColRow(map, 14, 4)].terrain = EnumTerrain.rescue;
+    map[_getIdFromColRow(map, 14, 4)].visible = true;
+
+    // set a few specific ones to be background hexes that can't be entered or selected
+    map[_getIdFromColRow(map, 0, 2)].terrain = EnumTerrain.background;
+    map[_getIdFromColRow(map, 0, 2)].visible = true;
+    map[_getIdFromColRow(map, 0, 3)].terrain = EnumTerrain.background;
+    map[_getIdFromColRow(map, 0, 3)].visible = true;
+    map[_getIdFromColRow(map, 0, 4)].terrain = EnumTerrain.background;
+    map[_getIdFromColRow(map, 0, 4)].visible = true;
+    map[_getIdFromColRow(map, 1, 4)].terrain = EnumTerrain.background;
+    map[_getIdFromColRow(map, 1, 4)].visible = true;
+    map[_getIdFromColRow(map, 13, 0)].terrain = EnumTerrain.background;
+    map[_getIdFromColRow(map, 13, 0)].visible = true;    
+    map[_getIdFromColRow(map, 14, 0)].terrain = EnumTerrain.background;
+    map[_getIdFromColRow(map, 14, 0)].visible = true;    
+
+    // return the map back out
+    return List.from(map); 
+
+  }
+
+
+
+
+
+
+
 }

@@ -23,6 +23,7 @@ const constImageVillageGrey = "assets/images/lf_terrain_village_grey.jpg";
 const constImageRescue = "assets/images/lf_rescue.jpg";
 const constImagePlayerLocation = "assets/images/lf_american_flag_small.gif";
 const constImageUnknown = "assets/images/lf_terrain_unknown.jpg";
+const constImageBackground = "assets/images/lf_terrain_background.jpg";
 const constImageEncounters = "assets/images/lf_enc_";
 const constImageRescued = "rescued.jpg";
 const constImageCaptured = "captured.jpg";
@@ -45,21 +46,20 @@ const constTerrainHills =
     "Hills are difficult to cross which hampers movement and rest, but they offer excellent places to hide.";
 const constTerrainVillage =
     "Villages can provide sanctuary or bring danger, so think carefully before you enter one.";
+const constTerrainRescue=
+    "United States military forces are patrolling here -- reach them to be rescued!";    
 
 // messages
 const constAlreadMovedMessage = "You are not able to move any more this turn";
 const constSameHexPickedMessage = "Choose a new spot for movement, or press Continue if you don't want to move this turn";
 const constHexTooFarMessage = "You can only move to an adjacent hex";
 const constHexImpassableMessage = "You cannot move into an impassable hex";
-
 const constDiceAllocationMessage1 = "You have";
 const constDiceAllocationMessage2 =
     "dice to allocate. Tap once to increment, and long press to decrement.";
-
-const constGameOverRescued = "Rescued";
-const constGameOverCaptured = "Captured";
+const constGameOverRescued = "You made it back to friendly forces and have been rescued!";
+const constGameOverCaptured = "Unable to escape your pursuers, you now wait in captivity.";
 const constGameOverKilled = "Despite your best efforts, you died alone, far from home.";
-
 const constDiceRollMoveMessage1 = "It is not easy navigating across the terrain. In order to keep your bearing and move forward, you must roll a";
 const constDiceRollMoveMessage2 =
     "(or higher) to get out of the hex you are currently in.";
@@ -68,7 +68,6 @@ const constMoveFailedMessage =
 const constNoDiceAllocatedForMoveMessage = "You are unable to move this round";
 const constMoveSuccessMessage =
     "Moved successfully to a new hex, and you can now re-roll one die during Stealth phase";
-
 const constDiceRollStealthMessage1 = "Various factions know that your F-16 was shot down and are actively looking for a survivor. They will steadily close in on your position unless you roll a"; 
 const constDiceRollStealthMessage2 =
     "(or higher) to stay ahead of them.";
@@ -80,7 +79,6 @@ const constNoDiceAllocatedForStealthMessage =
     "You lost 1 Proximity as your pursuers gained ground"; 
 const constStealthSuccessMessage =
     "Your stealthy movement kept distance between you and your pursuers";
-
 const constDiceRollRestMessage1 = "Endurance is the key to your survival. As it lowers, you lose dice to assign in the Allocation Phase. Rolling a";
 const constDiceRollRestMessage2 =
     "(or higher) means you successfully rested and thus raise your Endurance by one.";
@@ -90,12 +88,13 @@ const constNoDiceAllocatedForRestMessage =
     "You lost 1 Endurance due to fatigue";
 const constRestSuccessMessage =
     "You were able to rest successfully";
-
 const constDiceRollPickSix =
     "If you choose a 6, your Health is reduced by one point.";
 const constMoveSixMessage = "You were successful at moving, but still lost Health due to some minor injuries";
 const constStealthSixMessage = "You were successful at hiding, but still lost Health due to some minor injuries";
 const constRestSixMessage = "You were successful at resting, but still lost Health due to some minor injuries";
+const constGameOverLost = "You scored X points for traveling through Y hexes";
+const constGameOverWon = "You scored X points for traveling through Y hexes and a bonus of your remaining Health, Proximity, and Endurance";
 
 // encounters
 const constEncountersMessage =
@@ -245,7 +244,7 @@ const constAfflictionsText = "Afflictions";
 const constQuitText = "Quit";
 const constContinueText = "Continue";
 const constOKText = "OK";
-const constBackText = "Back";
+const constHomeText = "Home";
 
 const constDieFaceRed = "assets/images/dice_face_red_";
 const constDieFaceWhite = "assets/images/dice_face_white_";
@@ -282,7 +281,7 @@ enum EnumGameOver { rescued, captured, killed }
 
 enum EnumPhase { mapping, encounter, allocate, move, stealth, rest }
 
-enum EnumTerrain { scrub, brush, hills, village, rough, rescue, unknown }
+enum EnumTerrain { scrub, brush, hills, village, rough, rescue, unknown, background }
 
 enum EnumAffliction { deepcut, burn, brokenfoot, gunshotwound, fever }
 

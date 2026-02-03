@@ -15,6 +15,8 @@ String _displayMessage(EnumTerrain terrain) {
     name = constTerrainHills;
   } else if (terrain == EnumTerrain.village) {
     name = constTerrainVillage;
+  } else if (terrain == EnumTerrain.rescue) {
+    name = constTerrainRescue;    
   } else {
     name = constTerrainUnkown;
   }
@@ -36,6 +38,8 @@ String _displayImage(EnumTerrain terrain) {
     name = constImageHills;
   } else if (terrain == EnumTerrain.village) {
     name = constImageVillage;
+  } else if (terrain == EnumTerrain.rescue) {
+    name = constImageRescue;    
   } else {
     name = constImageUnknown;
   }

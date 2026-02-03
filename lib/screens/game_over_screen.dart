@@ -5,42 +5,63 @@ import '../const.dart';
 
 class GameOverScreen extends StatelessWidget {
 final EnumGameOver gameOverReason;
+final int hexesTraveled; 
+final int totalPoints; 
 
 
-const GameOverScreen({super.key, required this.gameOverReason});
+const GameOverScreen({super.key, required this.gameOverReason, required this.hexesTraveled, required this.totalPoints});
 
-String _dialogText() {
+  String _totalPointsText() {
+    String message; 
 
-  if (gameOverReason == EnumGameOver.rescued) {
-    return constGameOverRescued;
-  }
-  else if (gameOverReason == EnumGameOver.captured) {
-    return constGameOverCaptured;
-  }
-  else {
-    return constGameOverKilled;
-  }
+    // decide on which string to return 
+    if (gameOverReason == EnumGameOver.rescued) {
+      message = constGameOverWon
+      .replaceFirst("X", totalPoints.toString())     // total points
+      .replaceFirst("Y", hexesTraveled.toString());    // hexes traveled 
+    }
+    else { 
+      message = constGameOverLost
+      .replaceFirst("X", totalPoints.toString())     // total points
+      .replaceFirst("Y", hexesTraveled.toString());    // hexes traveled 
+    }
 
-}
+    return message; 
 
-String _graphic() {
-  int i = Random().nextInt(1) + 1; // return a 1 or 2 
-  late String img;
-  String folder = constAssetsImagesFolder; 
-
-  if (gameOverReason == EnumGameOver.rescued) {
-    img = constImageRescued;
-  }
-  else if (gameOverReason == EnumGameOver.captured) {
-    img = constImageCaptured;
-  }
-  else {
-    img = constImageKilled;
   }
 
-  return folder + i.toString() + img; 
 
-}
+  String _dialogText() {
+
+    if (gameOverReason == EnumGameOver.rescued) {
+      return constGameOverRescued;
+    }
+    else if (gameOverReason == EnumGameOver.captured) {
+      return constGameOverCaptured;
+    }
+    else {
+      return constGameOverKilled;
+    }
+  }
+
+  String _graphic() {
+    bool male = Random().nextBool(); 
+    String num  = (male) ? "1" : "2";
+    late String img;
+    String folder = constAssetsImagesFolder; 
+
+    if (gameOverReason == EnumGameOver.rescued) {
+      img = constImageRescued;
+    }
+    else if (gameOverReason == EnumGameOver.captured) {
+      img = constImageCaptured;
+    }
+    else {
+      img = constImageKilled;
+    }
+
+    return folder + num + img; 
+  }
 
   // main build function
   @override
@@ -66,9 +87,18 @@ String _graphic() {
                               style: const TextStyle(
                                   fontFamily: constAppTextFont,
                                   color: Colors.white,
-                                  fontSize: 25.0),
+                                  fontSize: 20.0),
                              ),
-                            const SizedBox(height: 20),
+                            const SizedBox(height: 15),                             
+                          Text(
+                              _totalPointsText(),
+                              textAlign: TextAlign.center,
+                              style: const TextStyle(
+                                  fontFamily: constAppTextFont,
+                                  color: Colors.white,
+                                  fontSize: 12.0),
+                             ),                             
+                            const SizedBox(height: 15),
                              ConstrainedBox(
                                 constraints: const BoxConstraints(
                                   minWidth: 0.0,
@@ -85,7 +115,7 @@ String _graphic() {
                                   child: const Align(
                                     alignment: Alignment.center,
                                     child: Text(
-                                      constBackText, 
+                                      constHomeText, 
                                       style: TextStyle(
                                           fontFamily: constAppTextFont, 
                                           color: Colors.black,

@@ -112,7 +112,6 @@ class Pilot {
 
   }
 
-
   // ************************
   // return whether the pilot has a specific affliction
   // ************************
