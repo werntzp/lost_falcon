@@ -49,63 +49,59 @@ String _graphic() {
         child: Scaffold(
             body: Stack(
               children: <Widget>[
-                Image(
-                  image: AssetImage(_graphic()),
-                  width: MediaQuery.of(context).size.width,
-                  height: MediaQuery.of(context).size.height,
-                  fit: BoxFit.cover,
-                ),              
-              Padding(
-                padding: const EdgeInsets.all(1.0),
-                child: Align(
-                  alignment: Alignment.topCenter,
-                  child:  Text(
-                    _dialogText(),
-                    textAlign: TextAlign.center,
-                    style: const TextStyle(
-                        fontFamily: constAppTextFont,
-                        color: Colors.white,
-                        fontSize: 35.0),
-                  ),
-                ),
-              ),
-                  const Padding(
-                    padding: EdgeInsets.all(15.0),
-                  ),
-                Positioned(
-                  top: 750,
-                  left: 125, 
-                child: Center(
-                  child: SizedBox(
-                  width: 160.0,
-                  height: 55.0,
-                  child: OutlinedButton(
-                    style: OutlinedButton.styleFrom(
-                      foregroundColor: Colors.black, // Text and icon color
-                      backgroundColor: Colors.white, // Background color
-                      side: BorderSide(color: Colors.black,   width: 5.0,), // Border color
-                    ),   
-                                        child: const Align(
-                        alignment: Alignment.center,
-                        child: Text(
-                          constOKText, 
-                          style: TextStyle(
-                              fontFamily: constAppTextFont, 
-                              color: Colors.black,
-                              fontWeight: FontWeight.bold,
-                              fontSize: 28.0),
-                        )),
-                        onPressed: () {
-                            Navigator.push(
-                              context,
-                              MaterialPageRoute(builder: (context) => const LostFalconApp()),
-                            );
-                    },                 
-                  ),
-                ),
-                  )),
-              ],)
-
-            ));
-  }
+                Column(
+                  children: [
+                    AspectRatio(aspectRatio: 1024 / 1536,
+                      child: Image.asset(_graphic(), fit: BoxFit.contain)),
+                    Expanded(
+                      child: Container(
+                        color: Colors.black, 
+                        width: double.infinity, 
+                        child: Column(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                           Text(
+                              _dialogText(),
+                              textAlign: TextAlign.center,
+                              style: const TextStyle(
+                                  fontFamily: constAppTextFont,
+                                  color: Colors.white,
+                                  fontSize: 25.0),
+                             ),
+                            const SizedBox(height: 20),
+                             ConstrainedBox(
+                                constraints: const BoxConstraints(
+                                  minWidth: 0.0,
+                                  maxWidth: 160.0,
+                                  minHeight: 0.0,
+                                  maxHeight: 55.0,
+                                ),
+                                child: OutlinedButton(
+                                  style: OutlinedButton.styleFrom(
+                                    foregroundColor: Colors.black, // Text and icon color
+                                    backgroundColor: Colors.white, // Background color
+                                    side: const BorderSide(color: Colors.black,   width: 5.0,), // Border color
+                                  ),   
+                                  child: const Align(
+                                    alignment: Alignment.center,
+                                    child: Text(
+                                      constBackText, 
+                                      style: TextStyle(
+                                          fontFamily: constAppTextFont, 
+                                          color: Colors.black,
+                                          fontWeight: FontWeight.bold,
+                                          fontSize: 28.0),
+                                    )),
+                                    onPressed: () {
+                                        Navigator.push(
+                                          context,
+                                          MaterialPageRoute(builder: (context) => const LostFalconApp()),
+                                  );
+                                },                 
+                              )), 
+                          ],)),
+                      )
+                    ],)
+              ])));                
+   }
 }

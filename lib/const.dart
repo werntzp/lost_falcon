@@ -47,6 +47,7 @@ const constTerrainVillage =
     "Villages can provide sanctuary or bring danger, so think carefully before you enter one.";
 
 // messages
+const constAlreadMovedMessage = "You are not able to move any more this turn";
 const constSameHexPickedMessage = "Choose a new spot for movement, or press Continue if you don't want to move this turn";
 const constHexTooFarMessage = "You can only move to an adjacent hex";
 const constHexImpassableMessage = "You cannot move into an impassable hex";
@@ -57,7 +58,7 @@ const constDiceAllocationMessage2 =
 
 const constGameOverRescued = "Rescued";
 const constGameOverCaptured = "Captured";
-const constGameOverKilled = "Killed";
+const constGameOverKilled = "Despite your best efforts, you died alone, far from home.";
 
 const constDiceRollMoveMessage1 = "It is not easy navigating across the terrain. In order to keep your bearing and move forward, you must roll a";
 const constDiceRollMoveMessage2 =
@@ -244,6 +245,7 @@ const constAfflictionsText = "Afflictions";
 const constQuitText = "Quit";
 const constContinueText = "Continue";
 const constOKText = "OK";
+const constBackText = "Back";
 
 const constDieFaceRed = "assets/images/dice_face_red_";
 const constDieFaceWhite = "assets/images/dice_face_white_";

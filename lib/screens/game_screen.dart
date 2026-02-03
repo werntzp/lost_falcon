@@ -7,6 +7,7 @@ import '../models/pilot_model.dart';
 import '../dialogs/terrain_dialog.dart';
 import '../dialogs/info_dialog.dart';
 import '../screens/game_over_screen.dart';
+import '../main.dart';
 import 'dart:math';
 import 'dart:async';
 
@@ -30,7 +31,6 @@ Set<int> _hexesTributary= {};
 List<int> _rollingDice = [];
 Timer? _rollTimer;
 bool _allowedToReRoll = false;
-bool _reRollOccurred = false;
 int _currentEncounterIndex = 1;
 List<Image> _encounterImages = [];
 bool _skipRest = false;
@@ -38,12 +38,11 @@ bool _skipStealh = false;
 bool _rescued = false; 
 bool _milepostFriendlyTerrain = false; 
 bool _movementBonus = false; 
-String _diceFace = constDieFaceWhite;
 int _reRolledDiceIndex = -1; 
 String _sixMessage = ""; 
 
 EnumVillageReactions _villageReaction = EnumVillageReactions.none;
-
+ 
 // extension used to capitalize the first letter of a word
 extension StringExtension on String {
   String capitalizeFirstLetter() {
@@ -1763,6 +1762,9 @@ class _GameScreenState extends State<GameScreen> {
 
     _overlayEntry = OverlayEntry(
         builder: (context) => Stack(children: [
+              const ModalBarrier(
+                dismissible: false,
+                color: Colors.black12),
               Align(
                   alignment: Alignment.center,
                   child: Card(
@@ -1871,11 +1873,27 @@ class _GameScreenState extends State<GameScreen> {
   }
 
   // ************************
-  // _newGame
+  // quit the current game and go back to main screen
+  // ************************
+  void _quitGame() async {
+    Navigator.push(
+      context,
+      MaterialPageRoute(builder: (context) => const LostFalconApp()));
+  }
+
+  // ************************
+  // set up a new game
   // ************************
   void _newGame() async {
     // set up the map
     _initMap();
+
+    // clear stuff out
+    _map.clear(); 
+    _hexesTraveled.clear();
+    _hexesImpassable.clear();
+    _hexesCrashedChopper.clear(); 
+    _hexesTributary.clear(); 
 
     // initial values
     _round = 1;
@@ -2177,7 +2195,7 @@ class _GameScreenState extends State<GameScreen> {
     // always set these to false to start
     _moveAllowed = false;
 
-
+ 
     // if encounter phase, decide if they had an encounter
     if (_phase == EnumPhase.encounter) {
       await _showEncounterOverlay(context);
@@ -2477,6 +2495,12 @@ class _GameScreenState extends State<GameScreen> {
       }
 
     }
+    else if ((_phase == EnumPhase.move) && (!_moveAllowed)) {
+        await _overlayMessage(constAlreadMovedMessage, EnumMessageType.fail);
+        return;
+
+    }
+
     else if ((_phase == EnumPhase.encounter) && (_moveAllowed)) {
       // there are some encounters where they can also move
             // is the hex too far away?
@@ -2559,7 +2583,7 @@ class _GameScreenState extends State<GameScreen> {
       return const Positioned(
           top: 10,
           left: 15,
-          child: Icon(Icons.directions_run, color: Colors.black, size: 75));
+          child: Icon(Icons.directions_walk, color: Colors.black, size: 75));
     }
 
     // else, just an empty container
@@ -2682,8 +2706,8 @@ class _GameScreenState extends State<GameScreen> {
                       columns: constMapCols,
                       rows: constMapRows,
                       buildTile: (col, row) => HexagonWidgetBuilder(
-                        elevation: 8.0, // col.toDouble(),
-                        padding: 1.0,
+                        elevation: 0.0, // col.toDouble(),
+                        padding: 0.0,
                         cornerRadius: null, // hex shape (vs rounded)
                         color: Colors.grey,
                         //child: Text("$row, $col"),
@@ -2931,7 +2955,7 @@ class _GameScreenState extends State<GameScreen> {
                                       fontSize: 18.0),
                                 )),
                             onPressed: () {
-                              // TBD
+                              _quitGame(); 
                             },
                           ),
                         )
