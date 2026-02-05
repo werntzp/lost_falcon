@@ -68,7 +68,7 @@ const constMoveFailedMessage =
 const constNoDiceAllocatedForMoveMessage = "You are unable to move this round";
 const constMoveSuccessMessage =
     "Moved successfully to a new hex, and you can now re-roll one die during Stealth phase";
-const constDiceRollStealthMessage1 = "Various factions know that your F-16 was shot down and are actively looking for a survivor. They will steadily close in on your position unless you roll a"; 
+const constDiceRollStealthMessage1 = "Hostile forces are actively looking for you. They will steadily close in on your position unless you roll a"; 
 const constDiceRollStealthMessage2 =
     "(or higher) to stay ahead of them.";
 const constDiceRollStealthMessage4 =
@@ -89,12 +89,12 @@ const constNoDiceAllocatedForRestMessage =
 const constRestSuccessMessage =
     "You were able to rest successfully";
 const constDiceRollPickSix =
-    "If you choose a 6, your Health is reduced by one point.";
+    "If you choose the 6, your Health is reduced by one point, or you can decide to fail the roll.";
 const constMoveSixMessage = "You were successful at moving, but still lost Health due to some minor injuries";
 const constStealthSixMessage = "You were successful at hiding, but still lost Health due to some minor injuries";
 const constRestSixMessage = "You were successful at resting, but still lost Health due to some minor injuries";
-const constGameOverLost = "You scored X points for traveling through Y hexes";
-const constGameOverWon = "You scored X points for traveling through Y hexes and a bonus of your remaining Health, Proximity, and Endurance";
+const constGameOverLost = "You scored X points for traveling through Z hexes";
+const constGameOverWon = "You scored X points for traveling through Z hexes and a bonus of your remaining Health, Proximity, and Endurance";
 
 // encounters
 const constEncountersMessage =
@@ -225,7 +225,7 @@ const constAfflictionFever = "a high fever limiting your ability to move, rest, 
 const constAfflictionGunShotWound = "a horrible wound dramatically lowering your Health";
 const constAfflictionBrokenFoot = "a broken foot hobbling your every step which limits your movement";
 const constAfflictionBurn = "a burn which continues to send shocks of pain through you reducing your Endurance";
-const constAfflictionDeepCut = "a deep cut straining every moment and eroding your Health";
+const constAfflictionDeepCut = "a deep cut that won't stop bleeding and straining your every movement";
 
 // inventory
 const constInventory = "You have collected the following items: ";
@@ -245,6 +245,8 @@ const constQuitText = "Quit";
 const constContinueText = "Continue";
 const constOKText = "OK";
 const constHomeText = "Home";
+const constFailText = "Fail";
+
 
 const constDieFaceRed = "assets/images/dice_face_red_";
 const constDieFaceWhite = "assets/images/dice_face_white_";

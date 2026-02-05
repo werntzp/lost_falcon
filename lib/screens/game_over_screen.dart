@@ -18,12 +18,12 @@ const GameOverScreen({super.key, required this.gameOverReason, required this.hex
     if (gameOverReason == EnumGameOver.rescued) {
       message = constGameOverWon
       .replaceFirst("X", totalPoints.toString())     // total points
-      .replaceFirst("Y", hexesTraveled.toString());    // hexes traveled 
+      .replaceFirst("Z", hexesTraveled.toString());    // hexes traveled 
     }
     else { 
       message = constGameOverLost
       .replaceFirst("X", totalPoints.toString())     // total points
-      .replaceFirst("Y", hexesTraveled.toString());    // hexes traveled 
+      .replaceFirst("Z", hexesTraveled.toString());    // hexes traveled 
     }
 
     return message; 

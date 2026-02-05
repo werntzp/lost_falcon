@@ -27,7 +27,8 @@ bool _moveAllowed = false;
 Set<int> _hexesTraveled = {};
 Set<int> _hexesImpassable = {};
 Set<int> _hexesCrashedChopper = {}; 
-Set<int> _hexesTributary= {}; 
+Set<int> _hexesTributary = {}; 
+Set<int> _hexesFriendlyVillage = {}; 
 List<int> _rollingDice = [];
 Timer? _rollTimer;
 bool _allowedToReRoll = false;
@@ -39,7 +40,6 @@ bool _rescued = false;
 bool _milepostFriendlyTerrain = false; 
 bool _movementBonus = false; 
 int _reRolledDiceIndex = -1; 
-String _sixMessage = ""; 
 bool _forcesPatrollingUp = true; 
 
 EnumVillageReactions _villageReaction = EnumVillageReactions.none;
@@ -440,6 +440,9 @@ class _ImageCyclerOverlayState extends State<ImageCyclerOverlay>
     // move the back to last spot
     _map[_oldHex].current = true;
     _map[_selectedHex].current = false;
+    setState(() {
+      // do nothing 
+    });
 
   }
 
@@ -821,6 +824,8 @@ class _ImageCyclerOverlayState extends State<ImageCyclerOverlay>
         setState(() {
           _setTerrainAroundSpot(newHex.col, newHex.row);
         });
+        // add this spot to the set
+        _hexesFriendlyVillage.add(id);
         return _returnContinueButton();
       
       // broken foot
@@ -1381,6 +1386,9 @@ class _GameScreenState extends State<GameScreen> {
 
     result = Random().nextInt(10) + 2;
 
+    // if this may be friendly as a result of the highground encounter, add bonus
+    if (_hexesFriendlyVillage.contains(_selectedHex)) { result++; }
+
     // based on result, let's do this thing
     if (result == 2) {
       // robbed
@@ -1559,9 +1567,6 @@ class _GameScreenState extends State<GameScreen> {
       _allowedToReRoll = false;
       _reRolledDiceIndex = index; 
       _rollingDice[index] = (Random().nextInt(6) + 1 - mod).clamp(1,6); 
-      setState(() {
-        if (_rollingDice.contains(6)) { _sixMessage = constDiceRollPickSix; }
-      });
       _overlayEntry?.markNeedsBuild(); // forces overlay to redraw
     }
   }
@@ -1633,14 +1638,61 @@ class _GameScreenState extends State<GameScreen> {
     // Stop the rolling after 2 seconds
     Future.delayed(const Duration(seconds: 2), () {
       _rollTimer?.cancel();
-      if (_rollingDice.contains(6)) {
-        _sixMessage = constDiceRollPickSix;
-        _overlayEntry?.markNeedsBuild(); 
-      }
-
-
+      _overlayEntry?.markNeedsBuild(); 
     });
   }
+
+  // *********************************************
+  // if they have six, give them message about it and
+  // option to fail the roll 
+  // *********************************************
+  Widget _sixMessage(EnumPhase phase) { 
+
+    if ((!_rollTimer!.isActive) && (_rollingDice.contains(6))) {
+      return  
+        Column(children: [
+          const Text(
+            constDiceRollPickSix, 
+            style: TextStyle(
+                color: Colors.white,
+                fontFamily: constAppTextFont,
+                fontSize: 13),
+            textAlign: TextAlign.center,
+          ), 
+        const SizedBox(height: 15,),
+        SizedBox(
+          width: 160.0,
+          height: 55.0,
+          child: OutlinedButton(
+            style: OutlinedButton.styleFrom(
+              foregroundColor: Colors.black, // Text and icon color
+              backgroundColor: Colors.white, // Background color
+              overlayColor: Colors.blueAccent.withValues(), // pressed ripple
+              side: const BorderSide(
+                color: Colors.black,
+                width: 3.0,
+              ), // Border color
+            ),
+            child: const Align(
+                alignment: Alignment.center,
+                child: Text(
+                  constFailText,
+                  style: TextStyle(
+                      fontFamily: constAppTextFont,
+                      color: Colors.black,
+                      fontSize: 18.0),
+                )),
+            onPressed: () {
+            _tapDice(phase, -1, 0); // this guarantees a failed roll 
+            }, 
+          ))       
+        ],);
+    } else { 
+      return Container();
+    }
+
+  }
+                    
 
   // *********************************************
   // display overlay for rolling and choosing dice
@@ -1652,7 +1704,6 @@ class _GameScreenState extends State<GameScreen> {
 
     // always reset this
     _reRolledDiceIndex = -1; 
-    _sixMessage = "";
 
     if (phase == EnumPhase.move) {
       title = constMovePhase;
@@ -1728,16 +1779,8 @@ class _GameScreenState extends State<GameScreen> {
                                   )
                                 ],
                               ),
-                              const SizedBox(height: 12),                              
-                              Text(
-                                _sixMessage, 
-                                style: const TextStyle(
-                                    color: Colors.white,
-                                    fontFamily: constAppTextFont,
-                                    fontSize: 13),
-                                textAlign: TextAlign.center,
-                              ),
-                          
+                              const SizedBox(height: 12),         
+                              _sixMessage(phase),                           
                             ],
                           ))))
             ]));
@@ -1905,6 +1948,7 @@ class _GameScreenState extends State<GameScreen> {
     _hexesImpassable.clear();
     _hexesCrashedChopper.clear(); 
     _hexesTributary.clear(); 
+    _hexesFriendlyVillage.clear();
 
     // get an initialized map from the factory
     _map = MapFactory.initMap();
