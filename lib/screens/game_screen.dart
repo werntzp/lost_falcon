@@ -1077,7 +1077,7 @@ class _ImageCyclerOverlayState extends State<ImageCyclerOverlay>
             _currentEncounterIndex =
                 _encounterFactory.getRandomEncounter(_map[_selectedHex]);
             // hardcode this for testing!
-            // _currentEncounterIndex = EnumEncounter.apc.index;
+            _currentEncounterIndex = EnumEncounter.rockslide.index;
             message = _encounterFactory
                 .getEncounterDescription(_currentEncounterIndex);
           }
@@ -1879,13 +1879,19 @@ class _GameScreenState extends State<GameScreen> {
   }
 
   // ************************
-  // _changeMove
+  // adjust move dice
   // ************************
   void _changeMove(EnumDirection direction) {
     // if up, see if there are dice left
     if ((direction == EnumDirection.increment) && (_totalDice > 0)) {
       _totalDice--;
       _moveDice++;
+      // if pilot has broken foot, can't have more than 2
+      if (_pilot.hasAnAffliction(EnumAffliction.brokenfoot)) {
+        if (_moveDice > 2) {
+          _moveDice = 2;
+        }
+      }
     } else if ((direction == EnumDirection.decrement) && (_moveDice > 0)) {
       _totalDice++;
       _moveDice--;
@@ -1994,10 +2000,14 @@ class _GameScreenState extends State<GameScreen> {
   }
 
   // ************************
-  // _moveImage
+  // decide which image to show for move dice
   // ************************
   AssetImage _moveImage() {
     String value = _moveDice.toString();
+    // if they have broken foot, make sure to use the red ones
+    if (_pilot.hasAnAffliction(EnumAffliction.brokenfoot)) {
+      value += "_red";
+    }
     return AssetImage("$constImageDie$value.png");
   }
 
