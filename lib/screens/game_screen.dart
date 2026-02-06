@@ -26,24 +26,24 @@ List<MapHex> _map = [];
 bool _moveAllowed = false;
 Set<int> _hexesTraveled = {};
 Set<int> _hexesImpassable = {};
-Set<int> _hexesCrashedChopper = {}; 
-Set<int> _hexesTributary = {}; 
-Set<int> _hexesFriendlyVillage = {}; 
+Set<int> _hexesCrashedChopper = {};
+Set<int> _hexesTributary = {};
+Set<int> _hexesFriendlyVillage = {};
 List<int> _rollingDice = [];
 Timer? _rollTimer;
 bool _allowedToReRoll = false;
 int _currentEncounterIndex = 1;
 List<Image> _encounterImages = [];
 bool _skipRest = false;
-bool _skipStealh = false; 
-bool _rescued = false; 
-bool _milepostFriendlyTerrain = false; 
-bool _movementBonus = false; 
-int _reRolledDiceIndex = -1; 
-bool _forcesPatrollingUp = true; 
+bool _skipStealh = false;
+bool _rescued = false;
+bool _milepostFriendlyTerrain = false;
+bool _movementBonus = false;
+int _reRolledDiceIndex = -1;
+bool _forcesPatrollingUp = true;
 
 EnumVillageReactions _villageReaction = EnumVillageReactions.none;
- 
+
 // extension used to capitalize the first letter of a word
 extension StringExtension on String {
   String capitalizeFirstLetter() {
@@ -60,84 +60,84 @@ extension StringExtension on String {
 class ActionButton extends StatelessWidget {
   final String message;
   final VoidCallback onAction;
-  final VoidCallback onCloseRequest; 
+  final VoidCallback onCloseRequest;
 
-  const ActionButton({
-    super.key,
-    required this.message,
-    required this.onAction,
-    required this.onCloseRequest
-  });
+  const ActionButton(
+      {super.key,
+      required this.message,
+      required this.onAction,
+      required this.onCloseRequest});
 
   @override
   Widget build(BuildContext context) {
-    return 
-    SizedBox(
-            width: 250.0,
-            height: 70.0,
-            child: OutlinedButton(
-              style: OutlinedButton.styleFrom(
-                alignment: Alignment.center,
-                foregroundColor: Colors.black, // Text and icon color
-                backgroundColor: Colors.white, // Background color
-                overlayColor: Colors.blueAccent.withValues(), // pressed ripple
-                side: const BorderSide(
-                  color: Colors.black,
-                  width: 3.0,
-                ), // Border color
-              ),
-              onPressed: () { 
-                onAction();
-                onCloseRequest();
-              },
-              child: Center(
-                  child: Text(
-                    message,
-                    textAlign: TextAlign.center,
-                    style: const TextStyle(
-                        fontFamily: constAppTextFont,
-                        color: Colors.black,
-                        fontSize: 12.0),
-                  )),
-            ));
+    return SizedBox(
+        width: 250.0,
+        height: 70.0,
+        child: OutlinedButton(
+          style: OutlinedButton.styleFrom(
+            alignment: Alignment.center,
+            foregroundColor: Colors.black, // Text and icon color
+            backgroundColor: Colors.white, // Background color
+            overlayColor: Colors.blueAccent.withValues(), // pressed ripple
+            side: const BorderSide(
+              color: Colors.black,
+              width: 3.0,
+            ), // Border color
+          ),
+          onPressed: () {
+            onAction();
+            onCloseRequest();
+          },
+          child: Center(
+              child: Text(
+            message,
+            textAlign: TextAlign.center,
+            style: const TextStyle(
+                fontFamily: constAppTextFont,
+                color: Colors.black,
+                fontSize: 12.0),
+          )),
+        ));
   }
 }
 
 // *********************************************
-//  generic message overlay 
+//  generic message overlay
 // *********************************************
 class MessageOverlay extends StatelessWidget {
-  final VoidCallback onFinished; 
-  final EnumMessageType messageType; 
-  final String message; 
+  final VoidCallback onFinished;
+  final EnumMessageType messageType;
+  final String message;
 
-  const MessageOverlay({super.key, required this.onFinished, required this.messageType, required this.message});
+  const MessageOverlay(
+      {super.key,
+      required this.onFinished,
+      required this.messageType,
+      required this.message});
 
   @override
   Widget build(BuildContext context) {
     return Stack(children: [
-              const ModalBarrier(
-                dismissible: false,
-                color: Colors.black12),
-              Align(
-                  alignment: Alignment.center,
-                  child: Card(
-                      elevation: 8.0,
-                      color: (messageType == EnumMessageType.success) ? Colors.green : Colors.red,
-                      child: Padding(
-                          padding: const EdgeInsets.all(10.0),
-                          child: Text(message,
-                              style: const TextStyle(
-                                  fontFamily: constAppTextFont,
-                                  fontSize: 18,
-                                  fontWeight: FontWeight.bold,
-                                  color: Colors.white),
-                              textAlign: TextAlign.center))))
-            ]);
+      const ModalBarrier(dismissible: false, color: Colors.black12),
+      Align(
+          alignment: Alignment.center,
+          child: Card(
+              elevation: 8.0,
+              color: (messageType == EnumMessageType.success)
+                  ? Colors.green
+                  : Colors.red,
+              child: Padding(
+                  padding: const EdgeInsets.all(10.0),
+                  child: Text(message,
+                      style: const TextStyle(
+                          fontFamily: constAppTextFont,
+                          fontSize: 18,
+                          fontWeight: FontWeight.bold,
+                          color: Colors.white),
+                      textAlign: TextAlign.center))))
+    ]);
   }
-
 }
-
 
 // *********************************************
 //  class to cycle images in the overlay
@@ -281,35 +281,33 @@ class _ImageCyclerOverlayState extends State<ImageCyclerOverlay>
   // *********************************************
   //  apc - find a first aid kit
   // *********************************************
-  void  _doApcKit() {
+  void _doApcKit() {
     _pilot.healAffliction();
     _pilot.setHealth(EnumDirection.increment);
-  }  
+  }
 
   // *********************************************
   //  apc - rest
   // *********************************************
-  void  _doApcRest() {
+  void _doApcRest() {
     _pilot.setProximity(EnumDirection.increment);
     _pilot.setEndurance(EnumDirection.increment);
-
-  }  
+  }
 
   // *********************************************
   //  helicopter - find a flare gun
   // *********************************************
-  void  _doHelicopterFlare() {
+  void _doHelicopterFlare() {
     _pilot.addInventoryItem(EnumInventory.flaregun);
-  }  
+  }
 
   // *********************************************
   //  helicopter - rest
   // *********************************************
-  void  _doHelicopterRest() {
+  void _doHelicopterRest() {
     _pilot.setEndurance(EnumDirection.increment);
     _pilot.setEndurance(EnumDirection.increment);
-
-  }  
+  }
 
   // *********************************************
   //  wolf - growl
@@ -320,41 +318,32 @@ class _ImageCyclerOverlayState extends State<ImageCyclerOverlay>
     // decide on what message to put up
     if (_pilot.hasAnInventoryItem(EnumInventory.machete)) {
       message = constWolfOption3;
-      // but lose the machete 
+      // but lose the machete
       _pilot.dropInventoryItem(EnumInventory.machete);
-    }
-    else if (_moveDice >= 3) {
+    } else if (_moveDice >= 3) {
       message = constWolfOption1;
-      // superficial wound 
+      // superficial wound
       _pilot.setHealth(EnumDirection.decrement);
-    }
-    else { 
-      message = constWolfOption2; 
+    } else {
+      message = constWolfOption2;
       _pilot.setAffliction(EnumAffliction.deepcut);
     }
 
-    return 
-      Column(
-        children: [
-        const Padding(
-          padding: EdgeInsets.all(5.0),
-        ),
-        Text(
-          message,
-          style: const TextStyle(
-              color: Colors.white,
-              fontFamily: constAppTextFont,
-              fontSize: 15),
-          textAlign: TextAlign.center,
-        ),
-        const Padding(
-          padding: EdgeInsets.all(10.0),
-        ),
-         _returnContinueButton(),
-
-        ]
-      );
-
+    return Column(children: [
+      const Padding(
+        padding: EdgeInsets.all(5.0),
+      ),
+      Text(
+        message,
+        style: const TextStyle(
+            color: Colors.white, fontFamily: constAppTextFont, fontSize: 15),
+        textAlign: TextAlign.center,
+      ),
+      const Padding(
+        padding: EdgeInsets.all(10.0),
+      ),
+      _returnContinueButton(),
+    ]);
   }
 
   // *********************************************
@@ -366,401 +355,341 @@ class _ImageCyclerOverlayState extends State<ImageCyclerOverlay>
     // decide on what message to put up
     if (_pilot.hasAnInventoryItem(EnumInventory.machete)) {
       message = constSnakeOption3;
-    }
-    else if (_map[_selectedHex].terrain == EnumTerrain.scrub) {
-      message = constSnakeOption1; 
+    } else if (_map[_selectedHex].terrain == EnumTerrain.scrub) {
+      message = constSnakeOption1;
       _pilot.setHealth(EnumDirection.decrement);
-    }
-    else { 
-      message = constSnakeOption2; 
+    } else {
+      message = constSnakeOption2;
       _pilot.setAffliction(EnumAffliction.fever);
     }
 
-    return 
-      Column(
-        children: [
-        const Padding(
-          padding: EdgeInsets.all(5.0),
-        ),
-        Text(
-          message,
-          style: const TextStyle(
-              color: Colors.white,
-              fontFamily: constAppTextFont,
-              fontSize: 15),
-          textAlign: TextAlign.center,
-        ),
-        const Padding(
-          padding: EdgeInsets.all(10.0),
-        ),
-         _returnContinueButton(),
-
-        ]
-      );
-
+    return Column(children: [
+      const Padding(
+        padding: EdgeInsets.all(5.0),
+      ),
+      Text(
+        message,
+        style: const TextStyle(
+            color: Colors.white, fontFamily: constAppTextFont, fontSize: 15),
+        textAlign: TextAlign.center,
+      ),
+      const Padding(
+        padding: EdgeInsets.all(10.0),
+      ),
+      _returnContinueButton(),
+    ]);
   }
 
   // *********************************************
   //  mortar - run to next hex
   // *********************************************
-  void  _doMortarRun() {
-    int newId = _getIdFromColRow(_map[_selectedHex].col+1, _map[_selectedHex].row);
-    
+  void _doMortarRun() {
+    int newId =
+        _getIdFromColRow(_map[_selectedHex].col + 1, _map[_selectedHex].row);
+
     _hexesTraveled.add(_selectedHex);
-    _map[_selectedHex].current = false; 
+    _map[_selectedHex].current = false;
     _hexesTraveled.add(newId);
-    _map[newId].current = true; 
+    _map[newId].current = true;
     _pilot.setEndurance(EnumDirection.decrement);
     _pilot.setAffliction(EnumAffliction.gunshotwound);
-
   }
 
   // *********************************************
   //  mortar - drop
   // *********************************************
-  void  _doMortarDrop() {
+  void _doMortarDrop() {
     _pilot.setProximity(EnumDirection.decrement);
-  }  
- 
+  }
+
   // *********************************************
-  //  dust - keep going 
+  //  dust - keep going
   // *********************************************
-  void  _doDustForward() {
-    
-    // lose endurance fighting the storm 
+  void _doDustForward() {
+    // lose endurance fighting the storm
     _pilot.setEndurance(EnumDirection.decrement);
     _pilot.setEndurance(EnumDirection.decrement);
-  } 
+  }
 
   // *********************************************
   //  dust - go back
   // *********************************************
-  void  _doDustBack() {
-
+  void _doDustBack() {
     // move the back to last spot
     _map[_oldHex].current = true;
     _map[_selectedHex].current = false;
     setState(() {
-      // do nothing 
+      // do nothing
     });
-
   }
 
   // *********************************************
   //  cave - get a binos
   // *********************************************
-  void  _doCaveBinos() {
-
+  void _doCaveBinos() {
     // add an AK
     _pilot.addInventoryItem(EnumInventory.binoculars);
-
   }
 
   // *********************************************
   //  cave - find a map
   // *********************************************
-  void  _doCaveMap() {
-    late MapHex newHex; 
-    int id = 0; 
+  void _doCaveMap() {
+    late MapHex newHex;
+    int id = 0;
 
-      // add a village 4 spaces away and surround it with brush or scrub
-        newHex = MapFactory.moveRandomSteps(
-            _map[_selectedHex].row, _map[_selectedHex].col, 3);
-        id = _getIdFromColRow(newHex.col, newHex.row);
-        _map[id].terrain = EnumTerrain.brush;
-        _map[id].visible = true;
-        // make that open and mark it where a tributary is  
-        _hexesTributary.add(id);
-        // walk around it to make bordering spaces either scrub or brush if they are empty
-        setState(() {
-          _setTerrainAroundSpot(newHex.col, newHex.row);
-        });
-
+    // add a village 4 spaces away and surround it with brush or scrub
+    newHex = MapFactory.moveRandomSteps(
+        _map[_selectedHex].row, _map[_selectedHex].col, 3);
+    id = _getIdFromColRow(newHex.col, newHex.row);
+    _map[id].terrain = EnumTerrain.brush;
+    _map[id].visible = true;
+    // make that open and mark it where a tributary is
+    _hexesTributary.add(id);
+    // walk around it to make bordering spaces either scrub or brush if they are empty
+    setState(() {
+      _setTerrainAroundSpot(newHex.col, newHex.row);
+    });
   }
 
-
-  
   // *********************************************
   //  soldier - get a rifle
   // *********************************************
-  void  _doSoldierRifle() {
-
+  void _doSoldierRifle() {
     // add an AK
     _pilot.addInventoryItem(EnumInventory.ak);
-
   }
 
   // *********************************************
   //  soldier - find a map
   // *********************************************
-  void  _doSoldierMap() {
-    late MapHex newHex; 
-    int id = 0; 
+  void _doSoldierMap() {
+    late MapHex newHex;
+    int id = 0;
 
-      // add a village 4 spaces away and surround it with brush or scrub
-        newHex = MapFactory.moveRandomSteps(
-            _map[_selectedHex].row, _map[_selectedHex].col, 3);
-        id = _getIdFromColRow(newHex.col, newHex.row);
-        _map[id].terrain = EnumTerrain.brush;
-        _map[id].visible = true;
-        // make that open and mark it where a crashed helicopter is 
-        _hexesCrashedChopper.add(id);
-        // walk around it to make bordering spaces either scrub or brush if they are empty
-        setState(() {
-          _setTerrainAroundSpot(newHex.col, newHex.row);
-        });
-
+    // add a village 4 spaces away and surround it with brush or scrub
+    newHex = MapFactory.moveRandomSteps(
+        _map[_selectedHex].row, _map[_selectedHex].col, 3);
+    id = _getIdFromColRow(newHex.col, newHex.row);
+    _map[id].terrain = EnumTerrain.brush;
+    _map[id].visible = true;
+    // make that open and mark it where a crashed helicopter is
+    _hexesCrashedChopper.add(id);
+    // walk around it to make bordering spaces either scrub or brush if they are empty
+    setState(() {
+      _setTerrainAroundSpot(newHex.col, newHex.row);
+    });
   }
 
   // *********************************************
   //  gunships - increase proximity
   // *********************************************
-  void  _doGunshipsProximity() {
-
+  void _doGunshipsProximity() {
     // increase 2 proximity
     _pilot.setProximity(EnumDirection.increment);
     _pilot.setProximity(EnumDirection.increment);
-
   }
 
   // *********************************************
   //  gunships - extra rest
   // *********************************************
-  void  _doGunshipsRest() {
-
+  void _doGunshipsRest() {
     // gain 2 helath and 1 endurance
     _pilot.setHealth(EnumDirection.increment);
-    _pilot.setHealth(EnumDirection.increment);    
+    _pilot.setHealth(EnumDirection.increment);
     _pilot.setEndurance(EnumDirection.increment);
-
   }
 
   // *********************************************
-  //  gunships - use flare gun 
+  //  gunships - use flare gun
   // *********************************************
-  void  _doGunshipsFlareGun() {
-
-    // win! 
-    _rescued = true; 
-
+  void _doGunshipsFlareGun() {
+    // win!
+    _rescued = true;
   }
 
   // *********************************************
   //  gunships - if they have flaregun, add option
   // *********************************************
   Widget _checkGunshipsFlareGun() {
-
     if (_pilot.hasAnInventoryItem(EnumInventory.flaregun)) {
-      return Container(); 
+      return Container();
+    } else {
+      return ActionButton(
+          message: constGunshipsOption3,
+          onAction: _doGunshipsFlareGun,
+          onCloseRequest: widget.onClose);
     }
-    else {
-      return ActionButton(message: constGunshipsOption3, onAction: _doGunshipsFlareGun, onCloseRequest: widget.onClose);
-
-    }
-
   }
 
   // *********************************************
   //  building - make a bandage
   // *********************************************
-  void  _doBuildingBandage() {
-
+  void _doBuildingBandage() {
     // gain 2 health back
     _pilot.setHealth(EnumDirection.increment);
     _pilot.setHealth(EnumDirection.increment);
-
   }
 
   // *********************************************
   //  building - extra rest
   // *********************************************
-  void  _doBuildingRest() {
-
+  void _doBuildingRest() {
     // gain 1 endurance
     _pilot.setEndurance(EnumDirection.increment);
-
   }
 
   // *********************************************
   //  building - get machete
   // *********************************************
-  void  _doBuildingMachete() {
-
+  void _doBuildingMachete() {
     // gain 1 endurance
     _pilot.addInventoryItem(EnumInventory.machete);
-
   }
 
   // *********************************************
-  //  building - if they don't already have a machete, can get one 
+  //  building - if they don't already have a machete, can get one
   // *********************************************
   Widget _checkBuildingMachete() {
-
     if (_pilot.hasAnInventoryItem(EnumInventory.machete)) {
-      return Container(); 
+      return Container();
+    } else {
+      return ActionButton(
+          message: constBuildingOption3,
+          onAction: _doBuildingMachete,
+          onCloseRequest: widget.onClose);
     }
-    else {
-      return ActionButton(message: constBuildingOption3, onAction: _doBuildingMachete, onCloseRequest: widget.onClose);
-
-    }
-
   }
 
   // *********************************************
   //  tributary - move
   // *********************************************
-  void  _doTributaryMove() {
-    _moveAllowed = true; 
-
+  void _doTributaryMove() {
+    _moveAllowed = true;
   }
 
   // *********************************************
   //  tributary - rest
   // *********************************************
-  void  _doTributaryRest() {
+  void _doTributaryRest() {
     _pilot.setHealth(EnumDirection.increment);
     _pilot.setEndurance(EnumDirection.increment);
-
   }
-
 
   // *********************************************
   //  road - move
   // *********************************************
-  void  _doRoadMove() {
-
+  void _doRoadMove() {
     // can keep on moving
-    _moveAllowed = true; 
-
+    _moveAllowed = true;
   }
 
   // *********************************************
   //  road - proximity
   // *********************************************
-  void  _doRoadProximity() {
-
+  void _doRoadProximity() {
     // Increase
     _pilot.setProximity(EnumDirection.increment);
-
   }
 
   // *********************************************
   //  sniper - run
   // *********************************************
-  void  _doSniperRun() {
-
+  void _doSniperRun() {
     // take 2 gunshot wounds!
-    _pilot.setAffliction(EnumAffliction.gunshotwound); 
-    _pilot.setAffliction(EnumAffliction.gunshotwound); 
-    // then run 
-    _moveAllowed = true; 
-
+    _pilot.setAffliction(EnumAffliction.gunshotwound);
+    _pilot.setAffliction(EnumAffliction.gunshotwound);
+    // then run
+    _moveAllowed = true;
   }
 
   // *********************************************
   //  sniper - retreat
   // *********************************************
-  void  _doSniperRetreat() {
-
-    _pilot.setAffliction(EnumAffliction.gunshotwound); 
+  void _doSniperRetreat() {
+    _pilot.setAffliction(EnumAffliction.gunshotwound);
     _pilot.setAffliction(EnumAffliction.deepcut);
     _map[_oldHex].current = true;
     _map[_selectedHex].current = false;
     _hexesImpassable.add(_selectedHex);
-
   }
 
   // *********************************************
   //  minefield - retreat
   // *********************************************
-  void  _doMinefieldRetreat() {
-
-      _map[_oldHex].current = true;
-      _map[_selectedHex].current = false;
-      _hexesImpassable.add(_selectedHex);
-
+  void _doMinefieldRetreat() {
+    _map[_oldHex].current = true;
+    _map[_selectedHex].current = false;
+    _hexesImpassable.add(_selectedHex);
   }
 
   // *********************************************
   //  minefield - move through
   // *********************************************
-  void  _doMinefieldMove() {
-
+  void _doMinefieldMove() {
     _pilot.setProximity(EnumDirection.decrement);
-
   }
 
   // *********************************************
   //  milepost - friendly terrain
   // *********************************************
-  void  _doMilepostFriendlyTerrain() {
-    _milepostFriendlyTerrain = true; 
-
-
+  void _doMilepostFriendlyTerrain() {
+    _milepostFriendlyTerrain = true;
   }
 
   // *********************************************
-  //  milepost - new village 
+  //  milepost - new village
   // *********************************************
-  void  _doMilepostNewVillage() {
-    late MapHex newHex; 
-    int id = 0; 
+  void _doMilepostNewVillage() {
+    late MapHex newHex;
+    int id = 0;
 
-        newHex = MapFactory.moveRandomSteps(
-            _map[_selectedHex].row, _map[_selectedHex].col, 4);
-        // make that a village
-        id = _getIdFromColRow(newHex.col, newHex.row);
-        _map[id].terrain = EnumTerrain.village;
-        _map[id].visible = true;
-        // walk around it to make bordering spaces either scrub or brush if they are empty
-        setState(() {
-          _setTerrainAroundSpot(newHex.col, newHex.row);
-        });
-
+    newHex = MapFactory.moveRandomSteps(
+        _map[_selectedHex].row, _map[_selectedHex].col, 4);
+    // make that a village
+    id = _getIdFromColRow(newHex.col, newHex.row);
+    _map[id].terrain = EnumTerrain.village;
+    _map[id].visible = true;
+    // walk around it to make bordering spaces either scrub or brush if they are empty
+    setState(() {
+      _setTerrainAroundSpot(newHex.col, newHex.row);
+    });
   }
 
   // *********************************************
   //  milepost - extra movement
   // *********************************************
-  void  _doMilepostMovementBonus() {
-
-    _movementBonus = true; 
-
+  void _doMilepostMovementBonus() {
+    _movementBonus = true;
   }
 
   // *********************************************
   //  thorns -- either go back, or chop/skip
   // *********************************************
-  void  _doThorns1() {
-
-    // if machete, 
+  void _doThorns1() {
+    // if machete,
     if (_pilot.hasAnInventoryItem(EnumInventory.machete)) {
-      // set flags to skip stealth and rest 
+      // set flags to skip stealth and rest
       _skipStealh = true;
-      _skipRest = true; 
-    }
-    else {
+      _skipRest = true;
+    } else {
       _map[_oldHex].current = true;
       _map[_selectedHex].current = false;
       _hexesImpassable.add(_selectedHex);
     }
-
   }
 
   // *********************************************
   //  thorns -- push on or chop/keep
   // *********************************************
-  void  _doThorns2() {
-
-    // if machete, 
+  void _doThorns2() {
+    // if machete,
     if (_pilot.hasAnInventoryItem(EnumInventory.machete)) {
-      // just continue on like normal 
-    }
-    else {
+      // just continue on like normal
+    } else {
       // they fight through, so add deep cut
       _pilot.setAffliction(EnumAffliction.deepcut);
     }
-
   }
 
   // *********************************************
@@ -791,7 +720,7 @@ class _ImageCyclerOverlayState extends State<ImageCyclerOverlay>
               )),
           onPressed: () {
             widget.onClose();
-          }, 
+          },
         ));
   }
 
@@ -810,7 +739,7 @@ class _ImageCyclerOverlayState extends State<ImageCyclerOverlay>
       if (encounter == EnumEncounter.none) {
         return _returnContinueButton();
       }
-      
+
       // highground
       else if (encounter == EnumEncounter.highground) {
         // add a village 4 spaces away and surround it with brush or scrub
@@ -827,177 +756,238 @@ class _ImageCyclerOverlayState extends State<ImageCyclerOverlay>
         // add this spot to the set
         _hexesFriendlyVillage.add(id);
         return _returnContinueButton();
-      
-      // broken foot
+
+        // broken foot
       } else if (encounter == EnumEncounter.rockslide) {
         _pilot.setAffliction(EnumAffliction.brokenfoot);
         return _returnContinueButton();
-      
-      // mortar fire
-      } else if (encounter == EnumEncounter.mortar) {
-        return 
-          Column(
-            children: [
-              ActionButton(message: constMortarOption1, onAction: _doMortarRun, onCloseRequest: widget.onClose),
-              ActionButton(message: constMortarOption2, onAction: _doMortarDrop, onCloseRequest: widget.onClose)
-            ]);
-      
-      // dust storm
-      } else if (encounter == EnumEncounter.dust) {
-        return 
-          Column(
-            children: [
-              ActionButton(message: constDustOption1, onAction: _doDustBack, onCloseRequest: widget.onClose),
-              ActionButton(message: constDustOption2, onAction: _doDustForward, onCloseRequest: widget.onClose)
-            ]);
-      
-      // chemical weapons
-      } else if (encounter == EnumEncounter.chemicals) {
-        // if theyhave a wound or cut, lose further health 
-        if ((_pilot.hasAnAffliction(EnumAffliction.burn)) || (_pilot.hasAnAffliction(EnumAffliction.gunshotwound))) {
-          _pilot.setHealth(EnumDirection.decrement);
-          _pilot.setHealth(EnumDirection.decrement);
-        }
-        else { 
-          _pilot.setAffliction(EnumAffliction.burn);
 
+        // mortar fire
+      } else if (encounter == EnumEncounter.mortar) {
+        return Column(children: [
+          ActionButton(
+              message: constMortarOption1,
+              onAction: _doMortarRun,
+              onCloseRequest: widget.onClose),
+          ActionButton(
+              message: constMortarOption2,
+              onAction: _doMortarDrop,
+              onCloseRequest: widget.onClose)
+        ]);
+
+        // dust storm
+      } else if (encounter == EnumEncounter.dust) {
+        return Column(children: [
+          ActionButton(
+              message: constDustOption1,
+              onAction: _doDustBack,
+              onCloseRequest: widget.onClose),
+          ActionButton(
+              message: constDustOption2,
+              onAction: _doDustForward,
+              onCloseRequest: widget.onClose)
+        ]);
+
+        // chemical weapons
+      } else if (encounter == EnumEncounter.chemicals) {
+        // if theyhave a wound or cut, lose further health
+        if ((_pilot.hasAnAffliction(EnumAffliction.burn)) ||
+            (_pilot.hasAnAffliction(EnumAffliction.gunshotwound))) {
+          _pilot.setHealth(EnumDirection.decrement);
+          _pilot.setHealth(EnumDirection.decrement);
+        } else {
+          _pilot.setAffliction(EnumAffliction.burn);
+          // if they have 6 endurance, lose 1
+          if (_pilot.getEndurance() == 6) {
+            _pilot.setEndurance(EnumDirection.decrement);
+          }
         }
         return _returnContinueButton();
 
-      // thorny briars
+        // thorny briars
       } else if (encounter == EnumEncounter.thorns) {
         if (_pilot.hasAnInventoryItem(EnumInventory.machete)) {
           option1 = constThornsOption3;
           option2 = constThornsOption4;
         } else {
           option1 = constThornsOption1;
-          option2 = constThornsOption2;         
+          option2 = constThornsOption2;
         }
 
-        return 
-          Column(
-            children: [
-              ActionButton(message: option1, onAction: _doThorns1, onCloseRequest: widget.onClose),
-              ActionButton(message: option2, onAction: _doThorns2, onCloseRequest: widget.onClose)
-            ]);
-      
-      
-      // building
+        return Column(children: [
+          ActionButton(
+              message: option1,
+              onAction: _doThorns1,
+              onCloseRequest: widget.onClose),
+          ActionButton(
+              message: option2,
+              onAction: _doThorns2,
+              onCloseRequest: widget.onClose)
+        ]);
+
+        // building
       } else if (encounter == EnumEncounter.building) {
-        return 
-          Column(
-            children: [
-              ActionButton(message: constHelicopterOption1, onAction: _doBuildingBandage, onCloseRequest: widget.onClose),
-              ActionButton(message: constHelicopterOption2, onAction: _doBuildingRest, onCloseRequest: widget.onClose),
-              _checkBuildingMachete(), 
-            ]);
+        return Column(children: [
+          ActionButton(
+              message: constHelicopterOption1,
+              onAction: _doBuildingBandage,
+              onCloseRequest: widget.onClose),
+          ActionButton(
+              message: constHelicopterOption2,
+              onAction: _doBuildingRest,
+              onCloseRequest: widget.onClose),
+          _checkBuildingMachete(),
+        ]);
 
-      // road
+        // road
       } else if (encounter == EnumEncounter.road) {
-        return 
-          Column(
-            children: [
-              ActionButton(message: constRoadOption1, onAction: _doRoadMove, onCloseRequest: widget.onClose),
-              ActionButton(message: constRoadOption2, onAction: _doRoadProximity, onCloseRequest: widget.onClose),
-              _checkBuildingMachete(), 
-            ]);
+        return Column(children: [
+          ActionButton(
+              message: constRoadOption1,
+              onAction: _doRoadMove,
+              onCloseRequest: widget.onClose),
+          ActionButton(
+              message: constRoadOption2,
+              onAction: _doRoadProximity,
+              onCloseRequest: widget.onClose),
+          _checkBuildingMachete(),
+        ]);
 
-      // dead soldier
+        // dead soldier
       } else if (encounter == EnumEncounter.soldier) {
-        return 
-          Column(
-            children: [
-              ActionButton(message: constSoldierOption1, onAction: _doSoldierRifle, onCloseRequest: widget.onClose),
-              ActionButton(message: constSoldierOption2, onAction: _doSoldierMap, onCloseRequest: widget.onClose),
-              _checkBuildingMachete(), 
-            ]);
+        return Column(children: [
+          ActionButton(
+              message: constSoldierOption1,
+              onAction: _doSoldierRifle,
+              onCloseRequest: widget.onClose),
+          ActionButton(
+              message: constSoldierOption2,
+              onAction: _doSoldierMap,
+              onCloseRequest: widget.onClose),
+          _checkBuildingMachete(),
+        ]);
 
-      // snake
+        // snake
       } else if (encounter == EnumEncounter.snake) {
         return _returnSnake();
 
-      // wolf
+        // wolf
       } else if (encounter == EnumEncounter.wolf) {
-        return _returnWolf(); 
+        return _returnWolf();
 
-      // helicopter
+        // helicopter
       } else if (encounter == EnumEncounter.helicopter) {
-        return 
-          Column(
-            children: [
-              ActionButton(message: constHelicopterOption1, onAction: _doHelicopterFlare, onCloseRequest: widget.onClose),
-              ActionButton(message: constHelicopterOption2, onAction: _doHelicopterRest, onCloseRequest: widget.onClose)
-            ]);
+        return Column(children: [
+          ActionButton(
+              message: constHelicopterOption1,
+              onAction: _doHelicopterFlare,
+              onCloseRequest: widget.onClose),
+          ActionButton(
+              message: constHelicopterOption2,
+              onAction: _doHelicopterRest,
+              onCloseRequest: widget.onClose)
+        ]);
 
-      // apc
+        // apc
       } else if (encounter == EnumEncounter.apc) {
-        return 
-          Column(
-            children: [
-              ActionButton(message: constApcOption1, onAction: _doApcKit, onCloseRequest: widget.onClose),
-              ActionButton(message: constApcOption2, onAction: _doApcRest, onCloseRequest: widget.onClose)
-            ]);
+        return Column(children: [
+          ActionButton(
+              message: constApcOption1,
+              onAction: _doApcKit,
+              onCloseRequest: widget.onClose),
+          ActionButton(
+              message: constApcOption2,
+              onAction: _doApcRest,
+              onCloseRequest: widget.onClose)
+        ]);
       }
 
       // cave
       else if (encounter == EnumEncounter.cave) {
-        return 
-          Column(
-            children: [
-              ActionButton(message: constCaveOption1, onAction: _doCaveMap, onCloseRequest: widget.onClose),
-              ActionButton(message: constCaveOption2, onAction: _doCaveBinos, onCloseRequest: widget.onClose)
-            ]);
+        return Column(children: [
+          ActionButton(
+              message: constCaveOption1,
+              onAction: _doCaveMap,
+              onCloseRequest: widget.onClose),
+          ActionButton(
+              message: constCaveOption2,
+              onAction: _doCaveBinos,
+              onCloseRequest: widget.onClose)
+        ]);
 
-      // gunships
+        // gunships
       } else if (encounter == EnumEncounter.gunships) {
-        return 
-          Column(
-            children: [
-              ActionButton(message: constGunshipsOption1, onAction: _doGunshipsProximity, onCloseRequest: widget.onClose),
-              ActionButton(message: constGunshipsOption2, onAction: _doGunshipsRest, onCloseRequest: widget.onClose),
-              _checkGunshipsFlareGun(), 
-            ]);
+        return Column(children: [
+          ActionButton(
+              message: constGunshipsOption1,
+              onAction: _doGunshipsProximity,
+              onCloseRequest: widget.onClose),
+          ActionButton(
+              message: constGunshipsOption2,
+              onAction: _doGunshipsRest,
+              onCloseRequest: widget.onClose),
+          _checkGunshipsFlareGun(),
+        ]);
 
-      // minefield
+        // minefield
       } else if (encounter == EnumEncounter.minefield) {
-        return 
-          Column(
-            children: [
-              ActionButton(message: constMinefieldOption1, onAction: _doMinefieldMove, onCloseRequest: widget.onClose),
-              ActionButton(message: constMinefieldOption2, onAction: _doMinefieldRetreat, onCloseRequest: widget.onClose)
-            ]);
+        return Column(children: [
+          ActionButton(
+              message: constMinefieldOption1,
+              onAction: _doMinefieldMove,
+              onCloseRequest: widget.onClose),
+          ActionButton(
+              message: constMinefieldOption2,
+              onAction: _doMinefieldRetreat,
+              onCloseRequest: widget.onClose)
+        ]);
 
-      // sniper
+        // sniper
       } else if (encounter == EnumEncounter.sniper) {
-        return 
-          Column(
-            children: [
-              ActionButton(message: constSniperOption1, onAction: _doSniperRun, onCloseRequest: widget.onClose),
-              ActionButton(message: constSniperOption2, onAction: _doSniperRetreat, onCloseRequest: widget.onClose)
-            ]);
+        return Column(children: [
+          ActionButton(
+              message: constSniperOption1,
+              onAction: _doSniperRun,
+              onCloseRequest: widget.onClose),
+          ActionButton(
+              message: constSniperOption2,
+              onAction: _doSniperRetreat,
+              onCloseRequest: widget.onClose)
+        ]);
 
-      // milepost
+        // milepost
       } else if (encounter == EnumEncounter.milepost) {
-        // no matter what, they can move again 
-        _moveAllowed = true; 
-        return 
-          Column(
-            children: [
-              ActionButton(message: constMilepostOption1, onAction: _doMilepostFriendlyTerrain, onCloseRequest: widget.onClose),
-              ActionButton(message: constMilepostOption2, onAction: _doMilepostNewVillage, onCloseRequest: widget.onClose),
-              ActionButton(message: constMilepostOption3, onAction: _doMilepostMovementBonus, onCloseRequest: widget.onClose)
-            ]);
+        // no matter what, they can move again
+        _moveAllowed = true;
+        return Column(children: [
+          ActionButton(
+              message: constMilepostOption1,
+              onAction: _doMilepostFriendlyTerrain,
+              onCloseRequest: widget.onClose),
+          ActionButton(
+              message: constMilepostOption2,
+              onAction: _doMilepostNewVillage,
+              onCloseRequest: widget.onClose),
+          ActionButton(
+              message: constMilepostOption3,
+              onAction: _doMilepostMovementBonus,
+              onCloseRequest: widget.onClose)
+        ]);
 
-      // tributary
+        // tributary
       } else if (encounter == EnumEncounter.tributary) {
-        return 
-          Column(
-            children: [
-              ActionButton(message: constTributaryOption1, onAction: _doTributaryMove, onCloseRequest: widget.onClose),
-              ActionButton(message: constTributaryOption2, onAction: _doTributaryRest, onCloseRequest: widget.onClose)
-            ]);
+        return Column(children: [
+          ActionButton(
+              message: constTributaryOption1,
+              onAction: _doTributaryMove,
+              onCloseRequest: widget.onClose),
+          ActionButton(
+              message: constTributaryOption2,
+              onAction: _doTributaryRest,
+              onCloseRequest: widget.onClose)
+        ]);
 
-      // catch all (remove later)
+        // catch all (remove later)
       } else {
         return _returnContinueButton();
       }
@@ -1010,12 +1000,13 @@ class _ImageCyclerOverlayState extends State<ImageCyclerOverlay>
   @override
   void initState() {
     super.initState();
-    bool skipDueToEncounter = false; 
+    bool skipDueToEncounter = false;
 
     // set a flag here in case we're in a hex which a preset encounter
     // is going to happen in
-    if ((_hexesCrashedChopper.contains(_selectedHex)) || (_hexesTributary.contains(_selectedHex)))  {
-      skipDueToEncounter = true; 
+    if ((_hexesCrashedChopper.contains(_selectedHex)) ||
+        (_hexesTributary.contains(_selectedHex))) {
+      skipDueToEncounter = true;
     }
 
     // Animation controller for smooth fades
@@ -1044,12 +1035,13 @@ class _ImageCyclerOverlayState extends State<ImageCyclerOverlay>
       setState(() {
         if (!skipDueToEncounter) {
           _currentEncounterIndex = rand.nextInt(_encounterImages.length);
-        }
-        else {
-          // are we finding a crashed helicopter or a tributary? 
-          _currentEncounterIndex = _hexesCrashedChopper.contains(_selectedHex) ? EnumEncounter.helicopter.index : EnumEncounter.tributary.index;
+        } else {
+          // are we finding a crashed helicopter or a tributary?
+          _currentEncounterIndex = _hexesCrashedChopper.contains(_selectedHex)
+              ? EnumEncounter.helicopter.index
+              : EnumEncounter.tributary.index;
           message =
-              _encounterFactory.getEncounterDescription(_currentEncounterIndex);          
+              _encounterFactory.getEncounterDescription(_currentEncounterIndex);
         }
         ready = true;
       });
@@ -1062,8 +1054,10 @@ class _ImageCyclerOverlayState extends State<ImageCyclerOverlay>
           setState(() {
             _currentEncounterIndex = rand.nextInt(_encounterImages.length);
             // if we find a cave, it can't be in scrub or brush, so just flip to no encounter
-            if (EnumEncounter.values[_currentEncounterIndex] == EnumEncounter.cave) {
-              if ((_map[_selectedHex].terrain == EnumTerrain.scrub) || (_map[_selectedHex].terrain == EnumTerrain.brush)) {
+            if (EnumEncounter.values[_currentEncounterIndex] ==
+                EnumEncounter.cave) {
+              if ((_map[_selectedHex].terrain == EnumTerrain.scrub) ||
+                  (_map[_selectedHex].terrain == EnumTerrain.brush)) {
                 _currentEncounterIndex = EnumEncounter.none.index;
               }
             }
@@ -1083,9 +1077,9 @@ class _ImageCyclerOverlayState extends State<ImageCyclerOverlay>
             _currentEncounterIndex =
                 _encounterFactory.getRandomEncounter(_map[_selectedHex]);
             // hardcode this for testing!
-            // _currentEncounterIndex = EnumEncounter.apc.index; 
-            message =
-                _encounterFactory.getEncounterDescription(_currentEncounterIndex);
+            // _currentEncounterIndex = EnumEncounter.apc.index;
+            message = _encounterFactory
+                .getEncounterDescription(_currentEncounterIndex);
           }
         });
       });
@@ -1125,7 +1119,7 @@ class _ImageCyclerOverlayState extends State<ImageCyclerOverlay>
                     mainAxisSize: MainAxisSize.min,
                     children: [
                       const SizedBox(height: 12),
-                       Container(
+                      Container(
                         color: Colors.black54,
                         alignment: Alignment.center,
                         height: 275,
@@ -1387,7 +1381,9 @@ class _GameScreenState extends State<GameScreen> {
     result = Random().nextInt(10) + 2;
 
     // if this may be friendly as a result of the highground encounter, add bonus
-    if (_hexesFriendlyVillage.contains(_selectedHex)) { result++; }
+    if (_hexesFriendlyVillage.contains(_selectedHex)) {
+      result++;
+    }
 
     // based on result, let's do this thing
     if (result == 2) {
@@ -1487,26 +1483,30 @@ class _GameScreenState extends State<GameScreen> {
         }
 
         // special case, if they moved into the rescue hex, then just end the game successfully
-        _checkRescueConditions(); 
+        _checkRescueConditions();
         // map out next hexes
         _doMappingPhase();
-        // for now, assume they can't move again 
+        // for now, assume they can't move again
         // did they choose a six?
         if (value == 6) {
           _pilot.setHealth(EnumDirection.decrement);
           if (_pilot.getHealth() == 0) {
             Navigator.push(
               context,
-                  MaterialPageRoute(builder: (context) => 
-                    GameOverScreen(gameOverReason: EnumGameOver.killed, hexesTraveled: _hexesTraveled.length, totalPoints: _totalUpPoints(EnumGameOver.killed),)),
-              );
-          } else { 
+              MaterialPageRoute(
+                  builder: (context) => GameOverScreen(
+                        gameOverReason: EnumGameOver.killed,
+                        hexesTraveled: _hexesTraveled.length,
+                        totalPoints: _totalUpPoints(EnumGameOver.killed),
+                      )),
+            );
+          } else {
             await _overlayMessage(constMoveSixMessage, EnumMessageType.fail);
           }
           await _overlayMessage(constMoveSixMessage, EnumMessageType.fail);
-        }
-        else { 
-          await _overlayMessage(constMoveSuccessMessage, EnumMessageType.success);
+        } else {
+          await _overlayMessage(
+              constMoveSuccessMessage, EnumMessageType.success);
         }
         // did they enter a village? that brings a whole new thing to check
         if (_map[_selectedHex].terrain == EnumTerrain.village) {
@@ -1521,10 +1521,10 @@ class _GameScreenState extends State<GameScreen> {
       if (value >= target) {
         if (value == 6) {
           _pilot.setHealth(EnumDirection.decrement);
-          await _overlayMessage(constStealthSixMessage, EnumMessageType.fail);          
-        }
-        else { 
-          await _overlayMessage(constStealthSuccessMessage, EnumMessageType.success);
+          await _overlayMessage(constStealthSixMessage, EnumMessageType.fail);
+        } else {
+          await _overlayMessage(
+              constStealthSuccessMessage, EnumMessageType.success);
         }
       } else {
         _pilot.setProximity(EnumDirection.decrement);
@@ -1538,9 +1538,9 @@ class _GameScreenState extends State<GameScreen> {
         if (value == 6) {
           _pilot.setHealth(EnumDirection.decrement);
           await _overlayMessage(constRestSixMessage, EnumMessageType.fail);
-        }
-        else {
-          await _overlayMessage(constRestSuccessMessage, EnumMessageType.success);
+        } else {
+          await _overlayMessage(
+              constRestSuccessMessage, EnumMessageType.success);
         }
       } else {
         _pilot.setEndurance(EnumDirection.decrement);
@@ -1558,15 +1558,17 @@ class _GameScreenState extends State<GameScreen> {
   // reroll one die
   // *********************************************
   void _reRoll(int index) {
-    int mod = 0; 
-    // if they have a fever, impacts all die rolls 
-    if (_pilot.hasAnAffliction(EnumAffliction.fever)) { mod = 1; }
+    int mod = 0;
+    // if they have a fever, impacts all die rolls
+    if (_pilot.hasAnAffliction(EnumAffliction.fever)) {
+      mod = 1;
+    }
 
     // only do this if they are allowed, and then flip that flag
     if (_allowedToReRoll) {
       _allowedToReRoll = false;
-      _reRolledDiceIndex = index; 
-      _rollingDice[index] = (Random().nextInt(6) + 1 - mod).clamp(1,6); 
+      _reRolledDiceIndex = index;
+      _rollingDice[index] = (Random().nextInt(6) + 1 - mod).clamp(1, 6);
       _overlayEntry?.markNeedsBuild(); // forces overlay to redraw
     }
   }
@@ -1576,20 +1578,24 @@ class _GameScreenState extends State<GameScreen> {
   // *********************************************
   void _rollDice() {
     int mod = 0;
-    int bonus = 0; 
+    int bonus = 0;
 
-    // if they have a fever, impacts all die rolls 
-    if (_pilot.hasAnAffliction(EnumAffliction.fever)) { mod = 1; }
+    // if they have a fever, impacts all die rolls
+    if (_pilot.hasAnAffliction(EnumAffliction.fever)) {
+      mod = 1;
+    }
 
     // if they have movement bonus due to milestone encounter, add + 2
     if (_movementBonus) {
-      bonus = 2; 
-      _movementBonus = false; 
+      bonus = 2;
+      _movementBonus = false;
     }
 
     setState(() {
-      // the clamp usage ensures keeps it between 1 and 6 
-      _rollingDice = _rollingDice.map((_) => (Random().nextInt(6) + 1 - mod + bonus).clamp(1,6)).toList();
+      // the clamp usage ensures keeps it between 1 and 6
+      _rollingDice = _rollingDice
+          .map((_) => (Random().nextInt(6) + 1 - mod + bonus).clamp(1, 6))
+          .toList();
     });
   }
 
@@ -1597,12 +1603,13 @@ class _GameScreenState extends State<GameScreen> {
   // draw the dice
   // *********************************************
   List<Widget> _drawDice(EnumPhase phase, int target) {
-
     // set each one
     return _rollingDice.asMap().entries.map((entry) {
       final index = entry.key;
       final value = entry.value;
-      final asset = (index == _reRolledDiceIndex) ? "$constDieFaceRed$value.jpg" : "$constDieFaceWhite$value.jpg"; 
+      final asset = (index == _reRolledDiceIndex)
+          ? "$constDieFaceRed$value.jpg"
+          : "$constDieFaceWhite$value.jpg";
 
       return GestureDetector(
           onTap: () {
@@ -1610,7 +1617,7 @@ class _GameScreenState extends State<GameScreen> {
           },
           onDoubleTap: () {
             // can only reroll during stealth phase if they successfully moved
-            if ((_phase == EnumPhase.stealth) && (_allowedToReRoll)) { 
+            if ((_phase == EnumPhase.stealth) && (_allowedToReRoll)) {
               _reRoll(index);
             }
           },
@@ -1638,79 +1645,79 @@ class _GameScreenState extends State<GameScreen> {
     // Stop the rolling after 2 seconds
     Future.delayed(const Duration(seconds: 2), () {
       _rollTimer?.cancel();
-      _overlayEntry?.markNeedsBuild(); 
+      _overlayEntry?.markNeedsBuild();
     });
   }
 
   // *********************************************
   // if they have six, give them message about it and
-  // option to fail the roll 
+  // option to fail the roll
   // *********************************************
-  Widget _sixMessage(EnumPhase phase) { 
-
+  Widget _sixMessage(EnumPhase phase) {
     if ((!_rollTimer!.isActive) && (_rollingDice.contains(6))) {
-      return  
-        Column(children: [
+      return Column(
+        children: [
           const Text(
-            constDiceRollPickSix, 
+            constDiceRollPickSix,
             style: TextStyle(
                 color: Colors.white,
                 fontFamily: constAppTextFont,
                 fontSize: 13),
             textAlign: TextAlign.center,
-          ), 
-        const SizedBox(height: 15,),
-        SizedBox(
-          width: 160.0,
-          height: 55.0,
-          child: OutlinedButton(
-            style: OutlinedButton.styleFrom(
-              foregroundColor: Colors.black, // Text and icon color
-              backgroundColor: Colors.white, // Background color
-              overlayColor: Colors.blueAccent.withValues(), // pressed ripple
-              side: const BorderSide(
-                color: Colors.black,
-                width: 3.0,
-              ), // Border color
-            ),
-            child: const Align(
-                alignment: Alignment.center,
-                child: Text(
-                  constFailText,
-                  style: TextStyle(
-                      fontFamily: constAppTextFont,
-                      color: Colors.black,
-                      fontSize: 18.0),
-                )),
-            onPressed: () {
-            _tapDice(phase, -1, 0); // this guarantees a failed roll 
-            }, 
-          ))       
-        ],);
-    } else { 
+          ),
+          const SizedBox(
+            height: 15,
+          ),
+          SizedBox(
+              width: 160.0,
+              height: 55.0,
+              child: OutlinedButton(
+                style: OutlinedButton.styleFrom(
+                  foregroundColor: Colors.black, // Text and icon color
+                  backgroundColor: Colors.white, // Background color
+                  overlayColor:
+                      Colors.blueAccent.withValues(), // pressed ripple
+                  side: const BorderSide(
+                    color: Colors.black,
+                    width: 3.0,
+                  ), // Border color
+                ),
+                child: const Align(
+                    alignment: Alignment.center,
+                    child: Text(
+                      constFailText,
+                      style: TextStyle(
+                          fontFamily: constAppTextFont,
+                          color: Colors.black,
+                          fontSize: 18.0),
+                    )),
+                onPressed: () {
+                  _tapDice(phase, -1, 0); // this guarantees a failed roll
+                },
+              ))
+        ],
+      );
+    } else {
       return Container();
     }
-
   }
-                    
 
   // *********************************************
   // display overlay for rolling and choosing dice
   // *********************************************
-  Future<void> _diceRollOverlay(
-      EnumPhase phase, int rollToBeat) async {
+  Future<void> _diceRollOverlay(EnumPhase phase, int rollToBeat) async {
     String message = "";
     String title = "";
 
     // always reset this
-    _reRolledDiceIndex = -1; 
+    _reRolledDiceIndex = -1;
 
     if (phase == EnumPhase.move) {
       title = constMovePhase;
       message =
           "$constDiceRollMoveMessage1 $rollToBeat $constDiceRollMoveMessage2";
     } else if (phase == EnumPhase.stealth) {
-      title = constStealthPhase;      
+      title = constStealthPhase;
       message =
           "$constDiceRollStealthMessage1 $rollToBeat $constDiceRollStealthMessage2";
       if (_allowedToReRoll) {
@@ -1779,8 +1786,8 @@ class _GameScreenState extends State<GameScreen> {
                                   )
                                 ],
                               ),
-                              const SizedBox(height: 12),         
-                              _sixMessage(phase),                           
+                              const SizedBox(height: 12),
+                              _sixMessage(phase),
                             ],
                           ))))
             ]));
@@ -1830,41 +1837,41 @@ class _GameScreenState extends State<GameScreen> {
   }
 
   // *********************************************
-  // overlay with a message, either good or bad 
+  // overlay with a message, either good or bad
   // *********************************************
   Future<void> _overlayMessage(String message, EnumMessageType type) async {
     _completer = Completer<void>();
     if (_overlayEntry != null) return; // Prevent stacking
 
     _overlayEntry = OverlayEntry(
-      builder: (_) => MessageOverlay(onFinished: _genericCloseOverlay, messageType: type, message: message,),
+      builder: (_) => MessageOverlay(
+        onFinished: _genericCloseOverlay,
+        messageType: type,
+        message: message,
+      ),
     );
 
     Overlay.of(context).insert(_overlayEntry!);
 
     Future.delayed(const Duration(seconds: 3), () {
-        _genericCloseOverlay();
-      }
-    );
+      _genericCloseOverlay();
+    });
 
-    return _completer?.future; 
-
+    return _completer?.future;
   }
 
   // *********************************************
   // this needs to be called to insert the encounter overlay
   // *********************************************
   Future<void> _showEncounterOverlay(BuildContext context) async {
-    final completer = Completer<void>(); 
+    final completer = Completer<void>();
     late OverlayEntry entry;
 
     entry = OverlayEntry(
-      builder: (_) => ImageCyclerOverlay(
-        onClose: () { 
-          entry.remove();
-          completer.complete();
-        }
-      ),
+      builder: (_) => ImageCyclerOverlay(onClose: () {
+        entry.remove();
+        completer.complete();
+      }),
     );
 
     Overlay.of(context).insert(entry);
@@ -1932,22 +1939,20 @@ class _GameScreenState extends State<GameScreen> {
   // quit the current game and go back to main screen
   // ************************
   void _quitGame() async {
-    Navigator.push(
-      context,
-      MaterialPageRoute(builder: (context) => const LostFalconApp()));
+    Navigator.push(context,
+        MaterialPageRoute(builder: (context) => const LostFalconApp()));
   }
 
   // ************************
   // set up a new game
   // ************************
   void _newGame() async {
-
     // clear stuff out
-    _map.clear(); 
+    _map.clear();
     _hexesTraveled.clear();
     _hexesImpassable.clear();
-    _hexesCrashedChopper.clear(); 
-    _hexesTributary.clear(); 
+    _hexesCrashedChopper.clear();
+    _hexesTributary.clear();
     _hexesFriendlyVillage.clear();
 
     // get an initialized map from the factory
@@ -2033,26 +2038,25 @@ class _GameScreenState extends State<GameScreen> {
   }
 
   // ************************
-  // friendly display of the round 
+  // friendly display of the round
   // ************************
   String _displayRound() {
     return _round.toString();
   }
 
   // ************************
-  // total up end game points 
+  // total up end game points
   // ************************
-  int _totalUpPoints(EnumGameOver gameOverReason) { 
-    int hexCount = _hexesTraveled.length; 
+  int _totalUpPoints(EnumGameOver gameOverReason) {
+    int hexCount = _hexesTraveled.length;
 
     // if they won, bonus is remaining health + proximinty + endurance
-    int bonus = (gameOverReason == EnumGameOver.rescued) ? (_pilot.getHealth() + _pilot.getProximity() + _pilot.getEndurance()) : 0; 
+    int bonus = (gameOverReason == EnumGameOver.rescued)
+        ? (_pilot.getHealth() + _pilot.getProximity() + _pilot.getEndurance())
+        : 0;
 
-    return hexCount + bonus; 
-
+    return hexCount + bonus;
   }
-
-
 
   // ************************
   // map next three hexes
@@ -2067,7 +2071,7 @@ class _GameScreenState extends State<GameScreen> {
     MapHex currentHex = _getCurrentHex();
     int row = currentHex.row;
     int col = currentHex.col;
-    late MapHex randomHex; 
+    late MapHex randomHex;
 
     // pick terrain for the next three hexes based on random roll
     if (die == 1) {
@@ -2098,11 +2102,10 @@ class _GameScreenState extends State<GameScreen> {
 
     // special case -- if this is a result of the milepost encounter, everything is scrub
     if (_milepostFriendlyTerrain == true) {
-      _milepostFriendlyTerrain = false; 
-      hex1 = EnumTerrain.scrub; 
-      hex2 = EnumTerrain.scrub; 
-      hex3 = EnumTerrain.scrub; 
-
+      _milepostFriendlyTerrain = false;
+      hex1 = EnumTerrain.scrub;
+      hex2 = EnumTerrain.scrub;
+      hex3 = EnumTerrain.scrub;
     }
 
     // start with first hex
@@ -2233,7 +2236,8 @@ class _GameScreenState extends State<GameScreen> {
       if (!randomHex.visible) {
         // randomly select one of the first five
         _map[_getIdFromColRow(randomHex.col, randomHex.row)].visible = true;
-        _map[_getIdFromColRow(randomHex.col, randomHex.row)].terrain = EnumTerrain.values[Random().nextInt(5)];
+        _map[_getIdFromColRow(randomHex.col, randomHex.row)].terrain =
+            EnumTerrain.values[Random().nextInt(5)];
       }
       // hex 2
       randomHex = MapFactory.moveRandomSteps(currentHex.row, currentHex.col, 3);
@@ -2241,9 +2245,9 @@ class _GameScreenState extends State<GameScreen> {
       if (!randomHex.visible) {
         // randomly select one of the first five
         _map[_getIdFromColRow(randomHex.col, randomHex.row)].visible = true;
-        _map[_getIdFromColRow(randomHex.col, randomHex.row)].terrain = EnumTerrain.values[Random().nextInt(5)];
+        _map[_getIdFromColRow(randomHex.col, randomHex.row)].terrain =
+            EnumTerrain.values[Random().nextInt(5)];
       }
-
     }
 
     setState(() {
@@ -2252,50 +2256,49 @@ class _GameScreenState extends State<GameScreen> {
   }
 
   // ************************
-  // move the u.s. patrol along the outer column 
+  // move the u.s. patrol along the outer column
   // ************************
   void _moveUSForces() {
-    int col = constMapCols-1; // they are always in the last column 
-    late int row; 
+    int col = constMapCols - 1; // they are always in the last column
+    late int row;
 
     // figure out current row
-    for (int i=1; i < constMapRows; i++) {
-      if (_map[_getIdFromColRow(col, i)].terrain == EnumTerrain.rescue) { 
-        _map[_getIdFromColRow(col, i)].terrain = EnumTerrain.unknown; // reset it while here        
-        _map[_getIdFromColRow(col, i)].visible = false; // reset it while here            
+    for (int i = 1; i < constMapRows; i++) {
+      if (_map[_getIdFromColRow(col, i)].terrain == EnumTerrain.rescue) {
+        _map[_getIdFromColRow(col, i)].terrain =
+            EnumTerrain.unknown; // reset it while here
+        _map[_getIdFromColRow(col, i)].visible = false; // reset it while here
         row = i;
         break;
       }
     }
 
     // move up or down depending on which way they are going
-    if (_forcesPatrollingUp) { 
+    if (_forcesPatrollingUp) {
       row--;
       if (row <= constStartRow) {
-        _forcesPatrollingUp = false; 
-        row = 2; 
+        _forcesPatrollingUp = false;
+        row = 2;
       }
-    }
-    else { 
+    } else {
       row++;
       if (row >= constMapRows) {
-        _forcesPatrollingUp = true; 
-        row = 3; 
+        _forcesPatrollingUp = true;
+        row = 3;
       }
     }
 
-    // now update them on the map 
-    _map[_getIdFromColRow(col, row)].terrain = EnumTerrain.rescue;    
-    _map[_getIdFromColRow(col, row)].visible = true;        
+    // now update them on the map
+    _map[_getIdFromColRow(col, row)].terrain = EnumTerrain.rescue;
+    _map[_getIdFromColRow(col, row)].visible = true;
 
     setState(() {
       // redraw
     });
-
   }
 
   // ************************
-  // advance through phases 
+  // advance through phases
   // ************************
   void _continueButtonPress() async {
     // increment the phase from current one since they moved to the next
@@ -2315,7 +2318,7 @@ class _GameScreenState extends State<GameScreen> {
 
     // always set these to false to start
     _moveAllowed = false;
- 
+
     // if encounter phase, decide if they had an encounter
     if (_phase == EnumPhase.encounter) {
       await _showEncounterOverlay(context);
@@ -2324,25 +2327,33 @@ class _GameScreenState extends State<GameScreen> {
       if (_pilot.getHealth() == 0) {
         Navigator.push(
           context,
-              MaterialPageRoute(builder: (context) => 
-                GameOverScreen(gameOverReason: EnumGameOver.killed, hexesTraveled: _hexesTraveled.length, totalPoints: _totalUpPoints(EnumGameOver.killed),)),
-          );
+          MaterialPageRoute(
+              builder: (context) => GameOverScreen(
+                    gameOverReason: EnumGameOver.killed,
+                    hexesTraveled: _hexesTraveled.length,
+                    totalPoints: _totalUpPoints(EnumGameOver.killed),
+                  )),
+        );
       }
       if (_pilot.getProximity() == 0) {
         Navigator.push(
           context,
-              MaterialPageRoute(builder: (context) =>
-                GameOverScreen(gameOverReason: EnumGameOver.captured, hexesTraveled: _hexesTraveled.length, totalPoints: _totalUpPoints(EnumGameOver.captured),)),
-          );
+          MaterialPageRoute(
+              builder: (context) => GameOverScreen(
+                    gameOverReason: EnumGameOver.captured,
+                    hexesTraveled: _hexesTraveled.length,
+                    totalPoints: _totalUpPoints(EnumGameOver.captured),
+                  )),
+        );
       }
 
       // clear out the dice numbers
       _moveDice = 0;
       _stealthDice = 0;
-      _restDice = 0; 
+      _restDice = 0;
 
       setState(() {
-        _doMappingPhase(); 
+        _doMappingPhase();
       });
     }
 
@@ -2359,21 +2370,21 @@ class _GameScreenState extends State<GameScreen> {
     // if move phase, just set the flag allowing them to move (when they pick a new hex)
     if (_phase == EnumPhase.move) {
       // move the u.s. forces up or down
-      _moveUSForces(); 
+      _moveUSForces();
       // reset village flags and counters
       _villageReaction = EnumVillageReactions.none;
       _motorcycleMoves = 0;
       // set flag that allows a move (so they only do it once per turn)
       if (_moveDice > 0) {
-          _moveAllowed = true;
-          setState(() {
-            // do nothing
-          });
-      }
-      else { 
-        await _overlayMessage(constNoDiceAllocatedForMoveMessage, EnumMessageType.fail);
-        _allowedToReRoll = false; 
-        //_continueButtonPress(); 
+        _moveAllowed = true;
+        setState(() {
+          // do nothing
+        });
+      } else {
+        await _overlayMessage(
+            constNoDiceAllocatedForMoveMessage, EnumMessageType.fail);
+        _allowedToReRoll = false;
+        //_continueButtonPress();
       }
     }
 
@@ -2391,37 +2402,38 @@ class _GameScreenState extends State<GameScreen> {
       } else {
         _pilot.setProximity(EnumDirection.decrement);
         await _overlayMessage(constStealthFailedMessage, EnumMessageType.fail);
-        //_continueButtonPress(); 
+        //_continueButtonPress();
       }
 
-      // do a game over check to see if the pilot was captured 
+      // do a game over check to see if the pilot was captured
       if (_pilot.getProximity() == 0) {
         Navigator.push(
           context,
-              MaterialPageRoute(builder: (context) =>
-                GameOverScreen(gameOverReason: EnumGameOver.captured, hexesTraveled: _hexesTraveled.length, totalPoints: _totalUpPoints(EnumGameOver.captured),)),
-          );
+          MaterialPageRoute(
+              builder: (context) => GameOverScreen(
+                    gameOverReason: EnumGameOver.captured,
+                    hexesTraveled: _hexesTraveled.length,
+                    totalPoints: _totalUpPoints(EnumGameOver.captured),
+                  )),
+        );
       }
-
     }
 
     // if rest phase, decide whether they lose any endurance
     if (_phase == EnumPhase.rest) {
       if (_restDice > 0) {
-        _rollingDice =
-            List.generate(_restDice, (_) => Random().nextInt(6) + 1);        
+        _rollingDice = List.generate(_restDice, (_) => Random().nextInt(6) + 1);
         setState(() {
           // do nothing
-        }); 
-        await _diceRollOverlay(EnumPhase.rest,
-            MapFactory.getRestCost(_getCurrentHex().terrain));
+        });
+        await _diceRollOverlay(
+            EnumPhase.rest, MapFactory.getRestCost(_getCurrentHex().terrain));
       } else {
         _pilot.setEndurance(EnumDirection.decrement);
         await _overlayMessage(constRestFailedMessage, EnumMessageType.fail);
-        //_continueButtonPress();         
+        //_continueButtonPress();
       }
     }
-
   }
 
   // ************************
@@ -2512,15 +2524,18 @@ class _GameScreenState extends State<GameScreen> {
   // check if rescued
   // ************************
   void _checkRescueConditions() {
-
-        // special case, if they moved into the rescue hex, then just end the game successfully
-        if (_map[_selectedHex].terrain == EnumTerrain.rescue) {
-          Navigator.push(
-              context,
-                  MaterialPageRoute(builder: (context) => 
-                    GameOverScreen(gameOverReason: EnumGameOver.rescued, hexesTraveled: _hexesTraveled.length, totalPoints: _totalUpPoints(EnumGameOver.rescued),)),
-          );
-        }
+    // special case, if they moved into the rescue hex, then just end the game successfully
+    if (_map[_selectedHex].terrain == EnumTerrain.rescue) {
+      Navigator.push(
+        context,
+        MaterialPageRoute(
+            builder: (context) => GameOverScreen(
+                  gameOverReason: EnumGameOver.rescued,
+                  hexesTraveled: _hexesTraveled.length,
+                  totalPoints: _totalUpPoints(EnumGameOver.rescued),
+                )),
+      );
+    }
   }
 
   // ************************
@@ -2533,7 +2548,7 @@ class _GameScreenState extends State<GameScreen> {
     // get current hex
     MapHex h = _getCurrentHex();
     // save that for the moment
-    _oldHex = h.id; 
+    _oldHex = h.id;
     // get the id of the hex they selected
     _selectedHex = _getIdFromColRow(col, row);
     // get distance between hexes
@@ -2549,13 +2564,13 @@ class _GameScreenState extends State<GameScreen> {
 
     // second check, if move phase and they picked same hex, bail right out
     if ((_phase == EnumPhase.move) && (_oldHex == _selectedHex)) {
-        await _overlayMessage(constSameHexPickedMessage, EnumMessageType.fail);
-        return;     
+      await _overlayMessage(constSameHexPickedMessage, EnumMessageType.fail);
+      return;
     }
 
     // third check, if they picked a special background hex that's not obvious, bail right out
     if (_map[_selectedHex].terrain == EnumTerrain.background) {
-      return; 
+      return;
     }
 
     // if this is move phase, do all the logic
@@ -2567,14 +2582,13 @@ class _GameScreenState extends State<GameScreen> {
       }
       // special case -- crashed helicopter due to encounter
       if (_hexesCrashedChopper.contains(_selectedHex)) {
-        // they just move, no roll or anything 
+        // they just move, no roll or anything
         _map[_oldHex].current = false;
         _map[_selectedHex].current = true;
         _hexesTraveled.add(_selectedHex);
         _hexesTraveled.add(_oldHex);
         // special case, check if game over in case they moved into rescue hex
-        _checkRescueConditions(); 
-
+        _checkRescueConditions();
       }
       // regular move
       else if (_villageReaction == EnumVillageReactions.none) {
@@ -2587,25 +2601,26 @@ class _GameScreenState extends State<GameScreen> {
               List.generate(_moveDice, (_) => Random().nextInt(6) + 1);
           await _diceRollOverlay(EnumPhase.move, moveCost);
         } else {
-          await _overlayMessage(constNoDiceAllocatedForMoveMessage, EnumMessageType.fail);
+          await _overlayMessage(
+              constNoDiceAllocatedForMoveMessage, EnumMessageType.fail);
         }
         _moveAllowed = false;
-      // special village move 
+        // special village move
       } else {
         // if robbed, delayed, or peaceful need to move into a hex that's already mapped
         if (_map[_selectedHex].terrain == EnumTerrain.unknown) {
           // must be untrusting, helpful, or allied
           if ((_villageReaction == EnumVillageReactions.untrusting) ||
               (_villageReaction == EnumVillageReactions.helpful) |
-              (_villageReaction == EnumVillageReactions.allied)) {
+                  (_villageReaction == EnumVillageReactions.allied)) {
             // ok to move
             _map[_oldHex].current = false;
             _map[_selectedHex].current = true;
             _hexesTraveled.add(_selectedHex);
             _hexesTraveled.add(_oldHex);
             // special case, check if game over in case they moved into rescue hex
-            _checkRescueConditions(); 
-            // map out next spaces 
+            _checkRescueConditions();
+            // map out next spaces
             _doMappingPhase();
           }
         } else {
@@ -2615,8 +2630,8 @@ class _GameScreenState extends State<GameScreen> {
           _hexesTraveled.add(_selectedHex);
           _hexesTraveled.add(_oldHex);
           // special case, check if game over in case they moved into rescue hex
-          _checkRescueConditions(); 
-          // map out next spaces 
+          _checkRescueConditions();
+          // map out next spaces
           _doMappingPhase();
         }
 
@@ -2631,38 +2646,31 @@ class _GameScreenState extends State<GameScreen> {
           _moveAllowed = false;
         }
       }
-
-    }
-    else if ((_phase == EnumPhase.move) && (!_moveAllowed)) {
-        await _overlayMessage(constAlreadMovedMessage, EnumMessageType.fail);
-        return;
-
-    }
-
-    else if ((_phase == EnumPhase.encounter) && (_moveAllowed)) {
+    } else if ((_phase == EnumPhase.move) && (!_moveAllowed)) {
+      await _overlayMessage(constAlreadMovedMessage, EnumMessageType.fail);
+      return;
+    } else if ((_phase == EnumPhase.encounter) && (_moveAllowed)) {
       // there are some encounters where they can also move
-            // is the hex too far away?
+      // is the hex too far away?
       if (hexDistance > 1) {
         // abort
         return;
       }
 
       // ok to move
-      _map[_oldHex].current = false;  
+      _map[_oldHex].current = false;
       _map[_selectedHex].current = true;
       _hexesTraveled.add(_selectedHex);
-      _hexesTraveled.add(_oldHex); 
+      _hexesTraveled.add(_oldHex);
       // special case, check if game over in case they moved into rescue hex
-      _checkRescueConditions(); 
-      // map out next spaces 
+      _checkRescueConditions();
+      // map out next spaces
       _doMappingPhase();
-
     }
 
     setState(() {
       // do nothing
     });
-
   }
 
   // ************************
@@ -2697,7 +2705,8 @@ class _GameScreenState extends State<GameScreen> {
               child: Image.asset(constImagePlayerLocation, fit: BoxFit.cover)));
     }
     // else if this hex contains a crashed chopper
-    else if ((_hexesCrashedChopper.isNotEmpty) && (_hexesCrashedChopper.contains(id))) {
+    else if ((_hexesCrashedChopper.isNotEmpty) &&
+        (_hexesCrashedChopper.contains(id))) {
       return const Positioned(
           top: 10,
           left: 15,
@@ -2736,7 +2745,7 @@ class _GameScreenState extends State<GameScreen> {
   // ************************
   // if they have items, display dialog
   // ************************
-  void _handleInventoryTap() { 
+  void _handleInventoryTap() {
     if (_pilot.hasAnyInventory()) {
       showInfoDialog(context, _pilot.describeInventory());
     }
@@ -2750,16 +2759,17 @@ class _GameScreenState extends State<GameScreen> {
       showInfoDialog(context, _pilot.describeAfflictions());
     }
   }
-  
+
   // ************************
   // return inventory color based on whether they have items
   // ************************
   Color _returnInventoryColor() {
     Color result = const Color.fromARGB(255, 68, 68, 68);
 
-    if (_pilot.hasAnyInventory()) { result = Colors.white; }
-    return result; 
-
+    if (_pilot.hasAnyInventory()) {
+      result = Colors.white;
+    }
+    return result;
   }
 
   // ************************
@@ -2768,9 +2778,10 @@ class _GameScreenState extends State<GameScreen> {
   Color _returnAfflictionsColor() {
     Color result = const Color.fromARGB(255, 68, 68, 68);
 
-    if (_pilot.hasAnyAfflictions()) { result = Colors.white; }
-    return result; 
-
+    if (_pilot.hasAnyAfflictions()) {
+      result = Colors.white;
+    }
+    return result;
   }
 
   // ************************
@@ -2857,7 +2868,8 @@ class _GameScreenState extends State<GameScreen> {
                             debugPrint(
                                 "row: $row.toString(), col: $col.toString()");
                             // do something if we're in the move phase
-                            if ((_phase == EnumPhase.move) || (_phase == EnumPhase.encounter ))  {
+                            if ((_phase == EnumPhase.move) ||
+                                (_phase == EnumPhase.encounter)) {
                               _selectMapHex(row, col);
                             }
                           },
@@ -2989,44 +3001,43 @@ class _GameScreenState extends State<GameScreen> {
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
                       GestureDetector(
-                        onTap: () {
-                          _handleInventoryTap();
-                        },
-                        child: 
-                          Column(
-                            children: [
-                              Icon(Icons.hiking, size: 30, color: _returnInventoryColor()),
-                              const SizedBox(width: 1), // spacing column
-                              Text(constInventoryText,
-                                  textAlign: TextAlign.center,
-                                  style: TextStyle(
-                                      color: _returnInventoryColor(),
-                                      fontWeight: FontWeight.bold,
-                                      fontFamily: constAppTextFont,
-                                      fontSize: 15.0)),
-                            ]
-                          )
-                        ),
-                      const SizedBox(width: 80,), 
-                     GestureDetector(
+                          onTap: () {
+                            _handleInventoryTap();
+                          },
+                          child: Column(children: [
+                            Icon(Icons.hiking,
+                                size: 30, color: _returnInventoryColor()),
+                            const SizedBox(width: 1), // spacing column
+                            Text(constInventoryText,
+                                textAlign: TextAlign.center,
+                                style: TextStyle(
+                                    color: _returnInventoryColor(),
+                                    fontWeight: FontWeight.bold,
+                                    fontFamily: constAppTextFont,
+                                    fontSize: 15.0)),
+                          ])),
+                      const SizedBox(
+                        width: 80,
+                      ),
+                      GestureDetector(
                         onTap: () {
                           _handleAfflictionsTap();
                         },
-                        child: 
-                         Column(
-                        children: [
-                          Icon(Icons.healing, size: 30, color: _returnAfflictionsColor()),
-                          const SizedBox(width: 1), // spacing column
-                          Text(constAfflictionsText,
-                              textAlign: TextAlign.center,
-                              style: TextStyle(
-                                  color: _returnAfflictionsColor(),
-                                  fontWeight: FontWeight.bold,
-                                  fontFamily: constAppTextFont,
-                                  fontSize: 15.0)),
-                        ],
+                        child: Column(
+                          children: [
+                            Icon(Icons.healing,
+                                size: 30, color: _returnAfflictionsColor()),
+                            const SizedBox(width: 1), // spacing column
+                            Text(constAfflictionsText,
+                                textAlign: TextAlign.center,
+                                style: TextStyle(
+                                    color: _returnAfflictionsColor(),
+                                    fontWeight: FontWeight.bold,
+                                    fontFamily: constAppTextFont,
+                                    fontSize: 15.0)),
+                          ],
+                        ),
                       ),
-                     ),
                     ],
                   ),
                   const Padding(
@@ -3096,7 +3107,7 @@ class _GameScreenState extends State<GameScreen> {
                                       fontSize: 18.0),
                                 )),
                             onPressed: () {
-                              _quitGame(); 
+                              _quitGame();
                             },
                           ),
                         )
