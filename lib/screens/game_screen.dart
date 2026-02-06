@@ -1077,7 +1077,7 @@ class _ImageCyclerOverlayState extends State<ImageCyclerOverlay>
             _currentEncounterIndex =
                 _encounterFactory.getRandomEncounter(_map[_selectedHex]);
             // hardcode this for testing!
-            _currentEncounterIndex = EnumEncounter.rockslide.index;
+            //_currentEncounterIndex = EnumEncounter.rockslide.index;
             message = _encounterFactory
                 .getEncounterDescription(_currentEncounterIndex);
           }
@@ -1890,6 +1890,7 @@ class _GameScreenState extends State<GameScreen> {
       if (_pilot.hasAnAffliction(EnumAffliction.brokenfoot)) {
         if (_moveDice > 2) {
           _moveDice = 2;
+          _totalDice++;
         }
       }
     } else if ((direction == EnumDirection.decrement) && (_moveDice > 0)) {
