@@ -1077,7 +1077,7 @@ class _ImageCyclerOverlayState extends State<ImageCyclerOverlay>
             _currentEncounterIndex =
                 _encounterFactory.getRandomEncounter(_map[_selectedHex]);
             // hardcode this for testing!
-            //_currentEncounterIndex = EnumEncounter.rockslide.index;
+            //_currentEncounterIndex = EnumEncounter.chemicals.index;
             message = _encounterFactory
                 .getEncounterDescription(_currentEncounterIndex);
           }
@@ -1415,7 +1415,7 @@ class _GameScreenState extends State<GameScreen> {
       _map[_oldHex].current = true;
       _map[_selectedHex].current = false;
       // remove this hex from one they've traveled in
-      _hexesTraveled.remove(_selectedHex);
+      // _hexesTraveled.remove(_selectedHex);
       // can't move
       _moveAllowed = false;
     } else if ((result == 6) || (result == 7) || (result == 8)) {
@@ -1465,6 +1465,8 @@ class _GameScreenState extends State<GameScreen> {
   // user selected a die
   // *********************************************
   void _tapDice(EnumPhase phase, int value, int target) async {
+    String moveMessage = constMoveSuccessMessage;
+
     // get rid of the overlay (either way)
     _genericCloseOverlay();
 
@@ -1505,8 +1507,11 @@ class _GameScreenState extends State<GameScreen> {
           }
           await _overlayMessage(constMoveSixMessage, EnumMessageType.fail);
         } else {
-          await _overlayMessage(
-              constMoveSuccessMessage, EnumMessageType.success);
+          // see if we need to concatenate messages
+          if (_stealthDice > 0) {
+            moveMessage = "$moveMessage $constReRollMessage";
+          }
+          await _overlayMessage(moveMessage, EnumMessageType.success);
         }
         // did they enter a village? that brings a whole new thing to check
         if (_map[_selectedHex].terrain == EnumTerrain.village) {
@@ -1579,10 +1584,16 @@ class _GameScreenState extends State<GameScreen> {
   void _rollDice() {
     int mod = 0;
     int bonus = 0;
+    int clamp = 6;
 
     // if they have a fever, impacts all die rolls
     if (_pilot.hasAnAffliction(EnumAffliction.fever)) {
       mod = 1;
+    }
+
+    // if they have a gunshot wound, also can't roll a six
+    if (_pilot.hasAnAffliction(EnumAffliction.gunshotwound)) {
+      clamp = 5;
     }
 
     // if they have movement bonus due to milestone encounter, add + 2
@@ -1592,9 +1603,9 @@ class _GameScreenState extends State<GameScreen> {
     }
 
     setState(() {
-      // the clamp usage ensures keeps it between 1 and 6
+      // the clamp usage ensures keeps it between 1 and max number (usually a six)
       _rollingDice = _rollingDice
-          .map((_) => (Random().nextInt(6) + 1 - mod + bonus).clamp(1, 6))
+          .map((_) => (Random().nextInt(6) + 1 - mod + bonus).clamp(1, clamp))
           .toList();
     });
   }
@@ -1654,11 +1665,14 @@ class _GameScreenState extends State<GameScreen> {
   // option to fail the roll
   // *********************************************
   Widget _sixMessage(EnumPhase phase) {
-    if ((!_rollTimer!.isActive) && (_rollingDice.contains(6))) {
+    // only display the fail button if they rolled one die and it is a six
+    if ((!_rollTimer!.isActive) &&
+        (_rollingDice.contains(6)) &&
+        (_rollingDice.length == 1)) {
       return Column(
         children: [
           const Text(
-            constDiceRollPickSix,
+            constDiceRollPickSixAndFailOption,
             style: TextStyle(
                 color: Colors.white,
                 fontFamily: constAppTextFont,
@@ -1696,6 +1710,13 @@ class _GameScreenState extends State<GameScreen> {
                 },
               ))
         ],
+      );
+    } else if ((!_rollTimer!.isActive) && (_rollingDice.contains(6))) {
+      return const Text(
+        constDiceRollPickSix,
+        style: TextStyle(
+            color: Colors.white, fontFamily: constAppTextFont, fontSize: 13),
+        textAlign: TextAlign.center,
       );
     } else {
       return Container();
@@ -1890,7 +1911,7 @@ class _GameScreenState extends State<GameScreen> {
       if (_pilot.hasAnAffliction(EnumAffliction.brokenfoot)) {
         if (_moveDice > 2) {
           _moveDice = 2;
-          _totalDice++;
+          _totalDice++; // add the die back to total since we aren't using it
         }
       }
     } else if ((direction == EnumDirection.decrement) && (_moveDice > 0)) {
@@ -1977,7 +1998,7 @@ class _GameScreenState extends State<GameScreen> {
   }
 
   // ************************
-  // _healthImage
+  // which images to show
   // ************************
   AssetImage _healthImage() {
     String value = _pilot.getHealth().toString();
@@ -1985,7 +2006,7 @@ class _GameScreenState extends State<GameScreen> {
   }
 
   // ************************
-  // _proximityImage
+  // which images to show
   // ************************
   AssetImage _proximityImage() {
     String value = _pilot.getProximity().toString();
@@ -1993,10 +2014,14 @@ class _GameScreenState extends State<GameScreen> {
   }
 
   // ************************
-  // _enduranceImage
+  // which image to show
   // ************************
   AssetImage _enduranceImage() {
     String value = _pilot.getEndurance().toString();
+    // endurance capped at 5 if they have a fever
+    if (_pilot.hasAnAffliction(EnumAffliction.burn)) {
+      value += "_red";
+    }
     return AssetImage("$constImageStatus$value.png");
   }
 
@@ -2083,6 +2108,10 @@ class _GameScreenState extends State<GameScreen> {
     int row = currentHex.row;
     int col = currentHex.col;
     late MapHex randomHex;
+    late MapHex destHex;
+    int distance = 0;
+    int newRow = 0;
+    int newCol = 0;
 
     // pick terrain for the next three hexes based on random roll
     if (die == 1) {
@@ -2126,7 +2155,7 @@ class _GameScreenState extends State<GameScreen> {
     // start to fill in hexes - depending on whether they are valid hexes and not already filled
     // walk around the whole way; should only hit 3 of these 4 in every situation
 
-    // row -1, col
+    // #1: row-1, col
     if (((row - 1) >= 0)) {
       if (_map[_getIdFromColRow(col, row - 1)].visible == false) {
         _map[_getIdFromColRow(col, row - 1)].terrain = hexToUse;
@@ -2135,25 +2164,35 @@ class _GameScreenState extends State<GameScreen> {
       }
     }
 
-    // only do row +1, col +1 if the current column is even
-    if (col % 2 == 0) {
-      if (((row + 1) <= constMapRows) && ((col + 1) <= constMapCols)) {
-        if (_map[_getIdFromColRow(col + 1, row + 1)].visible == false) {
-          if (hexCount == 1) {
-            hexToUse = hex1;
-          } else if (hexCount == 2) {
-            hexToUse = hex2;
-          } else {
-            hexToUse = hex3;
-          }
-          _map[_getIdFromColRow(col + 1, row + 1)].terrain = hexToUse;
-          _map[_getIdFromColRow(col + 1, row + 1)].visible = true;
-          hexCount++;
+    // #2: decide if we're doing row+1 or row-1 with col+1
+    destHex = _map[_getIdFromColRow(col + 1, row - 1)];
+    if (MapFactory.getDistanceBetweenHexes(currentHex, destHex) == 1) {
+      newRow = row - 1;
+      newCol = col + 1;
+    } else {
+      newRow = row + 1;
+      newCol = col + 1;
+    }
+
+    if ((newRow <= constMapRows) &&
+        (newRow >= 0) &&
+        (newCol <= constMapCols) &&
+        (newCol >= 0)) {
+      if (_map[_getIdFromColRow(newCol, newRow)].visible == false) {
+        if (hexCount == 1) {
+          hexToUse = hex1;
+        } else if (hexCount == 2) {
+          hexToUse = hex2;
+        } else {
+          hexToUse = hex3;
         }
+        _map[_getIdFromColRow(newCol, newRow)].terrain = hexToUse;
+        _map[_getIdFromColRow(newCol, newRow)].visible = true;
+        hexCount++;
       }
     }
 
-    // row, col +1
+    // #3: row, col +1
     if ((col + 1) <= constMapCols) {
       if (_map[_getIdFromColRow(col + 1, row)].visible == false) {
         if (hexCount == 1) {
@@ -2169,26 +2208,10 @@ class _GameScreenState extends State<GameScreen> {
       }
     }
 
-    // row +1, col
-    if ((row + 1) <= constMapRows) {
-      if (_map[_getIdFromColRow(col, row + 1)].visible == false) {
-        if (hexCount == 1) {
-          hexToUse = hex1;
-        } else if (hexCount == 2) {
-          hexToUse = hex2;
-        } else {
-          hexToUse = hex3;
-        }
-        _map[_getIdFromColRow(col, row + 1)].terrain = hexToUse;
-        _map[_getIdFromColRow(col, row + 1)].visible = true;
-        hexCount++;
-      }
-    }
-
-    // row - 1, col +1
+    // #4: row +1, col
     if (hexCount < 4) {
-      if (((row - 1) >= 0) && ((col + 1) <= constMapCols)) {
-        if (_map[_getIdFromColRow(col + 1, row - 1)].visible == false) {
+      if ((row + 1) <= constMapRows) {
+        if (_map[_getIdFromColRow(col, row + 1)].visible == false) {
           if (hexCount == 1) {
             hexToUse = hex1;
           } else if (hexCount == 2) {
@@ -2196,14 +2219,14 @@ class _GameScreenState extends State<GameScreen> {
           } else {
             hexToUse = hex3;
           }
-          _map[_getIdFromColRow(col + 1, row - 1)].terrain = hexToUse;
-          _map[_getIdFromColRow(col + 1, row - 1)].visible = true;
+          _map[_getIdFromColRow(col, row + 1)].terrain = hexToUse;
+          _map[_getIdFromColRow(col, row + 1)].visible = true;
           hexCount++;
         }
       }
     }
 
-    // row , col +1
+    // #5: row, col-1
     if (hexCount < 4) {
       if ((col - 1) >= 0) {
         if (_map[_getIdFromColRow(col - 1, row)].visible == false) {
@@ -2221,10 +2244,22 @@ class _GameScreenState extends State<GameScreen> {
       }
     }
 
-    // row +1 , col -1
+    // #6: decide if we're doing row+1 or row-1 with col-1
     if (hexCount < 4) {
-      if (((row + 1) <= constMapRows) && ((col - 1) >= 0)) {
-        if (_map[_getIdFromColRow(col - 1, row)].visible == false) {
+      destHex = _map[_getIdFromColRow(col, row + 1)];
+      if (MapFactory.getDistanceBetweenHexes(currentHex, destHex) == 1) {
+        newRow = row + 1;
+        newCol = col - 1;
+      } else {
+        newRow = row - 1;
+        newCol = col - 1;
+      }
+
+      if ((newRow <= constMapRows) &&
+          (newRow >= 0) &&
+          (newCol <= constMapCols) &&
+          (newCol >= 0)) {
+        if (_map[_getIdFromColRow(newCol, newRow)].visible == false) {
           if (hexCount == 1) {
             hexToUse = hex1;
           } else if (hexCount == 2) {
@@ -2232,8 +2267,8 @@ class _GameScreenState extends State<GameScreen> {
           } else {
             hexToUse = hex3;
           }
-          _map[_getIdFromColRow(col - 1, row + 1)].terrain = hexToUse;
-          _map[_getIdFromColRow(col - 1, row + 1)].visible = true;
+          _map[_getIdFromColRow(newCol, newRow)].terrain = hexToUse;
+          _map[_getIdFromColRow(newCol, newRow)].visible = true;
           hexCount++;
         }
       }
@@ -2302,6 +2337,19 @@ class _GameScreenState extends State<GameScreen> {
     // now update them on the map
     _map[_getIdFromColRow(col, row)].terrain = EnumTerrain.rescue;
     _map[_getIdFromColRow(col, row)].visible = true;
+
+    // if the us forces moved to where the player is, they win!
+    if (_selectedHex == _getIdFromColRow(col, row)) {
+      Navigator.push(
+        context,
+        MaterialPageRoute(
+            builder: (context) => GameOverScreen(
+                  gameOverReason: EnumGameOver.rescued,
+                  hexesTraveled: _hexesTraveled.length,
+                  totalPoints: _totalUpPoints(EnumGameOver.rescued),
+                )),
+      );
+    }
 
     setState(() {
       // redraw
@@ -2417,7 +2465,7 @@ class _GameScreenState extends State<GameScreen> {
       }
 
       // do a game over check to see if the pilot was captured
-      if (_pilot.getProximity() == 0) {
+      if (_pilot.getProximity() <= 0) {
         Navigator.push(
           context,
           MaterialPageRoute(
@@ -2591,6 +2639,7 @@ class _GameScreenState extends State<GameScreen> {
         await _overlayMessage(constHexTooFarMessage, EnumMessageType.fail);
         return;
       }
+
       // special case -- crashed helicopter due to encounter
       if (_hexesCrashedChopper.contains(_selectedHex)) {
         // they just move, no roll or anything
@@ -2601,6 +2650,7 @@ class _GameScreenState extends State<GameScreen> {
         // special case, check if game over in case they moved into rescue hex
         _checkRescueConditions();
       }
+
       // regular move
       else if (_villageReaction == EnumVillageReactions.none) {
         // what is the move cost?
@@ -2616,35 +2666,21 @@ class _GameScreenState extends State<GameScreen> {
               constNoDiceAllocatedForMoveMessage, EnumMessageType.fail);
         }
         _moveAllowed = false;
-        // special village move
+        // other village moves
       } else {
-        // if robbed, delayed, or peaceful need to move into a hex that's already mapped
-        if (_map[_selectedHex].terrain == EnumTerrain.unknown) {
-          // must be untrusting, helpful, or allied
-          if ((_villageReaction == EnumVillageReactions.untrusting) ||
-              (_villageReaction == EnumVillageReactions.helpful) |
-                  (_villageReaction == EnumVillageReactions.allied)) {
-            // ok to move
-            _map[_oldHex].current = false;
-            _map[_selectedHex].current = true;
-            _hexesTraveled.add(_selectedHex);
-            _hexesTraveled.add(_oldHex);
-            // special case, check if game over in case they moved into rescue hex
-            _checkRescueConditions();
-            // map out next spaces
-            _doMappingPhase();
-          }
-        } else {
-          // ok to move
-          _map[_oldHex].current = false;
-          _map[_selectedHex].current = true;
-          _hexesTraveled.add(_selectedHex);
-          _hexesTraveled.add(_oldHex);
-          // special case, check if game over in case they moved into rescue hex
-          _checkRescueConditions();
-          // map out next spaces
-          _doMappingPhase();
+        // ok to move
+        _map[_oldHex].current = false;
+        _map[_selectedHex].current = true;
+        _hexesTraveled.add(_selectedHex);
+        _hexesTraveled.add(_oldHex);
+        // check if they moved into another village (rare but it happens)
+        if (_map[_selectedHex].terrain == EnumTerrain.village) {
+          _handleVillage;
         }
+        // special case, check if game over in case they moved into rescue hex
+        _checkRescueConditions();
+        // map out next spaces
+        _doMappingPhase();
 
         // if on motorcycle, increment those moves
         if (_villageReaction == EnumVillageReactions.helpful) {
