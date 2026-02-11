@@ -24,7 +24,6 @@ int _motorcycleMoves = 0;
 EnumPhase _phase = EnumPhase.mapping;
 List<MapHex> _map = [];
 bool _moveAllowed = false;
-Set<int> _hexesTraveled = {};
 Set<int> _hexesImpassable = {};
 Set<int> _hexesCrashedChopper = {};
 Set<int> _hexesTributary = {};
@@ -263,6 +262,22 @@ class _ImageCyclerOverlayState extends State<ImageCyclerOverlay>
     }
   }
 
+  // *********************************************
+  // which was last place they were before the village
+  // *********************************************
+  int _getLastBeforeVillage() {
+    int id = 0;
+
+    for (MapHex mh in _map) {
+      if (mh.lastBeforeVillage == true) {
+        id = mh.id;
+        break;
+      }
+    }
+
+    return id;
+  }
+
   // ************************
   // _getIdFromRowCol
   // ************************
@@ -387,10 +402,10 @@ class _ImageCyclerOverlayState extends State<ImageCyclerOverlay>
     int newId =
         _getIdFromColRow(_map[_selectedHex].col + 1, _map[_selectedHex].row);
 
-    _hexesTraveled.add(_selectedHex);
     _map[_selectedHex].current = false;
-    _hexesTraveled.add(newId);
     _map[newId].current = true;
+    _map[_selectedHex].previous = true;
+    _map[newId].previous = true;
     _pilot.setEndurance(EnumDirection.decrement);
     _pilot.setAffliction(EnumAffliction.gunshotwound);
   }
@@ -415,8 +430,12 @@ class _ImageCyclerOverlayState extends State<ImageCyclerOverlay>
   //  dust - go back
   // *********************************************
   void _doDustBack() {
-    // move the back to last spot
-    _map[_oldHex].current = true;
+    // move them back to old hex (unless old hex was a village, then push them back again)
+    if (_map[_oldHex].terrain == EnumTerrain.village) {
+      _map[_getLastBeforeVillage()].current = true;
+    } else {
+      _map[_oldHex].current = true;
+    }
     _map[_selectedHex].current = false;
     setState(() {
       // do nothing
@@ -609,7 +628,12 @@ class _ImageCyclerOverlayState extends State<ImageCyclerOverlay>
   void _doSniperRetreat() {
     _pilot.setAffliction(EnumAffliction.gunshotwound);
     _pilot.setAffliction(EnumAffliction.deepcut);
-    _map[_oldHex].current = true;
+    // move them back to old hex (unless old hex was a village, then push them back again)
+    if (_map[_oldHex].terrain == EnumTerrain.village) {
+      _map[_getLastBeforeVillage()].current = true;
+    } else {
+      _map[_oldHex].current = true;
+    }
     _map[_selectedHex].current = false;
     _hexesImpassable.add(_selectedHex);
   }
@@ -618,7 +642,12 @@ class _ImageCyclerOverlayState extends State<ImageCyclerOverlay>
   //  minefield - retreat
   // *********************************************
   void _doMinefieldRetreat() {
-    _map[_oldHex].current = true;
+    // move them back to old hex (unless old hex was a village, then push them back again)
+    if (_map[_oldHex].terrain == EnumTerrain.village) {
+      _map[_getLastBeforeVillage()].current = true;
+    } else {
+      _map[_oldHex].current = true;
+    }
     _map[_selectedHex].current = false;
     _hexesImpassable.add(_selectedHex);
   }
@@ -673,7 +702,12 @@ class _ImageCyclerOverlayState extends State<ImageCyclerOverlay>
       _skipStealh = true;
       _skipRest = true;
     } else {
-      _map[_oldHex].current = true;
+      // move them back to old hex (unless old hex was a village, then push them back again)
+      if (_map[_oldHex].terrain == EnumTerrain.village) {
+        _map[_getLastBeforeVillage()].current = true;
+      } else {
+        _map[_oldHex].current = true;
+      }
       _map[_selectedHex].current = false;
       _hexesImpassable.add(_selectedHex);
     }
@@ -1419,11 +1453,13 @@ class _GameScreenState extends State<GameScreen> {
       message = constVillageKickedOut;
       // village now impassable
       _hexesImpassable.add(_selectedHex);
-      // move them back to old hex
-      _map[_oldHex].current = true;
+      // move them back to old hex (unless old hex was a village, then push them back again)
+      if (_map[_oldHex].terrain == EnumTerrain.village) {
+        _map[_getLastBeforeVillage()].current = true;
+      } else {
+        _map[_oldHex].current = true;
+      }
       _map[_selectedHex].current = false;
-      // remove this hex from one they've traveled in
-      // _hexesTraveled.remove(_selectedHex);
       // can't move
       _moveAllowed = false;
     } else if ((result == 6) || (result == 7) || (result == 8)) {
@@ -1488,7 +1524,7 @@ class _GameScreenState extends State<GameScreen> {
         // set this one assuming it isn't same as the old and add it to the list traveled
         if (_selectedHex != _oldHex) {
           _map[_selectedHex].current = true;
-          _hexesTraveled.add(_selectedHex);
+          _map[_selectedHex].previous = true;
           _allowedToReRoll = true;
         }
 
@@ -1506,7 +1542,7 @@ class _GameScreenState extends State<GameScreen> {
               MaterialPageRoute(
                   builder: (context) => GameOverScreen(
                         gameOverReason: EnumGameOver.killed,
-                        hexesTraveled: _hexesTraveled.length,
+                        hexesTraveled: _totalHexesTraveled(),
                         totalPoints: _totalUpPoints(EnumGameOver.killed),
                       )),
             );
@@ -1523,6 +1559,8 @@ class _GameScreenState extends State<GameScreen> {
         }
         // did they enter a village? that brings a whole new thing to check
         if (_map[_selectedHex].terrain == EnumTerrain.village) {
+          // save where they were
+          _map[_oldHex].lastBeforeVillage = true;
           _handleVillage();
         }
       } else {
@@ -1985,7 +2023,6 @@ class _GameScreenState extends State<GameScreen> {
   void _newGame() async {
     // clear stuff out
     _map.clear();
-    _hexesTraveled.clear();
     _hexesImpassable.clear();
     _hexesCrashedChopper.clear();
     _hexesTributary.clear();
@@ -1993,8 +2030,8 @@ class _GameScreenState extends State<GameScreen> {
 
     // get an initialized map from the factory
     _map = MapFactory.initMap();
-    // add the starting hex to the list the player travels
-    _hexesTraveled.add(_getIdFromColRow(constStartCol, constStartRow));
+    // add the starting hex to the list the player traveled
+    _map[_getIdFromColRow(constStartCol, constStartRow)].previous = true;
 
     // initial values
     _round = 1;
@@ -2089,10 +2126,24 @@ class _GameScreenState extends State<GameScreen> {
   }
 
   // ************************
+  // how many hexes has teh player traveled?
+  // ************************
+  int _totalHexesTraveled() {
+    int count = 0;
+
+    for (MapHex mh in _map) {
+      if (mh.previous == true) {
+        count++;
+      }
+    }
+    return count;
+  }
+
+  // ************************
   // total up end game points
   // ************************
   int _totalUpPoints(EnumGameOver gameOverReason) {
-    int hexCount = _hexesTraveled.length;
+    int hexCount = _totalHexesTraveled();
 
     // if they won, bonus is remaining health + proximinty + endurance
     int bonus = (gameOverReason == EnumGameOver.rescued)
@@ -2353,7 +2404,7 @@ class _GameScreenState extends State<GameScreen> {
         MaterialPageRoute(
             builder: (context) => GameOverScreen(
                   gameOverReason: EnumGameOver.rescued,
-                  hexesTraveled: _hexesTraveled.length,
+                  hexesTraveled: _totalHexesTraveled(),
                   totalPoints: _totalUpPoints(EnumGameOver.rescued),
                 )),
       );
@@ -2397,7 +2448,7 @@ class _GameScreenState extends State<GameScreen> {
           MaterialPageRoute(
               builder: (context) => GameOverScreen(
                     gameOverReason: EnumGameOver.killed,
-                    hexesTraveled: _hexesTraveled.length,
+                    hexesTraveled: _totalHexesTraveled(),
                     totalPoints: _totalUpPoints(EnumGameOver.killed),
                   )),
         );
@@ -2408,7 +2459,7 @@ class _GameScreenState extends State<GameScreen> {
           MaterialPageRoute(
               builder: (context) => GameOverScreen(
                     gameOverReason: EnumGameOver.captured,
-                    hexesTraveled: _hexesTraveled.length,
+                    hexesTraveled: _totalHexesTraveled(),
                     totalPoints: _totalUpPoints(EnumGameOver.captured),
                   )),
         );
@@ -2479,7 +2530,7 @@ class _GameScreenState extends State<GameScreen> {
           MaterialPageRoute(
               builder: (context) => GameOverScreen(
                     gameOverReason: EnumGameOver.captured,
-                    hexesTraveled: _hexesTraveled.length,
+                    hexesTraveled: _totalHexesTraveled(),
                     totalPoints: _totalUpPoints(EnumGameOver.captured),
                   )),
         );
@@ -2518,6 +2569,22 @@ class _GameScreenState extends State<GameScreen> {
     return hex;
   }
 
+  // *********************************************
+  // which was last place they were before the village
+  // *********************************************
+  int _getLastBeforeVillage() {
+    int id = 0;
+
+    for (MapHex mh in _map) {
+      if (mh.lastBeforeVillage == true) {
+        id = mh.id;
+        break;
+      }
+    }
+
+    return id;
+  }
+
   // ************************
   // _getIdFromRowCol
   // ************************
@@ -2534,6 +2601,18 @@ class _GameScreenState extends State<GameScreen> {
   }
 
   // ************************
+  // return if the plahyer has traveled through this hex
+  // ************************
+  bool _hasPlayerTraveledHere(int id) {
+    bool result = false;
+
+    if (_map[id].previous == true) {
+      result = true;
+    }
+    return result;
+  }
+
+  // ************************
   // _getMapHexGraphic
   // ************************
   String _getMapHexGraphic(int row, int col) {
@@ -2543,35 +2622,35 @@ class _GameScreenState extends State<GameScreen> {
 
     if (enumTerrain == EnumTerrain.scrub) {
       // decide whether they've been here before (color vs b&w)
-      if (_hexesTraveled.contains(id)) {
+      if (_hasPlayerTraveledHere(id)) {
         asset = constImageScrub;
       } else {
         asset = constImageScrubGrey;
       }
     } else if (enumTerrain == EnumTerrain.brush) {
       // decide whether they've been here before (color vs b&w)
-      if (_hexesTraveled.contains(id)) {
+      if (_hasPlayerTraveledHere(id)) {
         asset = constImageBrush;
       } else {
         asset = constImageBrushGrey;
       }
     } else if (enumTerrain == EnumTerrain.hills) {
       // decide whether they've been here before (color vs b&w)
-      if (_hexesTraveled.contains(id)) {
+      if (_hasPlayerTraveledHere(id)) {
         asset = constImageHills;
       } else {
         asset = constImageHillsGrey;
       }
     } else if (enumTerrain == EnumTerrain.rough) {
       // decide whether they've been here before (color vs b&w)
-      if (_hexesTraveled.contains(id)) {
+      if (_hasPlayerTraveledHere(id)) {
         asset = constImageRough;
       } else {
         asset = constImageRoughGrey;
       }
     } else if (enumTerrain == EnumTerrain.village) {
       // decide whether they've been here before (color vs b&w)
-      if (_hexesTraveled.contains(id)) {
+      if (_hasPlayerTraveledHere(id)) {
         asset = constImageVillage;
       } else {
         asset = constImageVillageGrey;
@@ -2598,7 +2677,7 @@ class _GameScreenState extends State<GameScreen> {
         MaterialPageRoute(
             builder: (context) => GameOverScreen(
                   gameOverReason: EnumGameOver.rescued,
-                  hexesTraveled: _hexesTraveled.length,
+                  hexesTraveled: _totalHexesTraveled(),
                   totalPoints: _totalUpPoints(EnumGameOver.rescued),
                 )),
       );
@@ -2653,8 +2732,8 @@ class _GameScreenState extends State<GameScreen> {
         // they just move, no roll or anything
         _map[_oldHex].current = false;
         _map[_selectedHex].current = true;
-        _hexesTraveled.add(_selectedHex);
-        _hexesTraveled.add(_oldHex);
+        _map[_oldHex].previous = true;
+        _map[_selectedHex].previous = true;
         // special case, check if game over in case they moved into rescue hex
         _checkRescueConditions();
       }
@@ -2679,11 +2758,11 @@ class _GameScreenState extends State<GameScreen> {
         // ok to move
         _map[_oldHex].current = false;
         _map[_selectedHex].current = true;
-        _hexesTraveled.add(_selectedHex);
-        _hexesTraveled.add(_oldHex);
+        _map[_oldHex].previous = true;
+        _map[_selectedHex].previous = true;
         // check if they moved into another village (rare but it happens)
         if (_map[_selectedHex].terrain == EnumTerrain.village) {
-          _handleVillage;
+          _handleVillage();
         }
         // special case, check if game over in case they moved into rescue hex
         _checkRescueConditions();
@@ -2715,8 +2794,8 @@ class _GameScreenState extends State<GameScreen> {
       // ok to move
       _map[_oldHex].current = false;
       _map[_selectedHex].current = true;
-      _hexesTraveled.add(_selectedHex);
-      _hexesTraveled.add(_oldHex);
+      _map[_oldHex].previous = true;
+      _map[_selectedHex].previous = true;
       // special case, check if game over in case they moved into rescue hex
       _checkRescueConditions();
       // map out next spaces
@@ -2784,7 +2863,7 @@ class _GameScreenState extends State<GameScreen> {
     }
 
     // else if player traveled through hex, show person icon
-    else if (_hexesTraveled.contains(id)) {
+    else if (_hasPlayerTraveledHere(id)) {
       return const Positioned(
           top: 10,
           left: 15,

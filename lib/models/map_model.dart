@@ -13,6 +13,8 @@ class MapHex {
   final int id;
   final int col; // col
   final int row; // row
+  bool lastBeforeVillage =
+      false; // save where they were before they entered village
   bool current = false; // player is here currently
   bool previous = false; // player was here on a previous turn
   bool visible = false; // player can "see" into this hex from where they are
@@ -22,7 +24,6 @@ class MapHex {
 }
 
 class MapFactory {
-
   // ************************
   // return move number based on terrain
   // ************************
@@ -84,15 +85,13 @@ class MapFactory {
   // how far are we from the starting hex?
   // ************************
   static int getDistanceBetweenHexes(MapHex startHex, MapHex destHex) {
-  
     final startCube = _offsetToCube(startHex.col, startHex.row);
     final destCube = _offsetToCube(destHex.col, destHex.row);
     return _cubeDistance(startCube, destCube);
-
   }
 
   // ************************
-  // build and return a cube 
+  // build and return a cube
   // ************************
   static Cube _offsetToCube(int col, int row) {
     final x = col;
@@ -102,15 +101,13 @@ class MapFactory {
   }
 
   // ************************
-  // figure out distance between cubes 
+  // figure out distance between cubes
   // ************************
   static int _cubeDistance(Cube a, Cube b) {
-    return ((a.x - b.x).abs() +
-            (a.y - b.y).abs() +
-            (a.z - b.z).abs()) ~/ 2;
+    return ((a.x - b.x).abs() + (a.y - b.y).abs() + (a.z - b.z).abs()) ~/ 2;
   }
 
-  // ************************ 
+  // ************************
   // how far are we from the starting hex?
   // ************************
   static MapHex moveRandomSteps(int currentRow, int currentCol, int numSteps) {
@@ -136,7 +133,7 @@ class MapFactory {
   }
 
   // ************************
-  // get an id from the column and row 
+  // get an id from the column and row
   // ************************
   static int _getIdFromColRow(List<MapHex> map, int col, int row) {
     int id = 0;
@@ -153,9 +150,9 @@ class MapFactory {
   // ************************
   // return an initialized map
   // ************************
-  static List<MapHex> initMap() { 
+  static List<MapHex> initMap() {
     List<MapHex> map = [];
-    int counter = 0; 
+    int counter = 0;
 
     // loop through and create initial map
     for (int c = 0; c < constMapCols; c++) {
@@ -188,19 +185,11 @@ class MapFactory {
     map[_getIdFromColRow(map, 1, 4)].terrain = EnumTerrain.background;
     map[_getIdFromColRow(map, 1, 4)].visible = true;
     map[_getIdFromColRow(map, 13, 0)].terrain = EnumTerrain.background;
-    map[_getIdFromColRow(map, 13, 0)].visible = true;    
+    map[_getIdFromColRow(map, 13, 0)].visible = true;
     map[_getIdFromColRow(map, 14, 0)].terrain = EnumTerrain.background;
-    map[_getIdFromColRow(map, 14, 0)].visible = true;    
+    map[_getIdFromColRow(map, 14, 0)].visible = true;
 
     // return the map back out
-    return List.from(map); 
-
+    return List.from(map);
   }
-
-
-
-
-
-
-
 }
