@@ -69,19 +69,19 @@ const constDiceRollMoveMessage2 =
     "(or higher) to get out of the hex you are currently in.";
 const constMoveFailedMessage = "You failed to move from your current hex";
 const constNoDiceAllocatedForMoveMessage = "You are unable to move this round.";
-const constMoveSuccessMessage = "Moved successfully to a new hex!";
-const constReRollMessage = " You can now re-roll one die during Stealth phase.";
+const constMoveSuccessMessage = "You moved to a new hex.";
+const constReRollMessage = " You can re-roll one die during Stealth phase.";
 const constDiceRollStealthMessage1 =
     "Hostile forces are actively looking for you. Roll a";
 const constDiceRollStealthMessage2 =
     "(or higher) to keep your distance from them.";
 const constDiceRollStealthMessage4 =
     " You can re-roll one die by double tapping on it.";
-const constStealthFailedMessage = "Your pursuers are closer! Lose 1 Proximity.";
+const constStealthFailedMessage = "Your pursuers are catching up. Lose 1 Proximity.";
 const constNoDiceAllocatedForStealthMessage =
     "You lost 1 Proximity as your pursuers close in on you.";
 const constStealthSuccessMessage =
-    "You successfully stayed ahead of your pursuers.";
+    "You stayed ahead of your pursuers.";
 const constDiceRollRestMessage1 =
     "Endurance is the key to your survival and each point give you a die in the Allocation Phase. Roll a";
 const constDiceRollRestMessage2 = "(or higher) to rest and gain 1 Endurance.";
@@ -89,7 +89,8 @@ const constRestFailedMessage = "You were unable to rest. Lose 1 Endurance.";
 const constNoDiceAllocatedForRestMessage =
     "You lost 1 Endurance due to fatigue.";
 const constRestSuccessMessage =
-    "You were able to rest successfully. Gain 1 Endruance.";
+    "You were able to rest.";
+const constGainEnduranceMessage = "Gain 1 Endruance.";
 const constDiceRollPickSix =
     "If you choose the 6, the roll is successful, but you lose 1 Health.";
 const constDiceRollPickSixAndFailOption =
@@ -247,12 +248,12 @@ const constVillageAlliedNoAfflications =
 const constAfflictions = "The following afflictions are impacting you: ";
 const constNoAfflictions =
     "Other than some minor scrapes and bruises, you are in good shape.";
-const constAfflictionFever = "a high fever (lowers your dice rolls)";
+const constAfflictionFever = "a high fever (subtracts 1 from dice rolls)";
 const constAfflictionGunShotWound =
-    "a horrible wound (reduces health and lowers dice rolls)";
-const constAfflictionBrokenFoot = "a broken foot (restricts your movement)";
-const constAfflictionBurn = "a painful burn (restricts your Endurance)";
-const constAfflictionDeepCut = "a deep cut (reduces health)";
+    "a horrible wound (lost multiple Health points and you can no longer roll a six)";
+const constAfflictionBrokenFoot = "a broken foot (caps Move dice at 2)";
+const constAfflictionBurn = "a painful burn (caps Endurance at 5)";
+const constAfflictionDeepCut = "a deep cut (lost 2 Health)";
 
 // inventory
 const constInventory = "You have collected the following items: ";

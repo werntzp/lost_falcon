@@ -100,7 +100,7 @@ class Pilot {
       _endurance--;
       if (_endurance <= 0) {
         _endurance = 1;
-        // always have one endurance, but if this that happens, remove a health
+        // always have one endurance, but if this happens, remove a health
         setHealth(EnumDirection.decrement);
       }
     }

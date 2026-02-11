@@ -1510,6 +1510,7 @@ class _GameScreenState extends State<GameScreen> {
   // *********************************************
   void _tapDice(EnumPhase phase, int value, int target) async {
     String moveMessage = constMoveSuccessMessage;
+    String restMessage = constRestSuccessMessage;
 
     // get rid of the overlay (either way)
     _genericCloseOverlay();
@@ -1590,8 +1591,16 @@ class _GameScreenState extends State<GameScreen> {
           _pilot.setHealth(EnumDirection.decrement);
           await _overlayMessage(constRestSixMessage, EnumMessageType.fail);
         } else {
-          await _overlayMessage(
-              constRestSuccessMessage, EnumMessageType.success);
+            // decide whether they can get more endurance, and if so, tell them,
+            // otherwise, just say they rested 
+            if (_pilot.getEndurance() != 6) {
+              // also check if they have a burn
+              if ((_pilot.getEndurance() <= 5) && (!_pilot.hasAnAffliction(EnumAffliction.burn))) {
+                restMessage = "$restMessage $constGainEnduranceMessage";
+              }
+            }
+
+          await _overlayMessage(restMessage, EnumMessageType.success);
         }
       } else {
         _pilot.setEndurance(EnumDirection.decrement);
@@ -1711,62 +1720,75 @@ class _GameScreenState extends State<GameScreen> {
   // option to fail the roll
   // *********************************************
   Widget _sixMessage(EnumPhase phase) {
-    // only display the fail button if they rolled one die and it is a six
-    if ((!_rollTimer!.isActive) &&
-        (_rollingDice.contains(6)) &&
-        (_rollingDice.length == 1)) {
-      return Column(
-        children: [
-          const Text(
-            constDiceRollPickSixAndFailOption,
-            style: TextStyle(
-                color: Colors.white,
-                fontFamily: constAppTextFont,
-                fontSize: 13),
-            textAlign: TextAlign.center,
-          ),
-          const SizedBox(
-            height: 15,
-          ),
-          SizedBox(
-              width: 160.0,
-              height: 55.0,
-              child: OutlinedButton(
-                style: OutlinedButton.styleFrom(
-                  foregroundColor: Colors.black, // Text and icon color
-                  backgroundColor: Colors.white, // Background color
-                  overlayColor:
-                      Colors.blueAccent.withValues(), // pressed ripple
-                  side: const BorderSide(
-                    color: Colors.black,
-                    width: 3.0,
-                  ), // Border color
-                ),
-                child: const Align(
-                    alignment: Alignment.center,
-                    child: Text(
-                      constFailText,
-                      style: TextStyle(
-                          fontFamily: constAppTextFont,
-                          color: Colors.black,
-                          fontSize: 18.0),
-                    )),
-                onPressed: () {
-                  _tapDice(phase, -1, 0); // this guarantees a failed roll
-                },
-              ))
-        ],
-      );
-    } else if ((!_rollTimer!.isActive) && (_rollingDice.contains(6))) {
-      return const Text(
-        constDiceRollPickSix,
-        style: TextStyle(
-            color: Colors.white, fontFamily: constAppTextFont, fontSize: 13),
-        textAlign: TextAlign.center,
-      );
-    } else {
+
+    // first step, make sure time isn't active
+    if (!_rollTimer!.isActive) {
+      // if all the dice rolled are six (regardless of how many, show the fail button),
+      // otherwise just show the text warning about picking a six
+      if (_rollingDice.every((r) => r == 6)) {
+        return Column(
+                children: [
+                  const Text(
+                    constDiceRollPickSixAndFailOption,
+                    style: TextStyle(
+                        color: Colors.white,
+                        fontFamily: constAppTextFont,
+                        fontSize: 13),
+                    textAlign: TextAlign.center,
+                  ),
+                  const SizedBox(
+                    height: 15,
+                  ),
+                  SizedBox(
+                      width: 160.0,
+                      height: 55.0,
+                      child: OutlinedButton(
+                        style: OutlinedButton.styleFrom(
+                          foregroundColor: Colors.black, // Text and icon color
+                          backgroundColor: Colors.white, // Background color
+                          overlayColor:
+                              Colors.blueAccent.withValues(), // pressed ripple
+                          side: const BorderSide(
+                            color: Colors.black,
+                            width: 3.0,
+                          ), // Border color
+                        ),
+                        child: const Align(
+                            alignment: Alignment.center,
+                            child: Text(
+                              constFailText,
+                              style: TextStyle(
+                                  fontFamily: constAppTextFont,
+                                  color: Colors.black,
+                                  fontSize: 18.0),
+                            )),
+                        onPressed: () {
+                          _tapDice(phase, -1, 0); // this guarantees a failed roll
+                        },
+                      ))
+                ],
+              );
+      }
+      // just show text message if any of them are a six
+      else if (_rollingDice.contains(6)) {
+        return const Text(
+          constDiceRollPickSix,
+          style: TextStyle(
+              color: Colors.white, fontFamily: constAppTextFont, fontSize: 13),
+          textAlign: TextAlign.center,
+        );
+      }
+      // otherwise, just an empty container
+      else {
+       return Container();       
+      }
+
+    }
+    // timer still active, so show empty container
+    else { 
       return Container();
     }
+
   }
 
   // *********************************************
