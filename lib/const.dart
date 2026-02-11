@@ -81,7 +81,7 @@ const constStealthFailedMessage = "Your pursuers are closer! Lose 1 Proximity.";
 const constNoDiceAllocatedForStealthMessage =
     "You lost 1 Proximity as your pursuers close in on you.";
 const constStealthSuccessMessage =
-    "You successfully kept distance from your pursuers.";
+    "You successfully stayed ahead of your pursuers.";
 const constDiceRollRestMessage1 =
     "Endurance is the key to your survival and each point give you a die in the Allocation Phase. Roll a";
 const constDiceRollRestMessage2 = "(or higher) to rest and gain 1 Endurance.";

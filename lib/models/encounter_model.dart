@@ -180,6 +180,7 @@ class EncounterFactory {
     // starting hex, see whether the player has an encounter
     int tens = Random().nextInt(5) + 1;
     int ones = Random().nextInt(5) + 1;
+    print("encounter roll: $tens$ones");
     MapHex startHex = MapHex(constFakeHex, constStartRow, constStartCol);
     int distance = MapFactory.getDistanceBetweenHexes(startHex, currentHex);
 

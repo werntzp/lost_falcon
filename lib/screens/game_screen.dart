@@ -757,7 +757,7 @@ class _ImageCyclerOverlayState extends State<ImageCyclerOverlay>
         _hexesFriendlyVillage.add(id);
         return _returnContinueButton();
 
-        // broken foot
+        // rockslide
       } else if (encounter == EnumEncounter.rockslide) {
         _pilot.setAffliction(EnumAffliction.brokenfoot);
         return _returnContinueButton();
@@ -1053,14 +1053,6 @@ class _ImageCyclerOverlayState extends State<ImageCyclerOverlay>
           if (!mounted) return;
           setState(() {
             _currentEncounterIndex = rand.nextInt(_encounterImages.length);
-            // if we find a cave, it can't be in scrub or brush, so just flip to no encounter
-            if (EnumEncounter.values[_currentEncounterIndex] ==
-                EnumEncounter.cave) {
-              if ((_map[_selectedHex].terrain == EnumTerrain.scrub) ||
-                  (_map[_selectedHex].terrain == EnumTerrain.brush)) {
-                _currentEncounterIndex = EnumEncounter.none.index;
-              }
-            }
             controller.forward(from: 0);
           });
         });
@@ -1076,6 +1068,22 @@ class _ImageCyclerOverlayState extends State<ImageCyclerOverlay>
           if (!skipDueToEncounter) {
             _currentEncounterIndex =
                 _encounterFactory.getRandomEncounter(_map[_selectedHex]);
+            // if we find a cave, it can't be in scrub or brush, so just flip to no encounter
+            if (EnumEncounter.values[_currentEncounterIndex] ==
+                EnumEncounter.cave) {
+              if ((_map[_selectedHex].terrain == EnumTerrain.scrub) ||
+                  (_map[_selectedHex].terrain == EnumTerrain.brush)) {
+                _currentEncounterIndex = EnumEncounter.none.index;
+              }
+            }
+            // if we have a rockslide, can only be in rough or hills, so may need to flip to no encounter
+            if (EnumEncounter.values[_currentEncounterIndex] ==
+                EnumEncounter.rockslide) {
+              if ((_map[_selectedHex].terrain == EnumTerrain.scrub) ||
+                  (_map[_selectedHex].terrain == EnumTerrain.brush)) {
+                _currentEncounterIndex = EnumEncounter.none.index;
+              }
+            }
             // hardcode this for testing!
             //_currentEncounterIndex = EnumEncounter.chemicals.index;
             message = _encounterFactory
@@ -2685,7 +2693,7 @@ class _GameScreenState extends State<GameScreen> {
         // if on motorcycle, increment those moves
         if (_villageReaction == EnumVillageReactions.helpful) {
           _motorcycleMoves++;
-          if (_motorcycleMoves > 3) {
+          if (_motorcycleMoves >= 3) {
             _motorcycleMoves = 0;
             _moveAllowed = false;
           }
@@ -2912,8 +2920,6 @@ class _GameScreenState extends State<GameScreen> {
                         //child: Text("$row, $col"),
                         child: GestureDetector(
                           onTap: () {
-                            debugPrint(
-                                "row: $row.toString(), col: $col.toString()");
                             // do something if we're in the move phase
                             if ((_phase == EnumPhase.move) ||
                                 (_phase == EnumPhase.encounter)) {
