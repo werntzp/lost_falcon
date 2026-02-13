@@ -86,6 +86,7 @@ const constDiceRollRestMessage1 =
     "Endurance is the key to your survival and each point give you a die in the Allocation Phase. Roll a";
 const constDiceRollRestMessage2 = "(or higher) to rest and gain 1 Endurance.";
 const constRestFailedMessage = "You were unable to rest. Lose 1 Endurance.";
+const constRestFailedLoseHealthMessage = "You lack of Endurance is now severly draining. Lose 1 Health.";
 const constNoDiceAllocatedForRestMessage =
     "You lost 1 Endurance due to fatigue.";
 const constRestSuccessMessage =
@@ -96,11 +97,11 @@ const constDiceRollPickSix =
 const constDiceRollPickSixAndFailOption =
     "If you choose the 6, the roll is successful, but you lose 1 Health. Or you can decide to fail the roll.";
 const constMoveSixMessage =
-    "You were successful at moving, but still lost Health due to some minor injuries.";
+    "You were successful at moving, but lost 1 Health due to some minor injuries.";
 const constStealthSixMessage =
-    "You were successful at hiding, but still lost Health due to some minor injuries.";
+    "You were successful at hiding, but lost 1 Health due to some minor injuries.";
 const constRestSixMessage =
-    "You were successful at resting, but still lost Health due to some minor injuries.";
+    "You were successful at resting, but lost 1 Health due to some minor injuries.";
 const constGameOverLost = "You scored X points for traveling Z hexes.";
 const constGameOverWon =
     "You scored X points for traveling Z hexes plus remaining Health, Proximity, and Endurance points.";
@@ -258,6 +259,9 @@ const constAfflictionDeepCut = "a deep cut (lost 2 Health)";
 // inventory
 const constInventory = "You have collected the following items: ";
 const constNoInventory = "Unfortunately, you have no items or gear to use.";
+
+// warnings
+const constCantEndInVillage = "You cannot end your phase in a village. Pick a hex to move into.";
 
 // buttons and labels
 const constMoveText = "Move";

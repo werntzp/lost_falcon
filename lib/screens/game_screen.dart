@@ -1542,19 +1542,6 @@ class _GameScreenState extends State<GameScreen> {
         // did they choose a six?
         if (value == 6) {
           _pilot.setHealth(EnumDirection.decrement);
-          if (_pilot.getHealth() == 0) {
-            Navigator.push(
-              context,
-              MaterialPageRoute(
-                  builder: (context) => GameOverScreen(
-                        gameOverReason: EnumGameOver.killed,
-                        hexesTraveled: _totalHexesTraveled(),
-                        totalPoints: _totalUpPoints(EnumGameOver.killed),
-                      )),
-            );
-          } else {
-            await _overlayMessage(constMoveSixMessage, EnumMessageType.fail);
-          }
           await _overlayMessage(constMoveSixMessage, EnumMessageType.fail);
         } else {
           // see if we need to concatenate messages
@@ -1608,8 +1595,14 @@ class _GameScreenState extends State<GameScreen> {
           await _overlayMessage(restMessage, EnumMessageType.success);
         }
       } else {
+        if (_pilot.getEndurance() == 1) {
+          restMessage = constRestFailedLoseHealthMessage; 
+        }        
+        else { 
+          restMessage = constRestFailedMessage;
+        }
         _pilot.setEndurance(EnumDirection.decrement);
-        await _overlayMessage(constRestFailedMessage, EnumMessageType.fail);
+        await _overlayMessage(restMessage, EnumMessageType.fail);
       }
     }
 
@@ -1617,6 +1610,32 @@ class _GameScreenState extends State<GameScreen> {
     setState(() {
       // do nothing
     });
+
+    // do some end game checks
+    if (_pilot.getHealth() <= 0) {
+      Navigator.push(
+        context,
+        MaterialPageRoute(
+            builder: (context) => GameOverScreen(
+                  gameOverReason: EnumGameOver.killed,
+                  hexesTraveled: _totalHexesTraveled(),
+                  totalPoints: _totalUpPoints(EnumGameOver.killed),
+                )),
+      );
+    }
+
+    if (_pilot.getHealth() <= 0) {
+      Navigator.push(
+        context,
+        MaterialPageRoute(
+            builder: (context) => GameOverScreen(
+                  gameOverReason: EnumGameOver.captured,
+                  hexesTraveled: _totalHexesTraveled(),
+                  totalPoints: _totalUpPoints(EnumGameOver.killed),
+                )),
+      );    
+    }
+
   }
 
   // *********************************************
@@ -2234,6 +2253,9 @@ class _GameScreenState extends State<GameScreen> {
       hex3 = EnumTerrain.scrub;
     }
 
+    // hardcode for testing 
+    //hex2 = EnumTerrain.village; 
+
     // start with first hex
     hexToUse = hex1;
     hexCount = 1;
@@ -2446,6 +2468,17 @@ class _GameScreenState extends State<GameScreen> {
   // advance through phases
   // ************************
   void _continueButtonPress() async {
+    String restMessage = constRestFailedMessage; 
+
+
+    // special first check, if this is a move phase, and there's a village reaction already 
+    // and they have move allowed, don't let them try to end here
+    if ((_phase == EnumPhase.move) && (_villageReaction != EnumVillageReactions.none) && 
+      (_moveAllowed == true)) {
+        showInfoDialog(context, constCantEndInVillage);
+        return; 
+      }
+
     // increment the phase from current one since they moved to the next
     try {
       // and increment the turn
@@ -2574,8 +2607,13 @@ class _GameScreenState extends State<GameScreen> {
         await _diceRollOverlay(
             EnumPhase.rest, MapFactory.getRestCost(_getCurrentHex().terrain));
       } else {
+        // if they are at one, we know they won't go lower, but need to let player
+        // know health is being impacted
+        if (_pilot.getEndurance() == 1) {
+          restMessage = constRestFailedLoseHealthMessage; 
+        }
         _pilot.setEndurance(EnumDirection.decrement);
-        await _overlayMessage(constRestFailedMessage, EnumMessageType.fail);
+        await _overlayMessage(restMessage, EnumMessageType.fail);
         //_continueButtonPress();
       }
     }
