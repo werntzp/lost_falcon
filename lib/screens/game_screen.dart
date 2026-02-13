@@ -636,6 +636,11 @@ class _ImageCyclerOverlayState extends State<ImageCyclerOverlay>
     }
     _map[_selectedHex].current = false;
     _hexesImpassable.add(_selectedHex);
+    // redraw
+    setState() {
+      // do nothing
+    }
+
   }
 
   // *********************************************
@@ -1585,21 +1590,21 @@ class _GameScreenState extends State<GameScreen> {
     } else {
       // rest
       if (value >= target) {
+        // decide whether they can get more endurance, and if so, tell them,
+        // otherwise, just say they rested 
+        if (_pilot.getEndurance() != 6) {
+          // also check if they have a burn
+          if ((_pilot.getEndurance() <= 5) && (!_pilot.hasAnAffliction(EnumAffliction.burn))) {
+            restMessage = "$restMessage $constGainEnduranceMessage";
+          }
+        }
+        // actually increment
         _pilot.setEndurance(EnumDirection.increment);
         // did they choose a six?
         if (value == 6) {
           _pilot.setHealth(EnumDirection.decrement);
           await _overlayMessage(constRestSixMessage, EnumMessageType.fail);
         } else {
-            // decide whether they can get more endurance, and if so, tell them,
-            // otherwise, just say they rested 
-            if (_pilot.getEndurance() != 6) {
-              // also check if they have a burn
-              if ((_pilot.getEndurance() <= 5) && (!_pilot.hasAnAffliction(EnumAffliction.burn))) {
-                restMessage = "$restMessage $constGainEnduranceMessage";
-              }
-            }
-
           await _overlayMessage(restMessage, EnumMessageType.success);
         }
       } else {

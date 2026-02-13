@@ -90,7 +90,7 @@ const constNoDiceAllocatedForRestMessage =
     "You lost 1 Endurance due to fatigue.";
 const constRestSuccessMessage =
     "You were able to rest.";
-const constGainEnduranceMessage = "Gain 1 Endruance.";
+const constGainEnduranceMessage = "Gain 1 Endurance.";
 const constDiceRollPickSix =
     "If you choose the 6, the roll is successful, but you lose 1 Health.";
 const constDiceRollPickSixAndFailOption =
