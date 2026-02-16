@@ -1306,8 +1306,8 @@ class _GameScreenState extends State<GameScreen> {
                                     const SizedBox(width: 75),
                                     Image(
                                       image: _moveImage(),
-                                      width: 80.0,
-                                      height: 18.0,
+                                      width: 85.0,
+                                      height: 22.0,
                                       fit: BoxFit.fill,
                                     ),
                                     const SizedBox(width: 5), // spacing column
@@ -1321,7 +1321,7 @@ class _GameScreenState extends State<GameScreen> {
                                   ],
                                 ),
                               ),
-                              const SizedBox(height: 8),
+                              const SizedBox(height: 12),
                               GestureDetector(
                                 onTap: () {
                                   _changeStealth(EnumDirection.increment);
@@ -1334,8 +1334,8 @@ class _GameScreenState extends State<GameScreen> {
                                     const SizedBox(width: 75),
                                     Image(
                                       image: _stealthImage(),
-                                      width: 80.0,
-                                      height: 18.0,
+                                      width: 85.0,
+                                      height: 22.0,
                                       fit: BoxFit.fill,
                                     ),
                                     const SizedBox(width: 5), // spacing column
@@ -1349,7 +1349,7 @@ class _GameScreenState extends State<GameScreen> {
                                   ],
                                 ),
                               ),
-                              const SizedBox(height: 8),
+                              const SizedBox(height: 12),
                               GestureDetector(
                                 onTap: () {
                                   _changeRest(EnumDirection.increment);
@@ -1362,8 +1362,8 @@ class _GameScreenState extends State<GameScreen> {
                                     const SizedBox(width: 75),
                                     Image(
                                       image: _restImage(),
-                                      width: 80.0,
-                                      height: 18.0,
+                                      width: 85.0,
+                                      height: 22.0,
                                       fit: BoxFit.fill,
                                     ),
                                     const SizedBox(width: 5), // spacing column
@@ -1380,7 +1380,7 @@ class _GameScreenState extends State<GameScreen> {
                             ],
                           ),
                           const Padding(
-                            padding: EdgeInsets.all(10.0),
+                            padding: EdgeInsets.all(12.0),
                           ),
                           SizedBox(
                             width: 160.0,
@@ -1750,7 +1750,7 @@ class _GameScreenState extends State<GameScreen> {
     _rollTimer?.cancel();
 
     // Start a new timer that fires repeatedly
-    _rollTimer = Timer.periodic(const Duration(milliseconds: 60), (_) {
+    _rollTimer = Timer.periodic(const Duration(milliseconds: 100), (_) {
       _rollDice(); // your existing method that randomizes all dice
       _overlayEntry?.markNeedsBuild(); // forces overlay to redraw
     });
