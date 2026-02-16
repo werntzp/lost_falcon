@@ -54,6 +54,7 @@ dev_dependencies:
 flutter_launcher_icons:
   android: true 
   image_path: "assets/images/lost_falcon_icon.png" 
+  adaptive_icon_foreground: "assets/images/lost_falcon_icon.png"
   adaptive_icon_background: "#3F99E4"
 
 # For information on the generic Dart part of this file, see the
