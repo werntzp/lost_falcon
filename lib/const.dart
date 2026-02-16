@@ -108,7 +108,7 @@ const constGameOverWon =
 
 // encounters
 const constEncountersMessage =
-    "Let's see if you had any encounters this round!";
+    "Let's see if you had any encounters this round ...";
 
 const constDustEncounterMessage =
     "A dust storm kicks up obstructing your view while the strong wind and harsh blowing sand wears you down.";

@@ -6,6 +6,7 @@ import '../models/map_model.dart';
 import '../models/pilot_model.dart';
 import '../dialogs/terrain_dialog.dart';
 import '../dialogs/info_dialog.dart';
+import '../dialogs/village_dialog.dart';
 import '../screens/game_over_screen.dart';
 import '../main.dart';
 import 'dart:math';
@@ -40,6 +41,7 @@ bool _milepostFriendlyTerrain = false;
 bool _movementBonus = false;
 int _reRolledDiceIndex = -1;
 bool _forcesPatrollingUp = true;
+bool _villageLastMappingPhase = false; 
 
 EnumVillageReactions _villageReaction = EnumVillageReactions.none;
 
@@ -402,12 +404,20 @@ class _ImageCyclerOverlayState extends State<ImageCyclerOverlay>
     int newId =
         _getIdFromColRow(_map[_selectedHex].col + 1, _map[_selectedHex].row);
 
+    // change all the values so we update where we're at 
+    _map[_oldHex].current = false;
     _map[_selectedHex].current = false;
     _map[newId].current = true;
     _map[_selectedHex].previous = true;
     _map[newId].previous = true;
+    _oldHex = _selectedHex; 
+    _selectedHex = newId; 
     _pilot.setEndurance(EnumDirection.decrement);
     _pilot.setAffliction(EnumAffliction.gunshotwound);
+
+    // since we ran into a new hex, auto make that scrub 
+    _map[_selectedHex].terrain = EnumTerrain.scrub; 
+
   }
 
   // *********************************************
@@ -813,7 +823,6 @@ class _ImageCyclerOverlayState extends State<ImageCyclerOverlay>
               onAction: _doMortarDrop,
               onCloseRequest: widget.onClose)
         ]);
-
         // dust storm
       } else if (encounter == EnumEncounter.dust) {
         return Column(children: [
@@ -1123,7 +1132,7 @@ class _ImageCyclerOverlayState extends State<ImageCyclerOverlay>
                 _currentEncounterIndex = EnumEncounter.none.index;
               }
             }
-            // hardcode this for testing!
+            // hardcode for testing
             //_currentEncounterIndex = EnumEncounter.chemicals.index;
             message = _encounterFactory
                 .getEncounterDescription(_currentEncounterIndex);
@@ -1200,7 +1209,13 @@ class _ImageCyclerOverlayState extends State<ImageCyclerOverlay>
 }
 
 // *********************************************
+// *********************************************
+// *********************************************
+// *********************************************
 //  gamescreen class
+// *********************************************
+// *********************************************
+// *********************************************
 // *********************************************
 class GameScreen extends StatefulWidget {
   const GameScreen({super.key});
@@ -1503,7 +1518,7 @@ class _GameScreenState extends State<GameScreen> {
     }
 
     // throw up village dialog
-    await _villageEncounterOverlay(message);
+    showVillageReactionDialog(context, message);
 
     setState(() {
       // do nothing
@@ -1624,14 +1639,14 @@ class _GameScreenState extends State<GameScreen> {
       );
     }
 
-    if (_pilot.getHealth() <= 0) {
+    if (_pilot.getProximity() <= 0) {
       Navigator.push(
         context,
         MaterialPageRoute(
             builder: (context) => GameOverScreen(
                   gameOverReason: EnumGameOver.captured,
                   hexesTraveled: _totalHexesTraveled(),
-                  totalPoints: _totalUpPoints(EnumGameOver.killed),
+                  totalPoints: _totalUpPoints(EnumGameOver.captured),
                 )),
       );    
     }
@@ -1911,43 +1926,11 @@ class _GameScreenState extends State<GameScreen> {
     _startRolling();
   }
 
-  // *********************************************
-  // village message overlay
-  // *********************************************
-  Future<void> _villageEncounterOverlay(String message) async {
-    _completer = Completer<void>();
-    if (_overlayEntry != null) return; // Prevent stacking
 
-    _overlayEntry = OverlayEntry(
-        builder: (context) => Stack(children: [
-              Align(
-                  alignment: Alignment.center,
-                  child: Card(
-                      elevation: 8.0,
-                      color: Colors.black,
-                      child: Padding(
-                          padding: const EdgeInsets.all(10.0),
-                          child: Text(message,
-                              style: const TextStyle(
-                                  fontFamily: constAppTextFont,
-                                  fontSize: 18,
-                                  fontWeight: FontWeight.bold,
-                                  color: Colors.white),
-                              textAlign: TextAlign.center))))
-            ]));
 
-    Overlay.of(context).insert(_overlayEntry!);
 
-    // Remove after 3 seconds
-    Future.delayed(const Duration(seconds: 3), () {
-      _overlayEntry?.remove();
-      _completer?.complete();
-      _overlayEntry = null;
-      _completer = null;
-    });
 
-    await _completer!.future;
-  }
+
 
   // *********************************************
   // overlay with a message, either good or bad
@@ -2214,9 +2197,17 @@ class _GameScreenState extends State<GameScreen> {
     int col = currentHex.col;
     late MapHex randomHex;
     late MapHex destHex;
-    int distance = 0;
     int newRow = 0;
     int newCol = 0;
+
+    print("doMappingPhase: row #$row, col #$col");
+
+    // odd thing -- don't let villages drop next to each other 
+    if (_villageLastMappingPhase) {
+      // reroll 
+      die = Random().nextInt(5) + 1;
+      _villageLastMappingPhase = false; 
+    }
 
     // pick terrain for the next three hexes based on random roll
     if (die == 1) {
@@ -2243,6 +2234,7 @@ class _GameScreenState extends State<GameScreen> {
       hex1 = EnumTerrain.rough;
       hex2 = EnumTerrain.village;
       hex3 = EnumTerrain.rough;
+      _villageLastMappingPhase = true; 
     }
 
     // special case -- if this is a result of the milepost encounter, everything is scrub
@@ -2254,7 +2246,7 @@ class _GameScreenState extends State<GameScreen> {
     }
 
     // hardcode for testing 
-    //hex2 = EnumTerrain.village; 
+    // hex2 = EnumTerrain.village; 
 
     // start with first hex
     hexToUse = hex1;
@@ -2354,7 +2346,7 @@ class _GameScreenState extends State<GameScreen> {
 
     // #6: decide if we're doing row+1 or row-1 with col-1
     if (hexCount < 4) {
-      destHex = _map[_getIdFromColRow(col, row + 1)];
+      destHex = _map[_getIdFromColRow(col-1, row + 1)];
       if (MapFactory.getDistanceBetweenHexes(currentHex, destHex) == 1) {
         newRow = row + 1;
         newCol = col - 1;
@@ -2500,6 +2492,10 @@ class _GameScreenState extends State<GameScreen> {
     // if encounter phase, decide if they had an encounter
     if (_phase == EnumPhase.encounter) {
       await _showEncounterOverlay(context);
+
+      // we should do a quick mapping phase here just in case
+      _doMappingPhase(); 
+
 
       // do a game end check after each encounter
       if (_pilot.getHealth() == 0) {
@@ -2841,8 +2837,9 @@ class _GameScreenState extends State<GameScreen> {
             _motorcycleMoves = 0;
             _moveAllowed = false;
           }
-        } else {
-          _moveAllowed = false;
+        } 
+        else {
+          _moveAllowed = false;  
         }
       }
     } else if ((_phase == EnumPhase.move) && (!_moveAllowed)) {

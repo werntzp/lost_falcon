@@ -15,8 +15,8 @@ class Pilot {
   int _health = 6;
   int _proximity = 6;
   int _endurance = 6;
-  Set<EnumInventory> _inventory = {};
-  Set<EnumAffliction> _afflictions = {};
+  final Set<EnumInventory> _inventory = {};
+  final Set<EnumAffliction> _afflictions = {};
 
   // ************************
   // constructor
