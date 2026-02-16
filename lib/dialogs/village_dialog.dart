@@ -2,7 +2,7 @@ import '../const.dart';
 import 'package:flutter/material.dart';
 
 
-void showVillageReactionDialog(BuildContext context, String villageReaction) {
+void showVillageReactionDialog(BuildContext context, String title, String villageReaction) {
 
   showDialog<String>(
     context: context,
@@ -32,9 +32,13 @@ void showVillageReactionDialog(BuildContext context, String villageReaction) {
               crossAxisAlignment: CrossAxisAlignment.start,
               mainAxisSize: MainAxisSize.min,
               children: [
+                Text(title,
+                    style: const TextStyle(
+                        fontFamily: constAppTextFont, fontSize: 18, fontWeight: FontWeight.bold)),
+                const SizedBox(height: 20),
                 Text(villageReaction,
                     style: const TextStyle(
-                        fontFamily: constAppTextFont, fontSize: 18)),
+                        fontFamily: constAppTextFont, fontSize: 15)),
               ],
             ),
           ),

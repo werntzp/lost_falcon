@@ -270,7 +270,7 @@ class _ImageCyclerOverlayState extends State<ImageCyclerOverlay>
   int _getLastBeforeVillage() {
     int id = 0;
 
-    for (MapHex mh in _map) {
+    for (MapHex mh in _map.reversed) {
       if (mh.lastBeforeVillage == true) {
         id = mh.id;
         break;
@@ -1439,6 +1439,7 @@ class _GameScreenState extends State<GameScreen> {
   void _handleVillage() async {
     int result = 0;
     String message = "";
+    String title = ""; 
 
     result = Random().nextInt(10) + 2;
 
@@ -1450,6 +1451,7 @@ class _GameScreenState extends State<GameScreen> {
     // based on result, let's do this thing
     if (result == 2) {
       // robbed
+      title = "Robbed";
       _villageReaction = EnumVillageReactions.robbed;
       // if they had items, they are all lost
       if (_pilot.hasAnyInventory()) {
@@ -1461,6 +1463,7 @@ class _GameScreenState extends State<GameScreen> {
       _moveAllowed = true;
     } else if (result == 3) {
       // delayed
+      title = "Delayed";
       _villageReaction = EnumVillageReactions.delayed;
       // reduce values
       _pilot.setProximity(EnumDirection.decrement);
@@ -1469,6 +1472,7 @@ class _GameScreenState extends State<GameScreen> {
       _moveAllowed = true;
     } else if ((result == 4) || (result == 5)) {
       // kicked out
+      title = "Kicked out";
       _villageReaction = EnumVillageReactions.kickedout;
       message = constVillageKickedOut;
       // village now impassable
@@ -1484,11 +1488,13 @@ class _GameScreenState extends State<GameScreen> {
       _moveAllowed = false;
     } else if ((result == 6) || (result == 7) || (result == 8)) {
       // untrusting
+      title = "Untrusting";
       _villageReaction = EnumVillageReactions.untrusting;
       message = constVillageUntrusting;
       _moveAllowed = true;
     } else if ((result == 9) || (result == 10)) {
       // peaceful
+      title = "Peaceful";
       _villageReaction = EnumVillageReactions.peaceful;
       message = constVillagePeaceful;
       // increment by 2
@@ -1497,11 +1503,13 @@ class _GameScreenState extends State<GameScreen> {
       _moveAllowed = true;
     } else if (result == 11) {
       // helpful
+      title = "Helpful";
       _villageReaction = EnumVillageReactions.helpful;
       message = constVillageHelpful;
       _moveAllowed = true;
       _pilot.setProximity(EnumDirection.increment);
     } else {
+      title = "Allied";
       _villageReaction = EnumVillageReactions.allied;
       // heal an affliction
       if (_pilot.hasAnyAfflictions()) {
@@ -1518,7 +1526,7 @@ class _GameScreenState extends State<GameScreen> {
     }
 
     // throw up village dialog
-    showVillageReactionDialog(context, message);
+    showVillageReactionDialog(context, title, message);
 
     setState(() {
       // do nothing
@@ -2636,7 +2644,7 @@ class _GameScreenState extends State<GameScreen> {
   int _getLastBeforeVillage() {
     int id = 0;
 
-    for (MapHex mh in _map) {
+    for (MapHex mh in _map.reversed) {
       if (mh.lastBeforeVillage == true) {
         id = mh.id;
         break;
@@ -2733,6 +2741,9 @@ class _GameScreenState extends State<GameScreen> {
   void _checkRescueConditions() {
     // special case, if they moved into the rescue hex, then just end the game successfully
     if (_map[_selectedHex].terrain == EnumTerrain.rescue) {
+      // close any overlay
+      _genericCloseOverlay(); 
+      // then navigate
       Navigator.push(
         context,
         MaterialPageRoute(

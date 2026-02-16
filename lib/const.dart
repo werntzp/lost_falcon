@@ -229,21 +229,21 @@ const constNoEncounterMessage =
 const constVillageRobbedItems =
     "You were robbed in the village and lost your items! Move to a new hex.";
 const constVillageRobbedNoItems =
-    "The villagers looked pretty threatening, so you decide to leave. Move to a new hex.";
+    "The villagers attempted to rob you, so you quickly leave. Move to a new hex.";
 const constVillageDelayed =
     "The villagers do not harm you, but purposefull slow you down which lets your pursuers get closer. Lose Proximity and Endurance. Move to a new hex.";
 const constVillageKickedOut =
-    "You are forcibly kicked out of the village and cannot enter here again.";
+    "They forcibly kick you out of the village and cannot enter here again.";
 const constVillageUntrusting =
     "Everyone in the village warily ignores you and lets you pass through. Move to a new hex.";
 const constVillagePeaceful =
-    "You are offered sanctuary. Gain Endurance and move to a new hex.";
+    "You are noffered sanctuary. Gain 2 Endurance and move to a new hex.";
 const constVillageHelpful =
-    "A villager gives you an old motorcycle. You gain Proximity and can drive three map spots in any direction before it runs out of gas.";
+    "A villager gives you an old motorcycle. You gain Proximity and can drive 3 hexes in any direction before it runs out of gas.";
 const constVillageAlliedAfflictions =
-    "A doctor in the village heals an affliction before you leave. Gain Health, Proximity, and Endurance. Move to a new hex.";
+    "A doctor in the village heals an affliction before you leave. Gain 1 Health, Proximity, and Endurance. Move to a new hex.";
 const constVillageAlliedNoAfflications =
-    "A doctor in the village treats you. Gain Health, Proximity, and Endurance. Move to a new hex.";
+    "A doctor in the village treats you. Gain 1 Health, Proximity, and Endurance. Move to a new hex.";
 
 // afflictions
 const constAfflictions = "The following afflictions are impacting you: ";
@@ -251,7 +251,7 @@ const constNoAfflictions =
     "Other than some minor scrapes and bruises, you are in good shape.";
 const constAfflictionFever = "a high fever (subtracts 1 from dice rolls)";
 const constAfflictionGunShotWound =
-    "a horrible wound (lost multiple Health points and you can no longer roll a six)";
+    "a horrible wound (lost multiple Health points and you can no longer roll a 6)";
 const constAfflictionBrokenFoot = "a broken foot (caps Move dice at 2)";
 const constAfflictionBurn = "a painful burn (caps Endurance at 5)";
 const constAfflictionDeepCut = "a deep cut (lost 2 Health)";
