@@ -1,11 +1,13 @@
 import 'package:lost_falcon/const.dart';
 import 'package:lost_falcon/models/map_model.dart';
 import 'dart:math';
+import 'package:logger/logger.dart';
 
 class EncounterFactory {
   // lists for graphics and messages
   final List<String> _paths = [];
   final List<String> _messages = [];
+  final _logger = Logger(); 
 
   // three lists for encounters
   final List<List<EnumEncounter>> _close = List.generate(
@@ -117,7 +119,6 @@ class EncounterFactory {
     enc = EnumEncounter.wolf.name;
     _paths.add("$constImageEncounters$enc.jpg");
     _messages.add(constWolfEncounterMessage);
-    ;
 
     enc = EnumEncounter.mortar.name;
     _paths.add("$constImageEncounters$enc.jpg");
@@ -178,9 +179,11 @@ class EncounterFactory {
 
     // roll two "dice" (tens and ones) and depending on distance from
     // starting hex, see whether the player has an encounter
-    int tens = Random().nextInt(5) + 1;
-    int ones = Random().nextInt(5) + 1;
-    print("encounter roll: $tens$ones");
+    int tens = Random().nextInt(6) + 1;
+    int ones = Random().nextInt(6) + 1;
+
+    _logger.d("encounter roll: $tens$ones");
+    
     MapHex startHex = MapHex(constFakeHex, constStartRow, constStartCol);
     int distance = MapFactory.getDistanceBetweenHexes(startHex, currentHex);
 

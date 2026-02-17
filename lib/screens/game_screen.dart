@@ -1,3 +1,5 @@
+// ignore_for_file: unused_element
+
 import 'package:flutter/material.dart';
 import 'package:hexagon/hexagon.dart';
 import 'package:lost_falcon/const.dart';
@@ -7,10 +9,13 @@ import '../models/pilot_model.dart';
 import '../dialogs/terrain_dialog.dart';
 import '../dialogs/info_dialog.dart';
 import '../dialogs/village_dialog.dart';
+import '../dialogs/inventory_dialog.dart';
+import '../dialogs/yes_no_dialog.dart';
 import '../screens/game_over_screen.dart';
 import '../main.dart';
 import 'dart:math';
 import 'dart:async';
+import 'package:logger/logger.dart';
 
 Pilot _pilot = Pilot();
 final EncounterFactory _encounterFactory = EncounterFactory();
@@ -42,6 +47,8 @@ bool _movementBonus = false;
 int _reRolledDiceIndex = -1;
 bool _forcesPatrollingUp = true;
 bool _villageLastMappingPhase = false; 
+final _logger = Logger(); 
+final _random = Random(); 
 
 EnumVillageReactions _villageReaction = EnumVillageReactions.none;
 
@@ -160,7 +167,6 @@ class _ImageCyclerOverlayState extends State<ImageCyclerOverlay>
   late final AnimationController controller;
   late final Animation<double> fade;
 
-  final rand = Random();
   int index = 0;
   bool ready = false;
   Timer? timer;
@@ -175,7 +181,7 @@ class _ImageCyclerOverlayState extends State<ImageCyclerOverlay>
 
     id = _getIdFromColRow(col, row);
     if (!_map[id].visible) {
-      Random().nextBool()
+      _random.nextBool()
           ? _map[id].terrain = EnumTerrain.scrub
           : _map[id].terrain = EnumTerrain.brush;
       _map[id].visible = true;
@@ -315,7 +321,7 @@ class _ImageCyclerOverlayState extends State<ImageCyclerOverlay>
   //  helicopter - find a flare gun
   // *********************************************
   void _doHelicopterFlare() {
-    _pilot.addInventoryItem(EnumInventory.flaregun);
+    _pilot.pickUpItem(EnumInventory.flaregun);
   }
 
   // *********************************************
@@ -333,10 +339,10 @@ class _ImageCyclerOverlayState extends State<ImageCyclerOverlay>
     String message = "";
 
     // decide on what message to put up
-    if (_pilot.hasAnInventoryItem(EnumInventory.machete)) {
+    if (_pilot.hasAnItem(EnumInventory.machete)) {
       message = constWolfOption3;
       // but lose the machete
-      _pilot.dropInventoryItem(EnumInventory.machete);
+      _pilot.dropOneItem(EnumInventory.machete);
     } else if (_moveDice >= 3) {
       message = constWolfOption1;
       // superficial wound
@@ -370,7 +376,7 @@ class _ImageCyclerOverlayState extends State<ImageCyclerOverlay>
     String message = "";
 
     // decide on what message to put up
-    if (_pilot.hasAnInventoryItem(EnumInventory.machete)) {
+    if (_pilot.hasAnItem(EnumInventory.machete)) {
       message = constSnakeOption3;
     } else if (_map[_selectedHex].terrain == EnumTerrain.scrub) {
       message = constSnakeOption1;
@@ -456,8 +462,8 @@ class _ImageCyclerOverlayState extends State<ImageCyclerOverlay>
   //  cave - get a binos
   // *********************************************
   void _doCaveBinos() {
-    // add an AK
-    _pilot.addInventoryItem(EnumInventory.binoculars);
+    // add binoculars
+    _pilot.pickUpItem(EnumInventory.binoculars);
   }
 
   // *********************************************
@@ -486,7 +492,7 @@ class _ImageCyclerOverlayState extends State<ImageCyclerOverlay>
   // *********************************************
   void _doSoldierRifle() {
     // add an AK
-    _pilot.addInventoryItem(EnumInventory.ak);
+    _pilot.pickUpItem(EnumInventory.ak);
   }
 
   // *********************************************
@@ -541,7 +547,7 @@ class _ImageCyclerOverlayState extends State<ImageCyclerOverlay>
   //  gunships - if they have flaregun, add option
   // *********************************************
   Widget _checkGunshipsFlareGun() {
-    if (_pilot.hasAnInventoryItem(EnumInventory.flaregun)) {
+    if (!_pilot.hasAnItem(EnumInventory.flaregun)) {
       return Container();
     } else {
       return ActionButton(
@@ -572,15 +578,15 @@ class _ImageCyclerOverlayState extends State<ImageCyclerOverlay>
   //  building - get machete
   // *********************************************
   void _doBuildingMachete() {
-    // gain 1 endurance
-    _pilot.addInventoryItem(EnumInventory.machete);
+    // pick up the machete
+    _pilot.pickUpItem(EnumInventory.machete);
   }
 
   // *********************************************
   //  building - if they don't already have a machete, can get one
   // *********************************************
   Widget _checkBuildingMachete() {
-    if (_pilot.hasAnInventoryItem(EnumInventory.machete)) {
+    if (_pilot.hasAnItem(EnumInventory.machete)) {
       return Container();
     } else {
       return ActionButton(
@@ -712,7 +718,7 @@ class _ImageCyclerOverlayState extends State<ImageCyclerOverlay>
   // *********************************************
   void _doThorns1() {
     // if machete,
-    if (_pilot.hasAnInventoryItem(EnumInventory.machete)) {
+    if (_pilot.hasAnItem(EnumInventory.machete)) {
       // set flags to skip stealth and rest
       _skipStealh = true;
       _skipRest = true;
@@ -733,7 +739,7 @@ class _ImageCyclerOverlayState extends State<ImageCyclerOverlay>
   // *********************************************
   void _doThorns2() {
     // if machete,
-    if (_pilot.hasAnInventoryItem(EnumInventory.machete)) {
+    if (_pilot.hasAnItem(EnumInventory.machete)) {
       // just continue on like normal
     } else {
       // they fight through, so add deep cut
@@ -854,7 +860,7 @@ class _ImageCyclerOverlayState extends State<ImageCyclerOverlay>
 
         // thorny briars
       } else if (encounter == EnumEncounter.thorns) {
-        if (_pilot.hasAnInventoryItem(EnumInventory.machete)) {
+        if (_pilot.hasAnItem(EnumInventory.machete)) {
           option1 = constThornsOption3;
           option2 = constThornsOption4;
         } else {
@@ -912,7 +918,6 @@ class _ImageCyclerOverlayState extends State<ImageCyclerOverlay>
               message: constSoldierOption2,
               onAction: _doSoldierMap,
               onCloseRequest: widget.onClose),
-          _checkBuildingMachete(),
         ]);
 
         // snake
@@ -1082,7 +1087,7 @@ class _ImageCyclerOverlayState extends State<ImageCyclerOverlay>
       // Immediately show the first image
       setState(() {
         if (!skipDueToEncounter) {
-          _currentEncounterIndex = rand.nextInt(_encounterImages.length);
+          _currentEncounterIndex = _random.nextInt(_encounterImages.length);
         } else {
           // are we finding a crashed helicopter or a tributary?
           _currentEncounterIndex = _hexesCrashedChopper.contains(_selectedHex)
@@ -1100,7 +1105,7 @@ class _ImageCyclerOverlayState extends State<ImageCyclerOverlay>
         timer = Timer.periodic(const Duration(milliseconds: 300), (_) {
           if (!mounted) return;
           setState(() {
-            _currentEncounterIndex = rand.nextInt(_encounterImages.length);
+            _currentEncounterIndex = _random.nextInt(_encounterImages.length);
             controller.forward(from: 0);
           });
         });
@@ -1441,7 +1446,7 @@ class _GameScreenState extends State<GameScreen> {
     String message = "";
     String title = ""; 
 
-    result = Random().nextInt(10) + 2;
+    result = _random.nextInt(11) + 2;
 
     // if this may be friendly as a result of the highground encounter, add bonus
     if (_hexesFriendlyVillage.contains(_selectedHex)) {
@@ -1454,9 +1459,9 @@ class _GameScreenState extends State<GameScreen> {
       title = "Robbed";
       _villageReaction = EnumVillageReactions.robbed;
       // if they had items, they are all lost
-      if (_pilot.hasAnyInventory()) {
+      if (_pilot.hasAnyAfflictions()) {
         message = constVillageRobbedItems;
-        _pilot.clearInventory();
+        _pilot.dropAllItems();
       } else {
         message = constVillageRobbedNoItems;
       }
@@ -1675,7 +1680,7 @@ class _GameScreenState extends State<GameScreen> {
     if (_allowedToReRoll) {
       _allowedToReRoll = false;
       _reRolledDiceIndex = index;
-      _rollingDice[index] = (Random().nextInt(6) + 1 - mod).clamp(1, 6);
+      _rollingDice[index] = (_random.nextInt(6) + 1 - mod).clamp(1, 6);
       _overlayEntry?.markNeedsBuild(); // forces overlay to redraw
     }
   }
@@ -1707,7 +1712,7 @@ class _GameScreenState extends State<GameScreen> {
     setState(() {
       // the clamp usage ensures keeps it between 1 and max number (usually a six)
       _rollingDice = _rollingDice
-          .map((_) => (Random().nextInt(6) + 1 - mod + bonus).clamp(1, clamp))
+          .map((_) => (_random.nextInt(6) + 1 - mod + bonus).clamp(1, clamp))
           .toList();
     });
   }
@@ -2194,7 +2199,7 @@ class _GameScreenState extends State<GameScreen> {
   // map next three hexes
   // ************************
   void _doMappingPhase() {
-    int die = Random().nextInt(6) + 1;
+    int die = _random.nextInt(6) + 1;
     EnumTerrain hex1;
     EnumTerrain hex2;
     EnumTerrain hex3;
@@ -2203,17 +2208,16 @@ class _GameScreenState extends State<GameScreen> {
     MapHex currentHex = _getCurrentHex();
     int row = currentHex.row;
     int col = currentHex.col;
-    late MapHex randomHex;
     late MapHex destHex;
     int newRow = 0;
     int newCol = 0;
 
-    print("doMappingPhase: row #$row, col #$col");
+    _logger.d("doMappingPhase: row #$row, col #$col");
 
     // odd thing -- don't let villages drop next to each other 
     if (_villageLastMappingPhase) {
       // reroll 
-      die = Random().nextInt(5) + 1;
+      die = _random.nextInt(5) + 1;
       _villageLastMappingPhase = false; 
     }
 
@@ -2382,28 +2386,6 @@ class _GameScreenState extends State<GameScreen> {
       }
     }
 
-    // if the player has binoculars, they also randomly map two more hexes three spots away
-    if (_pilot.hasAnInventoryItem(EnumInventory.binoculars)) {
-      // hex 1
-      randomHex = MapFactory.moveRandomSteps(currentHex.row, currentHex.col, 3);
-      // if not visible, make it so
-      if (!randomHex.visible) {
-        // randomly select one of the first five
-        _map[_getIdFromColRow(randomHex.col, randomHex.row)].visible = true;
-        _map[_getIdFromColRow(randomHex.col, randomHex.row)].terrain =
-            EnumTerrain.values[Random().nextInt(5)];
-      }
-      // hex 2
-      randomHex = MapFactory.moveRandomSteps(currentHex.row, currentHex.col, 3);
-      // if not visible, make it so
-      if (!randomHex.visible) {
-        // randomly select one of the first five
-        _map[_getIdFromColRow(randomHex.col, randomHex.row)].visible = true;
-        _map[_getIdFromColRow(randomHex.col, randomHex.row)].terrain =
-            EnumTerrain.values[Random().nextInt(5)];
-      }
-    }
-
     setState(() {
       // nothing to do here yet
     });
@@ -2469,15 +2451,25 @@ class _GameScreenState extends State<GameScreen> {
   // ************************
   void _continueButtonPress() async {
     String restMessage = constRestFailedMessage; 
+    bool continueOn = false; 
 
-
-    // special first check, if this is a move phase, and there's a village reaction already 
-    // and they have move allowed, don't let them try to end here
-    if ((_phase == EnumPhase.move) && (_villageReaction != EnumVillageReactions.none) && 
-      (_moveAllowed == true)) {
-        showInfoDialog(context, constCantEndInVillage);
+    // special first check, if this is a move phase, and they are in a village, don't let them try to end here
+    if ((_phase == EnumPhase.move) && (_map[_selectedHex].terrain == EnumTerrain.village)) {
+        await _overlayMessage(constCantEndInVillage, EnumMessageType.fail);
         return; 
-      }
+    }
+
+    // related to that, if move phase and they either have move remaining or are still in the
+    // same hex, then check whether to continue or not 
+    if ((_phase == EnumPhase.move) && (_moveAllowed == true)) {
+        if (await showYesNoDialog(context, constAboutToEndMovePhase)) {
+          // continue along 
+        }
+        else { 
+          return;  
+        }
+    }
+
 
     // increment the phase from current one since they moved to the next
     try {
@@ -2503,7 +2495,6 @@ class _GameScreenState extends State<GameScreen> {
 
       // we should do a quick mapping phase here just in case
       _doMappingPhase(); 
-
 
       // do a game end check after each encounter
       if (_pilot.getHealth() == 0) {
@@ -2575,7 +2566,7 @@ class _GameScreenState extends State<GameScreen> {
       if (_stealthDice > 0) {
         // set number of dice based on how many allocated
         _rollingDice =
-            List.generate(_stealthDice, (_) => Random().nextInt(6) + 1);
+            List.generate(_stealthDice, (_) => _random.nextInt(6) + 1);
         setState(() {
           // do nothing
         });
@@ -2604,7 +2595,7 @@ class _GameScreenState extends State<GameScreen> {
     // if rest phase, decide whether they lose any endurance
     if (_phase == EnumPhase.rest) {
       if (_restDice > 0) {
-        _rollingDice = List.generate(_restDice, (_) => Random().nextInt(6) + 1);
+        _rollingDice = List.generate(_restDice, (_) => _random.nextInt(6) + 1);
         setState(() {
           // do nothing
         });
@@ -2780,14 +2771,28 @@ class _GameScreenState extends State<GameScreen> {
       return;
     }
 
-    // second check, if move phase and they picked same hex, bail right out
+    // second check, can they move anymore? 
+    if ((_phase == EnumPhase.move) && (!_moveAllowed)) {
+      await _overlayMessage(constAlreadMovedMessage, EnumMessageType.fail);
+      return;
+    } 
+
+    // third check, if move phase and they picked same hex, bail right out
     if ((_phase == EnumPhase.move) && (_oldHex == _selectedHex)) {
       await _overlayMessage(constSameHexPickedMessage, EnumMessageType.fail);
       return;
     }
 
-    // third check, if they picked a special background hex that's not obvious, bail right out
+    // fourth check, if they picked a special background hex that's not obvious, bail right out
     if (_map[_selectedHex].terrain == EnumTerrain.background) {
+      return;
+    }
+
+    // fifth check, if they are on a motorcycle trying to enter a village, don't let them
+    if ((_map[_selectedHex].terrain == EnumTerrain.village) && 
+      (_villageReaction == EnumVillageReactions.allied) && 
+      (_motorcycleMoves <=3)) {
+      await _overlayMessage(constMotorcyleVillageMessage, EnumMessageType.fail);
       return;
     }
 
@@ -2818,7 +2823,7 @@ class _GameScreenState extends State<GameScreen> {
         if (_moveDice > 0) {
           // bring up overlay
           _rollingDice =
-              List.generate(_moveDice, (_) => Random().nextInt(6) + 1);
+              List.generate(_moveDice, (_) => _random.nextInt(6) + 1);
           await _diceRollOverlay(EnumPhase.move, moveCost);
         } else {
           await _overlayMessage(
@@ -2853,9 +2858,6 @@ class _GameScreenState extends State<GameScreen> {
           _moveAllowed = false;  
         }
       }
-    } else if ((_phase == EnumPhase.move) && (!_moveAllowed)) {
-      await _overlayMessage(constAlreadMovedMessage, EnumMessageType.fail);
-      return;
     } else if ((_phase == EnumPhase.encounter) && (_moveAllowed)) {
       // there are some encounters where they can also move
       // is the hex too far away?
@@ -2948,14 +2950,13 @@ class _GameScreenState extends State<GameScreen> {
       return Container();
     }
   }
-
+ 
   // ************************
   // if they have items, display dialog
   // ************************
   void _handleInventoryTap() {
-    if (_pilot.hasAnyInventory()) {
-      showInfoDialog(context, _pilot.describeInventory());
-    }
+    // TODO 
+    showInventoryDialog(context); 
   }
 
   // ************************
@@ -2973,7 +2974,7 @@ class _GameScreenState extends State<GameScreen> {
   Color _returnInventoryColor() {
     Color result = const Color.fromARGB(255, 68, 68, 68);
 
-    if (_pilot.hasAnyInventory()) {
+    if (_pilot.hasAnyItems()) {
       result = Colors.white;
     }
     return result;

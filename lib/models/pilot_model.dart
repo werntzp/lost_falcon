@@ -1,4 +1,5 @@
 import 'package:lost_falcon/const.dart';
+import 'package:lost_falcon/models/inventory_model.dart';
 import 'dart:math';
 
 class PilotException implements Exception {
@@ -15,7 +16,7 @@ class Pilot {
   int _health = 6;
   int _proximity = 6;
   int _endurance = 6;
-  final Set<EnumInventory> _inventory = {};
+  final Set<InventoryItem> _inventory = {};
   final Set<EnumAffliction> _afflictions = {};
 
   // ************************
@@ -26,6 +27,14 @@ class Pilot {
     _health = 6;
     _proximity = 6;
     _endurance = 6;
+    // clear and reset inventory 
+    _inventory.clear(); 
+    _inventory.add(InventoryItem(EnumInventory.ak));
+    _inventory.add(InventoryItem(EnumInventory.binoculars));
+    _inventory.add(InventoryItem(EnumInventory.firstaidkit));
+    _inventory.add(InventoryItem(EnumInventory.flaregun));
+    _inventory.add(InventoryItem(EnumInventory.machete));
+
   }
 
   // ************************
@@ -196,46 +205,82 @@ class Pilot {
   }
 
   // ************************
-  // return if they have any inventory
+  // get an item
   // ************************
-  bool hasAnyInventory() {
-    return _inventory.isNotEmpty ? true : false;
+  InventoryItem returnInventoryItem(EnumInventory item) {
+    return _inventory.firstWhere((x)=> x.item == item);
+
   }
 
   // ************************
-  // return if they have a specific item
+  // do they have anything?
   // ************************
-  bool hasAnInventoryItem(EnumInventory item) {
-    return _inventory.contains(item) ? true : false;
+  bool hasAnyItems() {
+    bool result = false; 
+
+    for (InventoryItem ii in _inventory) {
+      if (ii.isCurrentlyHeld) {
+        result = true;
+        break; 
+      }
+    }
+
+    return result; 
+
+  }
+
+  // ************************
+  // check to see if they have an item 
+  // ************************
+  bool hasAnItem(EnumInventory item) {
+    return _inventory.firstWhere((x)=> x.item == item).isCurrentlyHeld;
+
   }
 
   // ************************
   // drop all items
   // ************************
-  void clearInventory() {
-    _inventory.clear();
+  void dropAllItems() {
+
+    for (InventoryItem ii in _inventory) {
+      ii.isCurrentlyHeld = false; 
+    }
+
   }
 
   // ************************
-  // drop an item
+  // drop a specific item
   // ************************
-  void dropInventoryItem(EnumInventory item) {
-    _inventory.remove(item);
+  void dropOneItem(EnumInventory item) {
+    _inventory.firstWhere((x)=> x.item == item).isCurrentlyHeld = false; 
+
   }
 
   // ************************
   // add an item
   // ************************
-  void addInventoryItem(EnumInventory item) {
-    if (!_inventory.contains(item)) {
-      _inventory.add(item);
-    }
+  void pickUpItem(EnumInventory item) {
+    late InventoryItem ii; 
+
+    // pick it up and show it as currently held, but only if we've never held it before
+    ii = _inventory.firstWhere((x)=> x.item == item); 
+    if (!ii.hasEverBeenPickedUp) { 
+      ii.hasEverBeenPickedUp = true;
+      ii.isCurrentlyHeld = true; 
+    } 
+
   }
 
   // ************************
-  // list the inventory in a friendly message
+  // use an item
   // ************************
-  String describeInventory() {
-    return constNoInventory;
+  void useItem(EnumInventory item, bool drop) {
+
+    // mark it as used
+    _inventory.firstWhere((x)=> x.item == item).hasEverBeenUsed = true;  
+    // maybe drop it 
+    if (drop) { dropOneItem(item); }
+ 
   }
+
 }

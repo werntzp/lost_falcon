@@ -86,7 +86,7 @@ const constDiceRollRestMessage1 =
     "Endurance is the key to your survival and each point give you a die in the Allocation Phase. Roll a";
 const constDiceRollRestMessage2 = "(or higher) to rest and gain 1 Endurance.";
 const constRestFailedMessage = "You were unable to rest. Lose 1 Endurance.";
-const constRestFailedLoseHealthMessage = "You lack of Endurance is now severly draining. Lose 1 Health.";
+const constRestFailedLoseHealthMessage = "Your inability to rest is now making you weaker. Lose 1 Health.";
 const constNoDiceAllocatedForRestMessage =
     "You lost 1 Endurance due to fatigue.";
 const constRestSuccessMessage =
@@ -105,10 +105,12 @@ const constRestSixMessage =
 const constGameOverLost = "You scored X points for traveling Z hexes.";
 const constGameOverWon =
     "You scored X points for traveling Z hexes plus remaining Health, Proximity, and Endurance points.";
+const constMotorcyleVillageMessage = "You cannot enter a village while riding the motorcycle.";
+const constAboutToEndMovePhase = "You can still move. Do you really want to end the phase?";
 
 // encounters
 const constEncountersMessage =
-    "Let's see if you had any encounters this round ...";
+    "Let's see if you had any encounters this round...";
 
 const constDustEncounterMessage =
     "A dust storm kicks up obstructing your view while the strong wind and harsh blowing sand wears you down.";
@@ -146,11 +148,11 @@ const constRoadOption1 = "Immediately move to an adjacent hex";
 const constRoadOption2 = "Increase your Proximity by 1";
 
 const constSoldierEncounterMessage =
-    "A fallen soldier lies facedown hidden in the brush.";
+    "You come across a dead Government soldier.";
 const constSoldierOption1 =
     "Find a working AK-47 with several rounds left in the magazine";
 const constSoldierOption2 =
-    "Find a map show the location of a crashed helicopter";
+    "Find a map showing the location of a crashed helicopter";
 
 const constSnakeEncounterMessage =
     "As you trek across the desert, you disturb a sleeping snake.";
@@ -237,7 +239,7 @@ const constVillageKickedOut =
 const constVillageUntrusting =
     "Everyone in the village warily ignores you and lets you pass through. Move to a new hex.";
 const constVillagePeaceful =
-    "You are noffered sanctuary. Gain 2 Endurance and move to a new hex.";
+    "You are offered sanctuary. Gain 2 Endurance and move to a new hex.";
 const constVillageHelpful =
     "A villager gives you an old motorcycle. You gain Proximity and can drive 3 hexes in any direction before it runs out of gas.";
 const constVillageAlliedAfflictions =
@@ -258,10 +260,15 @@ const constAfflictionDeepCut = "a deep cut (lost 2 Health)";
 
 // inventory
 const constInventory = "You have collected the following items: ";
-const constNoInventory = "Unfortunately, you have no items or gear to use.";
+const constNoInventory = "Unfortunately, you have no items to use.";
+const constInventoryFlareGun = "Flare Gun (force an Encounter)";
+const constInventoryFirstAidKit =
+    "First Aid Kit (heal an affliction and gain 1 Health)";
+const constInventoryScope = "Binoculars (map 2 extra hexes within a range of 3)";
+const constInventoryAK = "AK-47 (increase Proximity by 2 )";
 
 // warnings
-const constCantEndInVillage = "You cannot end your phase in a village. Pick a hex to move into.";
+const constCantEndInVillage = "You cannot end Move phase in a village.";
 
 // buttons and labels
 const constMoveText = "Move";
@@ -278,6 +285,8 @@ const constContinueText = "Continue";
 const constOKText = "OK";
 const constHomeText = "Home";
 const constFailText = "Fail";
+const constYesText = "Yes";
+const constNoText = "No";
 
 const constDieFaceRed = "assets/images/dice_face_red_";
 const constDieFaceWhite = "assets/images/dice_face_white_";
