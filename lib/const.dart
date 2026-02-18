@@ -58,6 +58,7 @@ const constHexImpassableMessage = "You cannot move into an impassable hex.";
 const constDiceAllocationMessage1 = "You have";
 const constDiceAllocationMessage2 =
     "dice to allocate. Tap once to increment, and long press to decrement.";
+const constDiceAllocationLocked = "All dice have been allocated for this round.";
 const constGameOverRescued = "You have been rescued!";
 const constGameOverCaptured =
     "Unable to escape your pursuers, you now wait in captivity.";
@@ -136,14 +137,14 @@ const constHighgroundEncounterMessage =
     "From this vantage you can see for miles, including a bustling village that may be welcoming.";
 
 const constBuildingEncounterMessage =
-    "It appears that this building has been abandoned. The burn marks and bullet holes present this as another casualty of war.";
+    "It appears that this building has been abandoned.";
 const constBuildingOption1 =
-    "Scavenge some materials to make a bandage and gain 2 Health";
-const constBuildingOption2 = "Spend some quiet time here to gain 1 Endurance";
+    "Scavenge materials to make a bandage and gain 2 Health";
+const constBuildingOption2 = "Spend some quiet time here and gain 1 Endurance";
 const constBuildingOption3 = "Find a usable machete";
 
 const constRoadEncounterMessage =
-    "A flat stretch of road provides an easier path to move on.";
+    "A flat stretch of road provides an easier path for travel.";
 const constRoadOption1 = "Immediately move to an adjacent hex";
 const constRoadOption2 = "Increase your Proximity by 1";
 
@@ -185,7 +186,7 @@ const constHelicopterOption2 = "Use it as shelter to gain 2 Endurance";
 
 const constApcEncounterMessage =
     "The hulk of an armored personnel carrier sits quietly.";
-const constApcOption1 = "Find a first aid kit and use it to heal up";
+const constApcOption1 = "Find a first aid kit and gain 1 Health";
 const constApcOption2 = "Use it as a shelter to gain 1 Proximity and Endurance";
 
 const constCaveEncounterMessage =
@@ -213,9 +214,9 @@ const constSniperOption2 =
     "Fall back into cover and this hex becomes impassable";
 
 const constMilepostEncounterMessage =
-    "You come to an intersection that provides several safe looking movement options.";
-const constMilepostOption1 = "Terrain ahead becomes favorable";
-const constMilepostOption2 = "A village is nearby";
+    "You come to a large intersection. Move again.";
+const constMilepostOption1 = "Terrain ahead will be favorable";
+const constMilepostOption2 = "Map a nearby village";
 const constMilepostOption3 = "Gain +2 to your next movement roll";
 
 const constTributaryEncounterMessage =
@@ -235,7 +236,7 @@ const constVillageRobbedNoItems =
 const constVillageDelayed =
     "The villagers do not harm you, but purposefull slow you down which lets your pursuers get closer. Lose Proximity and Endurance. Move to a new hex.";
 const constVillageKickedOut =
-    "They forcibly kick you out of the village and cannot enter here again.";
+    "They forcibly kick you out of the village and you are told to not enter again.";
 const constVillageUntrusting =
     "Everyone in the village warily ignores you and lets you pass through. Move to a new hex.";
 const constVillagePeaceful =
@@ -244,7 +245,7 @@ const constVillageHelpful =
     "A villager gives you an old motorcycle. You gain Proximity and can drive 3 hexes in any direction before it runs out of gas.";
 const constVillageAlliedAfflictions =
     "A doctor in the village heals an affliction before you leave. Gain 1 Health, Proximity, and Endurance. Move to a new hex.";
-const constVillageAlliedNoAfflications =
+const constVillageAlliedNoAfflictions =
     "A doctor in the village treats you. Gain 1 Health, Proximity, and Endurance. Move to a new hex.";
 
 // afflictions
@@ -280,6 +281,7 @@ const constEnduranceText = "Endurance";
 const constRoundText = "Round";
 const constInventoryText = "Inventory";
 const constAfflictionsText = "Afflictions";
+const constAllocationsText = "Dice";
 const constQuitText = "Quit";
 const constContinueText = "Continue";
 const constOKText = "OK";

@@ -158,8 +158,12 @@ class Pilot {
   // heal an affliction
   // ************************
   void healAffliction() {
-    // if only one clear, otherwise pick a random one
-    if (_afflictions.length == 1) {
+
+    // if zero return, if only one clear it, otherwise pick a random one
+    if (_afflictions.isEmpty) {
+      return; 
+    }
+    else if (_afflictions.length == 1) {
       _afflictions.clear();
     } else {
       EnumAffliction item =

@@ -172,6 +172,14 @@ class EncounterFactory {
   }
 
   // ************************
+  // get an individual encounter graphic 
+  // ************************
+  String getEncounterGraphic(int index) {
+    return _paths[index];
+  }
+
+
+  // ************************
   // depending where they are, did an encounter happen?
   // ************************
   int getRandomEncounter(MapHex currentHex) {

@@ -11,7 +11,6 @@ import '../dialogs/info_dialog.dart';
 import '../dialogs/village_dialog.dart';
 import '../dialogs/inventory_dialog.dart';
 import '../dialogs/yes_no_dialog.dart';
-import '../screens/game_over_screen.dart';
 import '../main.dart';
 import 'dart:math';
 import 'dart:async';
@@ -49,6 +48,7 @@ bool _forcesPatrollingUp = true;
 bool _villageLastMappingPhase = false; 
 final _logger = Logger(); 
 final _random = Random(); 
+bool _isGameOver = false; 
 
 EnumVillageReactions _villageReaction = EnumVillageReactions.none;
 
@@ -695,7 +695,7 @@ class _ImageCyclerOverlayState extends State<ImageCyclerOverlay>
     int id = 0;
 
     newHex = MapFactory.moveRandomSteps(
-        _map[_selectedHex].row, _map[_selectedHex].col, 4);
+        _map[_selectedHex].row, _map[_selectedHex].col, 2);
     // make that a village
     id = _getIdFromColRow(newHex.col, newHex.row);
     _map[id].terrain = EnumTerrain.village;
@@ -788,6 +788,9 @@ class _ImageCyclerOverlayState extends State<ImageCyclerOverlay>
     int id = 0;
     String option1 = "";
     String option2 = "";
+
+    // always set additional move to false so we have to be explicit
+    _moveAllowed = false; 
 
     if (handleEncounter) {
       // no encounter
@@ -883,11 +886,11 @@ class _ImageCyclerOverlayState extends State<ImageCyclerOverlay>
       } else if (encounter == EnumEncounter.building) {
         return Column(children: [
           ActionButton(
-              message: constHelicopterOption1,
+              message: constBuildingOption1,
               onAction: _doBuildingBandage,
               onCloseRequest: widget.onClose),
           ActionButton(
-              message: constHelicopterOption2,
+              message: constBuildingOption2,
               onAction: _doBuildingRest,
               onCloseRequest: widget.onClose),
           _checkBuildingMachete(),
@@ -904,7 +907,6 @@ class _ImageCyclerOverlayState extends State<ImageCyclerOverlay>
               message: constRoadOption2,
               onAction: _doRoadProximity,
               onCloseRequest: widget.onClose),
-          _checkBuildingMachete(),
         ]);
 
         // dead soldier
@@ -1138,7 +1140,7 @@ class _ImageCyclerOverlayState extends State<ImageCyclerOverlay>
               }
             }
             // hardcode for testing
-            //_currentEncounterIndex = EnumEncounter.chemicals.index;
+            // _currentEncounterIndex = EnumEncounter.milepost.index;
             message = _encounterFactory
                 .getEncounterDescription(_currentEncounterIndex);
           }
@@ -1213,14 +1215,122 @@ class _ImageCyclerOverlayState extends State<ImageCyclerOverlay>
   }
 }
 
+
+
 // *********************************************
+//  class to build each die 
 // *********************************************
+class _DiceOption extends StatelessWidget {
+  final int value;
+  final void Function(int value) onSelected;
+  final EnumPhase phase; 
+
+  const _DiceOption({
+    required this.value,
+    required this.phase, 
+    required this.onSelected,    
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    String assetPath = "";
+    if (phase == EnumPhase.move) {
+      assetPath = (value == _moveDice) ? "$constDieFaceRed$value.jpg" : "$constDieFaceWhite$value.jpg";
+    }
+    else if (phase == EnumPhase.stealth) {
+      assetPath = (value == _stealthDice) ? "$constDieFaceRed$value.jpg" : "$constDieFaceWhite$value.jpg";
+    }
+    else {
+      assetPath = (value == _restDice) ? "$constDieFaceRed$value.jpg" : "$constDieFaceWhite$value.jpg";
+    }
+
+    return GestureDetector(
+      onTap: () => onSelected(value),
+      child: Container(
+        padding: const EdgeInsets.all(0),
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(12),
+        ),
+        child: SizedBox(
+          width: 40,
+          height: 40, 
+          child: Image.asset(
+          assetPath,
+          fit: BoxFit.contain,)
+        ),
+      ),
+    );
+  }
+}
+
 // *********************************************
+//  decide how many dice to return 
+// *********************************************
+int _getMaxDice(EnumPhase phase) {
+  int result = 6; 
+
+  // pretty simple, always six unless the pilot has a broken foot and
+  // then you only get two move dice
+  if ((phase == EnumPhase.move) && (_pilot.hasAnAffliction(EnumAffliction.brokenfoot))) {
+    result = 2; 
+  }
+
+  return result; 
+
+}
+
+// *********************************************
+//  class to build each row 
+// *********************************************
+class DiceSelectionRow extends StatelessWidget {
+  final String label;
+  final EnumPhase phase;
+  final void Function(int) onSelected;
+
+  const DiceSelectionRow({
+    super.key,
+    required this.label,
+    required this.phase,
+    required this.onSelected,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          label,
+          style: const TextStyle(
+            color: Colors.white,
+            fontSize: 15,
+            fontFamily: constAppTextFont,            
+            fontWeight: FontWeight.bold,
+          ),
+        ),
+        const SizedBox(height: 8),
+
+        Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            for (int value = 0; value <= _getMaxDice(phase); value++)
+              _DiceOption(
+                value: value,
+                phase: phase,
+                onSelected: onSelected,
+              ),
+          ],
+        ),
+
+        const SizedBox(height: 20),
+      ],
+    );
+  }
+}
+
 // *********************************************
 //  gamescreen class
-// *********************************************
-// *********************************************
-// *********************************************
 // *********************************************
 class GameScreen extends StatefulWidget {
   const GameScreen({super.key});
@@ -1249,13 +1359,264 @@ class _GameScreenState extends State<GameScreen> {
     });
   }
 
+  // ************************
+  // adjust move dice
+  // ************************
+  void _pickMoveDice(int value) {
+    // first check, if not allocation phase, just bail
+    if (_phase != EnumPhase.allocate) {
+      return;
+    }
+
+    // can't pick more dice than available
+    if ((value + _stealthDice + _restDice) > _pilot.getEndurance()) {
+      return;
+    }  
+
+    // set the new value
+    _moveDice = value; 
+
+    // set total dice remaining
+    _totalDice = _getTotalDice();  
+
+    // redraw the overlay
+    setState(() {
+      _overlayEntry?.markNeedsBuild();
+    });
+  }
+  
+
+  // ************************
+  // adjust stealth dice
+  // ************************
+  void _pickStealthDice(int value) {
+    // first check, if not allocation phase, just bail
+    if (_phase != EnumPhase.allocate) {
+      return;
+    }
+
+    // can't pick more dice than available
+    if ((_moveDice + value + _restDice) > _pilot.getEndurance()) {
+      return;
+    }  
+    // set the new value
+    _stealthDice = value; 
+
+    // set total dice remaining
+    _totalDice = _getTotalDice();  
+
+    // redraw the overlay
+    setState(() {
+      _overlayEntry?.markNeedsBuild();
+    });
+  }
+
+
+  // ************************
+  // adjust rest dice
+  // ************************
+  void _pickRestDice(int value) {
+    // first check, if not allocation phase, just bail
+    if (_phase != EnumPhase.allocate) {
+      return;
+    }
+
+    // can't pick more dice than available
+    if ((_moveDice + _stealthDice + value) > _pilot.getEndurance()) {
+      return;
+    }  
+    // set the new value
+    _restDice = value; 
+
+    // set total dice remaining
+    _totalDice = _getTotalDice();  
+
+    // redraw the overlay
+    setState(() {
+      _overlayEntry?.markNeedsBuild();
+    });
+  }  
+
+  // *********************************************
+  // how many dice are there to allocate?
+  // *********************************************
+  int _getTotalDice() {
+     return _pilot.getEndurance() - (_moveDice + _stealthDice + _restDice);
+
+  }
+
+  // *********************************************
+  // total up how many points they got 
+  // *********************************************
+  String _getEndGamePoints(EnumGameOver gameOverReason, int totalPoints, int hexesTraveled) {
+    String message; 
+
+    // decide on which string to return 
+    if (gameOverReason == EnumGameOver.rescued) {
+      message = constGameOverWon
+      .replaceFirst("X", totalPoints.toString())     // total points
+      .replaceFirst("Z", hexesTraveled.toString());    // hexes traveled 
+    }
+    else { 
+      message = constGameOverLost
+      .replaceFirst("X", totalPoints.toString())     // total points
+      .replaceFirst("Z", hexesTraveled.toString());    // hexes traveled 
+    }
+
+    return message; 
+
+  }
+
+  // *********************************************
+  // decide which message to show 
+  // *********************************************
+  String _getEndGameText(EnumGameOver gameOverReason) {
+
+    if (gameOverReason == EnumGameOver.rescued) {
+      return constGameOverRescued;
+    }
+    else if (gameOverReason == EnumGameOver.captured) {
+      return constGameOverCaptured;
+    }
+    else {
+      return constGameOverKilled;
+    }
+  }
+
+  // *********************************************
+  // and which graphic to show 
+  // *********************************************
+  String _getEndGameGraphic(EnumGameOver gameOverReason) {
+    bool male = Random().nextBool(); 
+    String num  = (male) ? "1" : "2";
+    late String img;
+    String folder = constAssetsImagesFolder; 
+
+    if (gameOverReason == EnumGameOver.rescued) {
+      img = constImageRescued;
+    }
+    else if (gameOverReason == EnumGameOver.captured) {
+      img = constImageCaptured;
+    }
+    else {
+      img = constImageKilled;
+    }
+
+    return folder + num + img; 
+  }
+
+  // *********************************************
+  // display overlay with game results and message
+  // *********************************************
+  Future<void> _endGameOverlay(EnumGameOver gameOverReason, int hexesTraveled, int totalPoints) async {
+    _completer = Completer<void>();
+    if (_overlayEntry != null) return; // Prevent stacking
+
+    // set this here
+    _isGameOver = true; 
+
+    _overlayEntry = OverlayEntry(
+        builder: (context) => Stack(
+              children: [
+                Positioned.fill(
+                  child: Container(
+                      color: Colors.black
+                          .withAlpha((0.4 * 255).toInt()) // adjustable darkness
+                      ),
+                ),
+                Positioned(
+                  top: 200,
+                  left: 50,
+                  right: 50,
+                  child: Material(
+                    elevation: 8.0,
+                    color: Colors.transparent,
+                    child: Container(
+                      padding: const EdgeInsets.all(12),
+                      decoration: BoxDecoration(
+                        color: Colors.black,
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      child: Column(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          const SizedBox(height: 12),
+                          Container(
+                            color: Colors.black54,
+                            alignment: Alignment.center,
+                            height: 275,
+                            width: 275,
+                            child: Image.asset(_getEndGameGraphic(gameOverReason),
+                              fit: BoxFit.contain,),
+                          ),
+                          const SizedBox(height: 20),
+                          Text(
+                              _getEndGameText(gameOverReason),
+                              textAlign: TextAlign.center,
+                              style: const TextStyle(
+                                  fontFamily: constAppTextFont,
+                                  color: Colors.white,
+                                  fontSize: 20.0),
+                          ),
+                          const SizedBox(height: 15),                             
+                          Text(
+                              _getEndGamePoints(gameOverReason, totalPoints, hexesTraveled),
+                              textAlign: TextAlign.center,
+                              style: const TextStyle(
+                                  fontFamily: constAppTextFont,
+                                  color: Colors.white,
+                                  fontSize: 12.0),
+                          ),                             
+                          const SizedBox(height: 15),
+                          ConstrainedBox(
+                              constraints: const BoxConstraints(
+                              minWidth: 0.0,
+                              maxWidth: 160.0,
+                              minHeight: 0.0,
+                              maxHeight: 55.0,
+                          ),
+                          child: OutlinedButton(
+                            style: OutlinedButton.styleFrom(
+                                foregroundColor: Colors.black, // Text and icon color
+                                backgroundColor: Colors.white, // Background color
+                                side: const BorderSide(color: Colors.black,   width: 5.0,), // Border color
+                            ),   
+                            child: const Align(
+                              alignment: Alignment.center,
+                              child: Text(
+                                constOKText, 
+                                style: TextStyle(
+                                    fontFamily: constAppTextFont, 
+                                    color: Colors.black,
+                                    fontWeight: FontWeight.bold,
+                                    fontSize: 28.0),
+                              )),
+                              onPressed: () { _genericCloseOverlay(); },
+                              ),
+                      )],
+                      )                    
+                    ),
+                  ),
+                ), 
+               
+              ],
+            ));
+
+    Overlay.of(context).insert(_overlayEntry!);
+  }
+
+
   // *********************************************
   // display overlay to get dice allocation
   // *********************************************
   Future<void> _diceAllocationOverlay() async {
-    _totalDice = _pilot.getEndurance();
-
     _completer = Completer<void>();
+    _totalDice = _getTotalDice(); 
+    String message = "$constDiceAllocationMessage1 $_totalDice $constDiceAllocationMessage2";
+
+    if (_phase != EnumPhase.allocate) {
+      message = constDiceAllocationLocked; 
+    }
 
     if (_overlayEntry != null) return; // Prevent stacking
 
@@ -1286,107 +1647,32 @@ class _GameScreenState extends State<GameScreen> {
                         children: [
                           const SizedBox(height: 12),
                           Text(
-                            "$constDiceAllocationMessage1 $_totalDice $constDiceAllocationMessage2",
+                            message,
                             style: const TextStyle(
                                 color: Colors.white,
                                 fontFamily: constAppTextFont,
                                 fontSize: 15),
                             textAlign: TextAlign.center,
                           ),
-                          const Padding(
-                            padding: EdgeInsets.all(12.0),
+                          const SizedBox(height: 10),
+                          DiceSelectionRow(
+                            label: constMoveText,
+                            phase: EnumPhase.move,
+                            onSelected: _pickMoveDice,
                           ),
-                          Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: <Widget>[
-                              GestureDetector(
-                                onTap: () {
-                                  _changeMove(EnumDirection.increment);
-                                },
-                                onLongPress: () {
-                                  _changeMove(EnumDirection.decrement);
-                                },
-                                child: Row(
-                                  children: <Widget>[
-                                    const SizedBox(width: 75),
-                                    Image(
-                                      image: _moveImage(),
-                                      width: 85.0,
-                                      height: 22.0,
-                                      fit: BoxFit.fill,
-                                    ),
-                                    const SizedBox(width: 5), // spacing column
-                                    const Text(constMoveText,
-                                        textAlign: TextAlign.center,
-                                        style: TextStyle(
-                                            color: Colors.white,
-                                            fontWeight: FontWeight.bold,
-                                            fontFamily: constAppTextFont,
-                                            fontSize: 18.0)),
-                                  ],
-                                ),
-                              ),
-                              const SizedBox(height: 12),
-                              GestureDetector(
-                                onTap: () {
-                                  _changeStealth(EnumDirection.increment);
-                                },
-                                onLongPress: () {
-                                  _changeStealth(EnumDirection.decrement);
-                                },
-                                child: Row(
-                                  children: <Widget>[
-                                    const SizedBox(width: 75),
-                                    Image(
-                                      image: _stealthImage(),
-                                      width: 85.0,
-                                      height: 22.0,
-                                      fit: BoxFit.fill,
-                                    ),
-                                    const SizedBox(width: 5), // spacing column
-                                    const Text(constStealthText,
-                                        textAlign: TextAlign.center,
-                                        style: TextStyle(
-                                            color: Colors.white,
-                                            fontWeight: FontWeight.bold,
-                                            fontFamily: constAppTextFont,
-                                            fontSize: 18.0)),
-                                  ],
-                                ),
-                              ),
-                              const SizedBox(height: 12),
-                              GestureDetector(
-                                onTap: () {
-                                  _changeRest(EnumDirection.increment);
-                                },
-                                onLongPress: () {
-                                  _changeRest(EnumDirection.decrement);
-                                },
-                                child: Row(
-                                  children: <Widget>[
-                                    const SizedBox(width: 75),
-                                    Image(
-                                      image: _restImage(),
-                                      width: 85.0,
-                                      height: 22.0,
-                                      fit: BoxFit.fill,
-                                    ),
-                                    const SizedBox(width: 5), // spacing column
-                                    const Text(constRestText,
-                                        textAlign: TextAlign.center,
-                                        style: TextStyle(
-                                            color: Colors.white,
-                                            fontWeight: FontWeight.bold,
-                                            fontFamily: constAppTextFont,
-                                            fontSize: 18.0)),
-                                  ],
-                                ),
-                              ),
-                            ],
+                          const SizedBox(height: 10),
+                          DiceSelectionRow(
+                            label: constStealthText,
+                            phase: EnumPhase.stealth,
+                            onSelected: _pickStealthDice,
                           ),
-                          const Padding(
-                            padding: EdgeInsets.all(12.0),
+                          const SizedBox(height: 10),
+                          DiceSelectionRow(
+                            label: constRestText,
+                            phase: EnumPhase.rest,
+                            onSelected: _pickRestDice,
                           ),
+                          const SizedBox(height: 20),
                           SizedBox(
                             width: 160.0,
                             height: 55.0,
@@ -1521,7 +1807,7 @@ class _GameScreenState extends State<GameScreen> {
         _pilot.healAffliction();
         message = constVillageAlliedAfflictions;
       } else {
-        message = constVillageAlliedNoAfflications;
+        message = constVillageAlliedNoAfflictions;
       }
 
       _pilot.setEndurance(EnumDirection.increment);
@@ -1587,6 +1873,8 @@ class _GameScreenState extends State<GameScreen> {
       } else {
         _allowedToReRoll = false;
         await _overlayMessage(constMoveFailedMessage, EnumMessageType.fail);
+        // reset where they were
+        _selectedHex = _oldHex; 
       }
     } else if (phase == EnumPhase.stealth) {
       // for stealth phase, see if they chose a six
@@ -1641,27 +1929,11 @@ class _GameScreenState extends State<GameScreen> {
 
     // do some end game checks
     if (_pilot.getHealth() <= 0) {
-      Navigator.push(
-        context,
-        MaterialPageRoute(
-            builder: (context) => GameOverScreen(
-                  gameOverReason: EnumGameOver.killed,
-                  hexesTraveled: _totalHexesTraveled(),
-                  totalPoints: _totalUpPoints(EnumGameOver.killed),
-                )),
-      );
+      await _endGameOverlay(EnumGameOver.killed, _totalHexesTraveled(), _totalUpPoints(EnumGameOver.killed));
     }
 
     if (_pilot.getProximity() <= 0) {
-      Navigator.push(
-        context,
-        MaterialPageRoute(
-            builder: (context) => GameOverScreen(
-                  gameOverReason: EnumGameOver.captured,
-                  hexesTraveled: _totalHexesTraveled(),
-                  totalPoints: _totalUpPoints(EnumGameOver.captured),
-                )),
-      );    
+      await _endGameOverlay(EnumGameOver.captured, _totalHexesTraveled(), _totalUpPoints(EnumGameOver.captured));
     }
 
   }
@@ -1939,12 +2211,6 @@ class _GameScreenState extends State<GameScreen> {
     _startRolling();
   }
 
-
-
-
-
-
-
   // *********************************************
   // overlay with a message, either good or bad
   // *********************************************
@@ -1988,70 +2254,6 @@ class _GameScreenState extends State<GameScreen> {
   }
 
   // ************************
-  // adjust move dice
-  // ************************
-  void _changeMove(EnumDirection direction) {
-    // if up, see if there are dice left
-    if ((direction == EnumDirection.increment) && (_totalDice > 0)) {
-      _totalDice--;
-      _moveDice++;
-      // if pilot has broken foot, can't have more than 2
-      if (_pilot.hasAnAffliction(EnumAffliction.brokenfoot)) {
-        if (_moveDice > 2) {
-          _moveDice = 2;
-          _totalDice++; // add the die back to total since we aren't using it
-        }
-      }
-    } else if ((direction == EnumDirection.decrement) && (_moveDice > 0)) {
-      _totalDice++;
-      _moveDice--;
-    }
-
-    // redraw the overlay
-    setState(() {
-      _overlayEntry?.markNeedsBuild();
-    });
-  }
-
-  // ************************
-  // _changeStealth
-  // ************************
-  void _changeStealth(EnumDirection direction) {
-    // if up, see if there are dice left
-    if ((direction == EnumDirection.increment) && (_totalDice > 0)) {
-      _totalDice--;
-      _stealthDice++;
-    } else if ((direction == EnumDirection.decrement) && (_stealthDice > 0)) {
-      _totalDice++;
-      _stealthDice--;
-    }
-
-    // redraw the overlay
-    setState(() {
-      _overlayEntry?.markNeedsBuild();
-    });
-  }
-
-  // ************************
-  // _changeRest
-  // ************************
-  void _changeRest(EnumDirection direction) {
-    // if up, see if there are dice left
-    if ((direction == EnumDirection.increment) && (_totalDice > 0)) {
-      _totalDice--;
-      _restDice++;
-    } else if ((direction == EnumDirection.decrement) && (_restDice > 0)) {
-      _totalDice++;
-      _restDice--;
-    }
-
-    // redraw the overlay
-    setState(() {
-      _overlayEntry?.markNeedsBuild();
-    });
-  }
-
-  // ************************
   // quit the current game and go back to main screen
   // ************************
   void _quitGame() async {
@@ -2082,6 +2284,8 @@ class _GameScreenState extends State<GameScreen> {
     _stealthDice = constNoDice;
     _restDice = constNoDice;
     _phase = EnumPhase.allocate;
+    _isGameOver = false; 
+
   }
 
   // ************************
@@ -2394,7 +2598,7 @@ class _GameScreenState extends State<GameScreen> {
   // ************************
   // move the u.s. patrol along the outer column
   // ************************
-  void _moveUSForces() {
+  void _moveUSForces() async {
     int col = constMapCols - 1; // they are always in the last column
     late int row;
 
@@ -2430,15 +2634,7 @@ class _GameScreenState extends State<GameScreen> {
 
     // if the us forces moved to where the player is, they win!
     if (_selectedHex == _getIdFromColRow(col, row)) {
-      Navigator.push(
-        context,
-        MaterialPageRoute(
-            builder: (context) => GameOverScreen(
-                  gameOverReason: EnumGameOver.rescued,
-                  hexesTraveled: _totalHexesTraveled(),
-                  totalPoints: _totalUpPoints(EnumGameOver.rescued),
-                )),
-      );
+      await _endGameOverlay(EnumGameOver.rescued, _totalHexesTraveled(), _totalUpPoints(EnumGameOver.rescued));
     }
 
     setState(() {
@@ -2451,25 +2647,28 @@ class _GameScreenState extends State<GameScreen> {
   // ************************
   void _continueButtonPress() async {
     String restMessage = constRestFailedMessage; 
-    bool continueOn = false; 
 
-    // special first check, if this is a move phase, and they are in a village, don't let them try to end here
+    // if game is over, just ignore the click
+    if (_isGameOver) {
+      return; 
+    }
+
+    // special check, if this is a move phase, and they are in a village, don't let them try to end here
     if ((_phase == EnumPhase.move) && (_map[_selectedHex].terrain == EnumTerrain.village)) {
         await _overlayMessage(constCantEndInVillage, EnumMessageType.fail);
         return; 
     }
 
-    // related to that, if move phase and they either have move remaining or are still in the
+    // if move or encounter phase and they either have move remaining or are still in the
     // same hex, then check whether to continue or not 
-    if ((_phase == EnumPhase.move) && (_moveAllowed == true)) {
+    if (((_phase == EnumPhase.move) || (_phase == EnumPhase.encounter)) && (_moveAllowed == true)) {
         if (await showYesNoDialog(context, constAboutToEndMovePhase)) {
           // continue along 
         }
         else { 
-          return;  
+          return;   
         }
     }
-
 
     // increment the phase from current one since they moved to the next
     try {
@@ -2498,32 +2697,12 @@ class _GameScreenState extends State<GameScreen> {
 
       // do a game end check after each encounter
       if (_pilot.getHealth() == 0) {
-        Navigator.push(
-          context,
-          MaterialPageRoute(
-              builder: (context) => GameOverScreen(
-                    gameOverReason: EnumGameOver.killed,
-                    hexesTraveled: _totalHexesTraveled(),
-                    totalPoints: _totalUpPoints(EnumGameOver.killed),
-                  )),
-        );
+        await _endGameOverlay(EnumGameOver.killed, _totalHexesTraveled(), _totalUpPoints(EnumGameOver.killed));
+
       }
       if (_pilot.getProximity() == 0) {
-        Navigator.push(
-          context,
-          MaterialPageRoute(
-              builder: (context) => GameOverScreen(
-                    gameOverReason: EnumGameOver.captured,
-                    hexesTraveled: _totalHexesTraveled(),
-                    totalPoints: _totalUpPoints(EnumGameOver.captured),
-                  )),
-        );
+        await _endGameOverlay(EnumGameOver.captured, _totalHexesTraveled(), _totalUpPoints(EnumGameOver.captured));
       }
-
-      // clear out the dice numbers
-      _moveDice = 0;
-      _stealthDice = 0;
-      _restDice = 0;
 
       setState(() {
         _doMappingPhase();
@@ -2580,15 +2759,7 @@ class _GameScreenState extends State<GameScreen> {
 
       // do a game over check to see if the pilot was captured
       if (_pilot.getProximity() <= 0) {
-        Navigator.push(
-          context,
-          MaterialPageRoute(
-              builder: (context) => GameOverScreen(
-                    gameOverReason: EnumGameOver.captured,
-                    hexesTraveled: _totalHexesTraveled(),
-                    totalPoints: _totalUpPoints(EnumGameOver.captured),
-                  )),
-        );
+        await _endGameOverlay(EnumGameOver.captured, _totalHexesTraveled(), _totalUpPoints(EnumGameOver.captured));
       }
     }
 
@@ -2723,27 +2894,29 @@ class _GameScreenState extends State<GameScreen> {
       asset = constImageUnknown;
     }
 
+    // special cases, if this terrain is the crashed helicopter or water source, show them
+    // instead 
+    if (_hexesCrashedChopper.contains(id)) {
+      asset = EncounterFactory().getEncounterGraphic(EnumEncounter.helicopter.index);
+    }
+    else if (_hexesTributary.contains(id)) {
+      asset = EncounterFactory().getEncounterGraphic(EnumEncounter.tributary.index);
+    }
+
+
     return asset;
   }
 
   // ************************
   // check if rescued
   // ************************
-  void _checkRescueConditions() {
+  void _checkRescueConditions() async {
     // special case, if they moved into the rescue hex, then just end the game successfully
     if (_map[_selectedHex].terrain == EnumTerrain.rescue) {
       // close any overlay
       _genericCloseOverlay(); 
-      // then navigate
-      Navigator.push(
-        context,
-        MaterialPageRoute(
-            builder: (context) => GameOverScreen(
-                  gameOverReason: EnumGameOver.rescued,
-                  hexesTraveled: _totalHexesTraveled(),
-                  totalPoints: _totalUpPoints(EnumGameOver.rescued),
-                )),
-      );
+      // show the end game overlay 
+      await _endGameOverlay(EnumGameOver.rescued, _totalHexesTraveled(), _totalUpPoints(EnumGameOver.rescued));
     }
   }
 
@@ -2871,6 +3044,8 @@ class _GameScreenState extends State<GameScreen> {
       _map[_selectedHex].current = true;
       _map[_oldHex].previous = true;
       _map[_selectedHex].previous = true;
+      // no more move allowed 
+      _moveAllowed = false; 
       // special case, check if game over in case they moved into rescue hex
       _checkRescueConditions();
       // map out next spaces
@@ -2913,22 +3088,6 @@ class _GameScreenState extends State<GameScreen> {
               ),
               child: Image.asset(constImagePlayerLocation, fit: BoxFit.cover)));
     }
-    // else if this hex contains a crashed chopper
-    else if ((_hexesCrashedChopper.isNotEmpty) &&
-        (_hexesCrashedChopper.contains(id))) {
-      return const Positioned(
-          top: 10,
-          left: 15,
-          child: Icon(Icons.place, color: Colors.yellow, size: 75));
-    }
-    // else if this hex contains a crashed chopper
-    else if ((_hexesTributary.isNotEmpty) && (_hexesTributary.contains(id))) {
-      return const Positioned(
-          top: 10,
-          left: 15,
-          child: Icon(Icons.place, color: Colors.yellow, size: 75));
-    }
-
     // else if player cannot travel through this hex, show close icon
     else if ((_hexesImpassable.isNotEmpty) && (_hexesImpassable.contains(id))) {
       return const Positioned(
@@ -2966,6 +3125,13 @@ class _GameScreenState extends State<GameScreen> {
     if (_pilot.hasAnyAfflictions()) {
       showInfoDialog(context, _pilot.describeAfflictions());
     }
+  }
+
+  // ************************
+  // bring up the allocation screen 
+  // ************************
+  void _handleAllocationTap() async {
+      await _diceAllocationOverlay();
   }
 
   // ************************
@@ -3096,9 +3262,9 @@ class _GameScreenState extends State<GameScreen> {
                     ),
                   )),
                   Row(
-                    mainAxisAlignment: MainAxisAlignment.start,
+                    crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      const SizedBox(width: 35), // spacing column
+                      const SizedBox(width: 165), // spacing column
                       Image(
                         image: _healthImage(),
                         width: 80.0,
@@ -3112,29 +3278,15 @@ class _GameScreenState extends State<GameScreen> {
                               fontWeight: FontWeight.bold,
                               fontFamily: constAppTextFont,
                               fontSize: 12.0)),
-                      const SizedBox(width: 72), // flexible spacing column
-                      Image(
-                        image: _moveImage(),
-                        width: 80.0,
-                        height: 18.0,
-                        fit: BoxFit.fill,
-                      ),
-                      const SizedBox(width: 5), // spacing column
-                      const Text(constMoveText,
-                          textAlign: TextAlign.center,
-                          style: TextStyle(
-                              fontWeight: FontWeight.bold,
-                              fontFamily: constAppTextFont,
-                              fontSize: 12.0)),
                     ],
                   ),
                   const Padding(
                     padding: EdgeInsets.all(2.0),
                   ),
                   Row(
-                    mainAxisAlignment: MainAxisAlignment.start,
+                    crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      const SizedBox(width: 35), // spacing column
+                      const SizedBox(width: 165), // spacing column
                       Image(
                         image: _proximityImage(),
                         width: 80.0,
@@ -3148,29 +3300,15 @@ class _GameScreenState extends State<GameScreen> {
                               fontWeight: FontWeight.bold,
                               fontFamily: constAppTextFont,
                               fontSize: 12.0)),
-                      const SizedBox(width: 50), // middle spacing column
-                      Image(
-                        image: _stealthImage(),
-                        width: 80.0,
-                        height: 18.0,
-                        fit: BoxFit.fill,
-                      ),
-                      const SizedBox(width: 5), // spacing column
-                      const Text(constStealthText,
-                          textAlign: TextAlign.center,
-                          style: TextStyle(
-                              fontWeight: FontWeight.bold,
-                              fontFamily: constAppTextFont,
-                              fontSize: 12.0)),
                     ],
                   ),
                   const Padding(
                     padding: EdgeInsets.all(2.0),
                   ),
                   Row(
-                    mainAxisAlignment: MainAxisAlignment.start,
+                    crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      const SizedBox(width: 35), // spacing column
+                      const SizedBox(width: 165), // spacing column
                       Image(
                         image: _enduranceImage(),
                         width: 80.0,
@@ -3179,20 +3317,6 @@ class _GameScreenState extends State<GameScreen> {
                       ),
                       const SizedBox(width: 5), // spacing column
                       const Text(constEnduranceText,
-                          textAlign: TextAlign.center,
-                          style: TextStyle(
-                              fontWeight: FontWeight.bold,
-                              fontFamily: constAppTextFont,
-                              fontSize: 12.0)),
-                      const SizedBox(width: 43), // middle spacing column
-                      Image(
-                        image: _restImage(),
-                        width: 80.0,
-                        height: 18.0,
-                        fit: BoxFit.fill,
-                      ),
-                      const SizedBox(width: 5), // spacing column
-                      const Text(constRestText,
                           textAlign: TextAlign.center,
                           style: TextStyle(
                               fontWeight: FontWeight.bold,
@@ -3223,7 +3347,7 @@ class _GameScreenState extends State<GameScreen> {
                                     fontSize: 15.0)),
                           ])),
                       const SizedBox(
-                        width: 80,
+                        width: 50,
                       ),
                       GestureDetector(
                         onTap: () {
@@ -3238,6 +3362,28 @@ class _GameScreenState extends State<GameScreen> {
                                 textAlign: TextAlign.center,
                                 style: TextStyle(
                                     color: _returnAfflictionsColor(),
+                                    fontWeight: FontWeight.bold,
+                                    fontFamily: constAppTextFont,
+                                    fontSize: 15.0)),
+                          ],
+                        ),
+                      ),
+                      const SizedBox(
+                        width: 50,
+                      ),
+                      GestureDetector(
+                        onTap: () {
+                          _handleAllocationTap();
+                        },
+                        child: const Column(
+                          children: [
+                            Icon(Icons.casino,
+                                size: 30, color: Colors.white),
+                            SizedBox(width: 1), // spacing column
+                            Text(constAllocationsText,
+                                textAlign: TextAlign.center,
+                                style: TextStyle(
+                                    color: Colors.white,
                                     fontWeight: FontWeight.bold,
                                     fontFamily: constAppTextFont,
                                     fontSize: 15.0)),

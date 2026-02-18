@@ -21,7 +21,7 @@ void showInventoryDialog(BuildContext context) {
               children: [
                 Text("message",
                     style:
-                        const TextStyle(fontFamily: constAppTextFont, fontSize: 18)),
+                        TextStyle(fontFamily: constAppTextFont, fontSize: 18)),
               ],
             ),
           ),
