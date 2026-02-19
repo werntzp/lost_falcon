@@ -25,6 +25,8 @@ const constImagePlayerLocation = "assets/images/lf_american_flag_small.gif";
 const constImageUnknown = "assets/images/lf_terrain_unknown.jpg";
 const constImageBackground = "assets/images/lf_terrain_background.jpg";
 const constImageEncounters = "assets/images/lf_enc_";
+const constImageEncounterHelicopterGrey = "assets/images/lf_enc_helicopter_grey.jpg";
+const constImageEncountersTributaryGrey = "assets/images/lf_enc_tributary_grey.jpg";
 const constImageRescued = "rescued.jpg";
 const constImageCaptured = "captured.jpg";
 const constImageKilled = "dead.jpg";
@@ -260,13 +262,17 @@ const constAfflictionBurn = "a painful burn (caps Endurance at 5)";
 const constAfflictionDeepCut = "a deep cut (lost 2 Health)";
 
 // inventory
-const constInventory = "You have collected the following items: ";
-const constNoInventory = "Unfortunately, you have no items to use.";
-const constInventoryFlareGun = "Flare Gun (force an Encounter)";
-const constInventoryFirstAidKit =
-    "First Aid Kit (heal an affliction and gain 1 Health)";
-const constInventoryScope = "Binoculars (map 2 extra hexes within a range of 3)";
-const constInventoryAK = "AK-47 (increase Proximity by 2 )";
+const constInventoryMessage = "All usable inventory items are shown below. If you are able to use it, the button will be active. Once you use an item, it is done, and you cannot get the same item multiple times.";
+const constInventoryFlareGunTitle = "Flare Gun";
+const constInventoryFlareGunAction = "force an Encounter in Scrub";
+const constInventoryFirstAidKitTitle =
+    "First Aid Kit";
+const constInventoryFirstAidKitAction =
+    "heal an affliction and gain 1 Health";
+const constInventoryScopeTitle = "Binoculars";
+const constInventoryScopeAction = "map 2 extra hexes within a range of 3";
+const constInventoryAKTitle = "AK-47";
+const constInventoryAKAction = "increase Proximity by 2";
 
 // warnings
 const constCantEndInVillage = "You cannot end Move phase in a village.";
