@@ -950,20 +950,31 @@ class _ImageCyclerOverlayState extends State<ImageCyclerOverlay>
 
         // helicopter
       } else if (encounter == EnumEncounter.helicopter) {
-        return Column(children: [
-          ActionButton(
-              message: constHelicopterOption1,
-              isActive: true,
-              onAction: _doHelicopterFlare,
-              onCloseRequest: widget.onClose),
-          ActionButton(
-              message: constHelicopterOption2,
-              isActive: true,
-              onAction: _doHelicopterRest,
-              onCloseRequest: widget.onClose)
-        ]);
-
-        // apc
+        // don't show flare gun option if they already have it 
+        if (!_pilot.hasAnItem(EnumInventory.flaregun)) {
+          return Column(children: [
+            ActionButton(
+                message: constHelicopterOption1,
+                isActive: true,
+                onAction: _doHelicopterFlare,
+                onCloseRequest: widget.onClose),
+            ActionButton(
+                message: constHelicopterOption2,
+                isActive: true,
+                onAction: _doHelicopterRest,
+                onCloseRequest: widget.onClose)
+          ]);
+        }
+        else { 
+          return Column(children: [
+            ActionButton(
+                message: constHelicopterOption2,
+                isActive: true,
+                onAction: _doHelicopterRest,
+                onCloseRequest: widget.onClose)
+          ]);     
+        }
+         // apc
       } else if (encounter == EnumEncounter.apc) {
         return Column(children: [
           ActionButton(
@@ -1408,14 +1419,14 @@ class _GameScreenState extends State<GameScreen> {
 
     // set the new value
     _moveDice = value; 
+    _totalDice = _getTotalDice();
 
-    // set total dice remaining
-    _totalDice = _getTotalDice();  
-
-    // redraw the overlay
+    // redraw
+    _overlayEntry?.markNeedsBuild();
     setState(() {
-      _overlayEntry?.markNeedsBuild();
+      // do nothing
     });
+
   }
   
 
@@ -1434,13 +1445,12 @@ class _GameScreenState extends State<GameScreen> {
     }  
     // set the new value
     _stealthDice = value; 
+    _totalDice = _getTotalDice();
 
-    // set total dice remaining
-    _totalDice = _getTotalDice();  
-
-    // redraw the overlay
+    // redraw
+    _overlayEntry?.markNeedsBuild();
     setState(() {
-      _overlayEntry?.markNeedsBuild();
+      // do nothing
     });
   }
 
@@ -1460,14 +1470,14 @@ class _GameScreenState extends State<GameScreen> {
     }  
     // set the new value
     _restDice = value; 
+    _totalDice = _getTotalDice();
 
-    // set total dice remaining
-    _totalDice = _getTotalDice();  
-
-    // redraw the overlay
+    // redraw
+    _overlayEntry?.markNeedsBuild();
     setState(() {
-      _overlayEntry?.markNeedsBuild();
+      // do nothing
     });
+
   }  
 
   // *********************************************
@@ -1843,16 +1853,24 @@ class _GameScreenState extends State<GameScreen> {
   }
 
   // *********************************************
-  // display overlay to get dice allocation
+  // which message to send 
   // *********************************************
-  Future<void> _diceAllocationOverlay() async {
-    _completer = Completer<void>();
-    _totalDice = _getTotalDice(); 
+  String _getAllocationMessage() { 
     String message = "$constDiceAllocationMessage1 $_totalDice $constDiceAllocationMessage2";
 
     if (_phase != EnumPhase.allocate) {
       message = constDiceAllocationLocked; 
     }
+
+    return message; 
+
+  }
+
+  // *********************************************
+  // display overlay to get dice allocation
+  // *********************************************
+  Future<void> _diceAllocationOverlay() async {
+    _completer = Completer<void>();
 
     if (_overlayEntry != null) return; // Prevent stacking
 
@@ -1883,7 +1901,7 @@ class _GameScreenState extends State<GameScreen> {
                         children: [
                           const SizedBox(height: 12),
                           Text(
-                            message,
+                            _getAllocationMessage(),
                             style: const TextStyle(
                                 color: Colors.white,
                                 fontFamily: constAppTextFont,
@@ -2519,6 +2537,7 @@ class _GameScreenState extends State<GameScreen> {
     _moveDice = constNoDice;
     _stealthDice = constNoDice;
     _restDice = constNoDice;
+    _totalDice = 6; 
     _phase = EnumPhase.allocate;
     _isGameOver = false; 
 
@@ -2841,9 +2860,12 @@ class _GameScreenState extends State<GameScreen> {
     // figure out current row
     for (int i = 1; i < constMapRows; i++) {
       if (_map[_getIdFromColRow(col, i)].terrain == EnumTerrain.rescue) {
-        _map[_getIdFromColRow(col, i)].terrain =
-            EnumTerrain.unknown; // reset it while here
-        _map[_getIdFromColRow(col, i)].visible = false; // reset it while here
+        // only change/hide terrain if pilot isn't close to it
+        if (MapFactory.getDistanceBetweenHexes(_getCurrentHex(), MapHex(constFakeHex, col, i)) > 1) {
+          _map[_getIdFromColRow(col, i)].terrain =
+              EnumTerrain.unknown; // reset it while here
+          _map[_getIdFromColRow(col, i)].visible = false; // reset it while here
+        }        
         row = i;
         break;
       }
@@ -3080,7 +3102,7 @@ class _GameScreenState extends State<GameScreen> {
   }
 
   // ************************
-  // _getMapHexGraphic
+  // decide which graphics to display on the map 
   // ************************
   String _getMapHexGraphic(int row, int col) {
     EnumTerrain enumTerrain = _map[_getIdFromColRow(col, row)].terrain;
@@ -3134,21 +3156,20 @@ class _GameScreenState extends State<GameScreen> {
     // instead 
     if (_hexesCrashedChopper.contains(id)) {
       if (_hasPlayerTraveledHere(id)) {
-        asset = constImageEncounterHelicopterGrey; 
+        asset = EncounterFactory().getEncounterGraphic(EnumEncounter.helicopter.index);        
       }
       else { 
-        asset = EncounterFactory().getEncounterGraphic(EnumEncounter.helicopter.index);
+        asset = constImageEncounterHelicopterGrey; 
       }
     }
     else if (_hexesTributary.contains(id)) {
       if (_hasPlayerTraveledHere(id)) {
-        asset = constImageEncountersTributaryGrey; 
-      }
-      else { 
         asset = EncounterFactory().getEncounterGraphic(EnumEncounter.tributary.index);
       }
+      else { 
+        asset = constImageEncountersTributaryGrey; 
+      }
     }
-
 
     return asset;
   }
@@ -3209,7 +3230,7 @@ class _GameScreenState extends State<GameScreen> {
 
     // fifth check, if they are on a motorcycle trying to enter a village, don't let them
     if ((_map[_selectedHex].terrain == EnumTerrain.village) && 
-      (_villageReaction == EnumVillageReactions.allied) && 
+      (_villageReaction == EnumVillageReactions.helpful) && 
       (_motorcycleMoves <=3)) {
       await _overlayMessage(constMotorcyleVillageMessage, EnumMessageType.fail);
       return;
@@ -3230,6 +3251,10 @@ class _GameScreenState extends State<GameScreen> {
         _map[_selectedHex].current = true;
         _map[_oldHex].previous = true;
         _map[_selectedHex].previous = true;
+        // no more move this turn
+        _moveAllowed = false; 
+        // and since move was successful, they can do a re-roll in stealth phase
+        _allowedToReRoll = true; 
         // special case, check if game over in case they moved into rescue hex
         _checkRescueConditions();
       }

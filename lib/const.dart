@@ -59,7 +59,7 @@ const constHexTooFarMessage = "You can only move to an adjacent hex.";
 const constHexImpassableMessage = "You cannot move into an impassable hex.";
 const constDiceAllocationMessage1 = "You have";
 const constDiceAllocationMessage2 =
-    "dice to allocate. Tap once to increment, and long press to decrement.";
+    "dice to allocate.";
 const constDiceAllocationLocked = "All dice have been allocated for this round.";
 const constGameOverRescued = "You have been rescued!";
 const constGameOverCaptured =
