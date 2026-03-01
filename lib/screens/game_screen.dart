@@ -9,7 +9,6 @@ import '../models/pilot_model.dart';
 import '../dialogs/terrain_dialog.dart';
 import '../dialogs/info_dialog.dart';
 import '../dialogs/village_dialog.dart';
-import '../dialogs/inventory_dialog.dart';
 import '../dialogs/yes_no_dialog.dart';
 import '../main.dart';
 import 'dart:math';
@@ -49,6 +48,7 @@ bool _villageLastMappingPhase = false;
 final _logger = Logger(); 
 final _random = Random(); 
 bool _isGameOver = false; 
+bool _flareGunForceEncounter = false; 
 
 EnumVillageReactions _villageReaction = EnumVillageReactions.none;
 
@@ -1167,8 +1167,16 @@ class _ImageCyclerOverlayState extends State<ImageCyclerOverlay>
         setState(() {
           // only pick an encounter that is appropriate based on their distance from start
           if (!skipDueToEncounter) {
-            _currentEncounterIndex =
-                _encounterFactory.getRandomEncounter(_map[_selectedHex]);
+            // if the player forced the encounter by using the flare gun, the set of
+            // encounters is smaller
+            if (_flareGunForceEncounter) {
+              _currentEncounterIndex =
+                  _encounterFactory.getForcedEncounter(_map[_selectedHex]);
+            }
+            else {
+              _currentEncounterIndex =
+                  _encounterFactory.getRandomEncounter(_map[_selectedHex]);
+            }
             // if we find a cave, it can't be in scrub or brush, so just flip to no encounter
             if (EnumEncounter.values[_currentEncounterIndex] ==
                 EnumEncounter.cave) {
@@ -1652,6 +1660,9 @@ class _GameScreenState extends State<GameScreen> {
   // use the flare gun 
   // *********************************************
   void _doFlareGun() {
+
+    // force an encounter 
+    _flareGunForceEncounter = true; 
 
   }
 
@@ -2949,6 +2960,12 @@ class _GameScreenState extends State<GameScreen> {
     // if encounter phase, decide if they had an encounter
     if (_phase == EnumPhase.encounter) {
       await _showEncounterOverlay(context);
+
+      // if they forced an encounter, drop the flare gun now
+      if (_flareGunForceEncounter) {
+        _pilot.dropOneItem(EnumInventory.flaregun);
+        _flareGunForceEncounter = false; 
+      }
 
       // we should do a quick mapping phase here just in case
       _doMappingPhase(); 

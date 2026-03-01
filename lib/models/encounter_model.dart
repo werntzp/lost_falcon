@@ -178,9 +178,52 @@ class EncounterFactory {
     return _paths[index];
   }
 
+  // ************************
+  // collapse 2d array into a 1d 
+  // ************************
+  List<EnumEncounter> _fold(List<List<EnumEncounter>> original) {
+    List<EnumEncounter> folded = []; 
+
+    for (var r = original.length - 1; r >= 0; r--) {
+      for (var c = original[r].length - 1; c >= 0; c--) {
+        if (original[r][c] != EnumEncounter.none) {
+          folded.add(original[r][c]);
+        }
+      }
+    }
+
+    return List.from(folded);
+
+  }
 
   // ************************
-  // depending where they are, did an encounter happen?
+  // when forcing an encounter, return just from the list 
+  // and again, that depends where they are 
+  // ************************
+  int getForcedEncounter(MapHex currentHex) {
+    MapHex startHex = MapHex(constFakeHex, constStartRow, constStartCol);
+    int distance = MapFactory.getDistanceBetweenHexes(startHex, currentHex);
+    List<EnumEncounter> encounters = []; 
+
+    // use the distance to figure out which array to use 
+    // 1-4 hexes from start
+    if ((distance >= 1) && (distance <= 4)) {
+      encounters = _fold(_close);
+      // 5-9
+    } else if ((distance >= 5) && (distance <= 9)) {
+      encounters = _fold(_medium);
+      // 10-15
+    } else if ((distance >= 10) && (distance <= 15)) {
+      encounters = _fold(_far);
+    }
+
+    // now pick randomly 
+    return Random().nextInt(encounters.length) + 1; 
+
+  }
+
+  // ************************
+  // depending where they are, did an encounter happen? 
   // ************************
   int getRandomEncounter(MapHex currentHex) {
     EnumEncounter encounter = EnumEncounter.none;
