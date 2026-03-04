@@ -188,7 +188,7 @@ const constHelicopterOption2 = "Use it as shelter to gain 2 Endurance";
 
 const constApcEncounterMessage =
     "The hulk of an armored personnel carrier sits quietly.";
-const constApcOption1 = "Find a first aid kit and gain 1 Health";
+const constApcOption1 = "Find a first aid kit";
 const constApcOption2 = "Use it as a shelter to gain 1 Proximity and Endurance";
 
 const constCaveEncounterMessage =
@@ -229,6 +229,8 @@ const constTributaryOption2 =
 
 const constNoEncounterMessage =
     "Nothing but blue skies and empty desert ahead of you.";
+
+const constUsedBinocularsMessage = "You cannot map any more hexes.";
 
 // village actions
 const constVillageRobbedItems =

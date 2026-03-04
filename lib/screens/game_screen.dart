@@ -49,6 +49,8 @@ final _logger = Logger();
 final _random = Random(); 
 bool _isGameOver = false; 
 bool _flareGunForceEncounter = false; 
+bool _binocularMapExtraHexes = false; 
+int  _extraHexes = 0; 
 
 EnumVillageReactions _villageReaction = EnumVillageReactions.none;
 
@@ -309,8 +311,9 @@ class _ImageCyclerOverlayState extends State<ImageCyclerOverlay>
   //  apc - find a first aid kit
   // *********************************************
   void _doApcKit() {
-    _pilot.healAffliction();
-    _pilot.setHealth(EnumDirection.increment);
+    // pick up a first aid kit
+    _pilot.pickUpItem(EnumInventory.firstaidkit);
+
   }
 
   // *********************************************
@@ -1194,7 +1197,7 @@ class _ImageCyclerOverlayState extends State<ImageCyclerOverlay>
               }
             }
             // hardcode for testing
-            // _currentEncounterIndex = EnumEncounter.helicopter.index;
+            // _currentEncounterIndex = EnumEncounter.soldier.index;
             message = _encounterFactory
                 .getEncounterDescription(_currentEncounterIndex);
           }
@@ -1661,7 +1664,7 @@ class _GameScreenState extends State<GameScreen> {
   // *********************************************
   void _doFlareGun() {
 
-    // force an encounter 
+    // force an encounter (but don't drop yet)
     _flareGunForceEncounter = true; 
 
   }
@@ -1671,6 +1674,14 @@ class _GameScreenState extends State<GameScreen> {
   // *********************************************
   void _doBinoculars() {
 
+    // set flag that it is ok to map extra hexes 
+    _binocularMapExtraHexes = true; 
+    _extraHexes = 0; 
+    setState(() {
+      // drop them
+      _pilot.dropOneItem(EnumInventory.binoculars);      
+    });
+
   }
 
   // *********************************************
@@ -1678,12 +1689,33 @@ class _GameScreenState extends State<GameScreen> {
   // *********************************************
   void _doFirstAidKit() {
 
+    // randomly heal one affliction (except fever)
+    if (_pilot.hasAnyAfflictions()) {
+        _pilot.healAffliction();
+    }
+
+    setState(() {
+    // increase health by one
+    _pilot.setHealth(EnumDirection.increment);    
+    // drop
+    _pilot.dropOneItem(EnumInventory.firstaidkit);
+    });
+
   }
 
   // *********************************************
-  // use the first aid kit
+  // use the AK
   // *********************************************
   void _doAK() {
+
+    setState(() {
+      // increase proximity by two 
+      _pilot.setProximity(EnumDirection.increment);
+      _pilot.setProximity(EnumDirection.increment);
+      // now drop
+      _pilot.dropOneItem(EnumInventory.ak);
+      
+    });
 
   }
 
@@ -1715,8 +1747,8 @@ class _GameScreenState extends State<GameScreen> {
     String buttonMessage = constInventoryFlareGunTitle;
     bool buttonIsActive = false; 
 
-    // if they don't have the AK, just show title and not action
-    if (_pilot.hasAnItem(EnumInventory.flaregun)) {
+    // flare gun only active in scrub 
+    if ((_pilot.hasAnItem(EnumInventory.flaregun) && (_getCurrentHex().terrain == EnumTerrain.scrub))) {
       buttonMessage = "$constInventoryFlareGunTitle ($constInventoryFlareGunAction)";
       buttonIsActive = true; 
     }
@@ -2040,6 +2072,7 @@ class _GameScreenState extends State<GameScreen> {
         _map[_oldHex].current = true;
       }
       _map[_selectedHex].current = false;
+      _selectedHex = _oldHex; 
       // can't move
       _moveAllowed = false;
     } else if ((result == 6) || (result == 7) || (result == 8)) {
@@ -3221,31 +3254,54 @@ class _GameScreenState extends State<GameScreen> {
     hexDistance =
         MapFactory.getDistanceBetweenHexes(_map[_oldHex], _map[_selectedHex]);
 
-    // first check, if this hex is impassable, bail right out
+    // check: if they are using the binoculars, they are mapping extra hexes 
+    if ((_binocularMapExtraHexes) && (_extraHexes <= 2) && (hexDistance <= 3)) {
+      // map it (if unknown)
+      if ((_map[_selectedHex].terrain == EnumTerrain.unknown) &&
+        (_map[_selectedHex].visible == false)) {
+          // pick a random terrain
+          _map[_selectedHex].terrain = EnumTerrain.values[_random.nextInt(5)];
+          _map[_selectedHex].visible = true;
+          setState(() {
+            // do nothing 
+          });
+          // increase count, and if now at 2, flip flag  
+          _extraHexes++;
+          if (_extraHexes == 2) {
+            await _overlayMessage(constUsedBinocularsMessage, EnumMessageType.fail); 
+            _binocularMapExtraHexes = false;
+          }
+      }
+
+    }
+
+    // check: if this hex is impassable, bail right out
     if ((_hexesImpassable.isNotEmpty) &
         (_hexesImpassable.contains(_selectedHex))) {
       await _overlayMessage(constHexImpassableMessage, EnumMessageType.fail);
       return;
     }
 
-    // second check, can they move anymore? 
+    // check: can they move anymore? 
     if ((_phase == EnumPhase.move) && (!_moveAllowed)) {
       await _overlayMessage(constAlreadMovedMessage, EnumMessageType.fail);
       return;
     } 
 
-    // third check, if move phase and they picked same hex, bail right out
+    // check: if move phase and they picked same hex, bail right out
     if ((_phase == EnumPhase.move) && (_oldHex == _selectedHex)) {
+      // move selected hex back to where they were
+      _selectedHex = _oldHex; 
       await _overlayMessage(constSameHexPickedMessage, EnumMessageType.fail);
       return;
     }
 
-    // fourth check, if they picked a special background hex that's not obvious, bail right out
+    // check: if they picked a special background hex that's not obvious, bail right out
     if (_map[_selectedHex].terrain == EnumTerrain.background) {
       return;
     }
 
-    // fifth check, if they are on a motorcycle trying to enter a village, don't let them
+    // check: if they are on a motorcycle trying to enter a village, don't let them
     if ((_map[_selectedHex].terrain == EnumTerrain.village) && 
       (_villageReaction == EnumVillageReactions.helpful) && 
       (_motorcycleMoves <=3)) {
