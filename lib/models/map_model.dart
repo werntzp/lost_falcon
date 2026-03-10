@@ -171,8 +171,7 @@ class MapFactory {
         EnumTerrain.scrub; // start in scrub
     map[_getIdFromColRow(map, constStartCol, constStartRow)].visible = true;
 
-    // rescue hex
-    map[_getIdFromColRow(map, 14, 4)].terrain = EnumTerrain.rescue;
+    // rescue hex should be visible at start
     map[_getIdFromColRow(map, 14, 4)].visible = true;
 
     // set a few specific ones to be background hexes that can't be entered or selected

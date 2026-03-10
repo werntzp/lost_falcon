@@ -51,6 +51,7 @@ bool _isGameOver = false;
 bool _flareGunForceEncounter = false; 
 bool _binocularMapExtraHexes = false; 
 int  _extraHexes = 0; 
+int _rescueHexId = 0; 
 
 EnumVillageReactions _villageReaction = EnumVillageReactions.none;
 
@@ -2574,6 +2575,8 @@ class _GameScreenState extends State<GameScreen> {
     _map = MapFactory.initMap();
     // add the starting hex to the list the player traveled
     _map[_getIdFromColRow(constStartCol, constStartRow)].previous = true;
+    // track where US forces start
+    _rescueHexId = _getIdFromColRow(14, 4);
 
     // initial values
     _round = 1;
@@ -2901,21 +2904,19 @@ class _GameScreenState extends State<GameScreen> {
     int col = constMapCols - 1; // they are always in the last column
     late int row;
 
-    // figure out current row
+    // loop through the rows and hide each one as we iterate
     for (int i = 1; i < constMapRows; i++) {
-      if (_map[_getIdFromColRow(col, i)].terrain == EnumTerrain.rescue) {
-        // only change/hide terrain if pilot isn't close to it
-        if (MapFactory.getDistanceBetweenHexes(_getCurrentHex(), MapHex(constFakeHex, col, i)) > 1) {
-          _map[_getIdFromColRow(col, i)].terrain =
-              EnumTerrain.unknown; // reset it while here
-          _map[_getIdFromColRow(col, i)].visible = false; // reset it while here
-        }        
+      // while we're here, hide them all (unless player is within one)
+      if (MapFactory.getDistanceBetweenHexes(_getCurrentHex(), MapHex(constFakeHex, col, i)) > 1) {
+         _map[_getIdFromColRow(col, i)].visible = false;
+      }
+      // see if forces are here
+      if (_getIdFromColRow(col, i) == _rescueHexId) {
         row = i;
-        break;
       }
     }
 
-    // move up or down depending on which way they are going
+    // decide where US forces are moving 
     if (_forcesPatrollingUp) {
       row--;
       if (row <= constStartRow) {
@@ -2930,8 +2931,10 @@ class _GameScreenState extends State<GameScreen> {
       }
     }
 
+    // set the new value 
+    _rescueHexId = _getIdFromColRow(col, row);
+
     // now update them on the map
-    _map[_getIdFromColRow(col, row)].terrain = EnumTerrain.rescue;
     _map[_getIdFromColRow(col, row)].visible = true;
 
     // if the us forces moved to where the player is, they win!
@@ -3194,8 +3197,6 @@ class _GameScreenState extends State<GameScreen> {
       } else {
         asset = constImageVillageGrey;
       }
-    } else if (enumTerrain == EnumTerrain.rescue) {
-      asset = constImageRescue;
     } else if (enumTerrain == EnumTerrain.background) {
       asset = constImageBackground;
     } else {
@@ -3221,6 +3222,11 @@ class _GameScreenState extends State<GameScreen> {
       }
     }
 
+    // final special case, if this is where US forces are, show them instead of regular terrain
+    if (id == _rescueHexId) {
+      asset = constImageRescue;    
+    }
+
     return asset;
   }
 
@@ -3229,7 +3235,7 @@ class _GameScreenState extends State<GameScreen> {
   // ************************
   void _checkRescueConditions() async {
     // special case, if they moved into the rescue hex, then just end the game successfully
-    if (_map[_selectedHex].terrain == EnumTerrain.rescue) {
+    if (_selectedHex  == _rescueHexId) {
       // close any overlay
       _genericCloseOverlay(); 
       // show the end game overlay 
@@ -3406,7 +3412,13 @@ class _GameScreenState extends State<GameScreen> {
   // ************************
   void _showMapHexInfo(int row, int col) {
     int id = _getIdFromColRow(col, row);
-    showTerrainInfoDialog(context, _map[id].terrain);
+    EnumTerrain terrain = _map[id].terrain;
+    // quick check to over ride if this is where US forces are
+    if (id == _rescueHexId) {
+      terrain = EnumTerrain.rescue; 
+    }
+
+    showTerrainInfoDialog(context, terrain);
   }
 
   // ************************
