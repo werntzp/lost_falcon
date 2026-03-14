@@ -1,0 +1,425 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>The Lost Falcon – Help</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <style>
+    :root {
+      color-scheme: dark light;
+      --bg: #05070a;
+      --card: #10141b;
+      --accent: #3fa9f5;
+      --accent-soft: rgba(63,169,245,0.12);
+      --text: #f5f7fb;
+      --muted: #a5afc4;
+      --border: #222837;
+      --danger: #ff6b6b;
+      --success: #4cd964;
+    }
+    * {
+      box-sizing: border-box;
+    }
+    body {
+      margin: 0;
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      background: radial-gradient(circle at top, #111827 0, #020308 55%);
+      color: var(--text);
+      -webkit-font-smoothing: antialiased;
+    }
+    .page {
+      max-width: 900px;
+      margin: 0 auto;
+      padding: 16px 16px 40px;
+    }
+    header {
+      padding: 20px 18px 18px;
+      margin-bottom: 18px;
+      border-radius: 16px;
+      background: linear-gradient(135deg, rgba(63,169,245,0.18), rgba(15,23,42,0.95));
+      border: 1px solid rgba(148,163,184,0.35);
+      box-shadow: 0 18px 45px rgba(15,23,42,0.9);
+      position: sticky;
+      top: 0;
+      z-index: 10;
+      backdrop-filter: blur(16px);
+    }
+    header h1 {
+      margin: 0 0 4px;
+      font-size: 1.6rem;
+      letter-spacing: 0.04em;
+      text-transform: uppercase;
+    }
+    header p {
+      margin: 0;
+      font-size: 0.9rem;
+      color: var(--muted);
+    }
+    .tagline {
+      margin-top: 10px;
+      font-size: 0.9rem;
+      color: #e5e7eb;
+    }
+    .pill-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin-top: 10px;
+    }
+    .pill {
+      font-size: 0.75rem;
+      padding: 4px 10px;
+      border-radius: 999px;
+      border: 1px solid rgba(148,163,184,0.4);
+      color: var(--muted);
+      background: rgba(15,23,42,0.7);
+    }
+    .pill.accent {
+      border-color: rgba(56,189,248,0.8);
+      color: #e0f2fe;
+      background: rgba(8,47,73,0.9);
+    }
+
+    h2 {
+      margin: 26px 0 10px;
+      font-size: 1.2rem;
+      letter-spacing: 0.03em;
+      text-transform: uppercase;
+      color: #e5e7eb;
+    }
+    h3 {
+      margin: 18px 0 6px;
+      font-size: 1rem;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      color: #cbd5f5;
+    }
+    p {
+      margin: 6px 0 10px;
+      font-size: 0.95rem;
+      line-height: 1.5;
+      color: var(--muted);
+    }
+    strong {
+      color: #e5e7eb;
+    }
+    .card {
+      background: rgba(15,23,42,0.9);
+      border-radius: 14px;
+      border: 1px solid var(--border);
+      padding: 14px 14px 12px;
+      margin-top: 10px;
+      box-shadow: 0 12px 30px rgba(15,23,42,0.8);
+    }
+    .card-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 6px;
+    }
+    .card-title {
+      font-size: 0.9rem;
+      font-weight: 600;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      color: #e5e7eb;
+    }
+    .badge {
+      font-size: 0.7rem;
+      padding: 2px 8px;
+      border-radius: 999px;
+      border: 1px solid rgba(148,163,184,0.5);
+      color: var(--muted);
+    }
+    .badge.danger {
+      border-color: rgba(248,113,113,0.8);
+      color: #fecaca;
+    }
+    .badge.success {
+      border-color: rgba(52,211,153,0.8);
+      color: #bbf7d0;
+    }
+    ul {
+      margin: 6px 0 6px 18px;
+      padding: 0;
+      color: var(--muted);
+      font-size: 0.9rem;
+    }
+    li {
+      margin-bottom: 4px;
+    }
+    .stat-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+      gap: 10px;
+      margin-top: 8px;
+    }
+    .stat {
+      background: rgba(15,23,42,0.9);
+      border-radius: 12px;
+      border: 1px solid var(--border);
+      padding: 10px 11px;
+      font-size: 0.9rem;
+    }
+    .stat-name {
+      font-size: 0.8rem;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      color: #e5e7eb;
+      margin-bottom: 4px;
+    }
+    .stat-desc {
+      color: var(--muted);
+      font-size: 0.85rem;
+    }
+    .quote {
+      margin: 8px 0 4px;
+      padding-left: 10px;
+      border-left: 2px solid rgba(148,163,184,0.6);
+      font-size: 0.85rem;
+      color: #9ca3af;
+      font-style: italic;
+    }
+    .phase-list {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+      gap: 10px;
+      margin-top: 8px;
+    }
+    .phase-tag {
+      font-size: 0.75rem;
+      padding: 2px 7px;
+      border-radius: 999px;
+      background: rgba(15,23,42,0.9);
+      border: 1px solid rgba(148,163,184,0.4);
+      color: var(--muted);
+      margin-right: 4px;
+    }
+    .tip {
+      margin-top: 10px;
+      padding: 10px 11px;
+      border-radius: 12px;
+      background: rgba(34,197,94,0.06);
+      border: 1px dashed rgba(34,197,94,0.6);
+      font-size: 0.85rem;
+      color: #bbf7d0;
+    }
+    .tips-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+      gap: 10px;
+      margin-top: 8px;
+    }
+    .footer-note {
+      margin-top: 22px;
+      font-size: 0.8rem;
+      color: #6b7280;
+      text-align: center;
+    }
+    @media (max-width: 600px) {
+      header {
+        margin: 0 -4px 14px;
+        border-radius: 0 0 16px 16px;
+      }
+      .page {
+        padding: 10px 12px 28px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="page">
+    <header>
+      <p class="tagline">
+Shot down over the Syrian desert, you barely survived the ejection. Now, alone and hunted, you must cross hostile terrain, manage your dwindling strength, and avoid enemy patrols to reach safety.
+      </p>
+    </header>
+
+    <section>
+      <h2>Objective</h2>
+      <div class="card">
+        <div class="card-header">
+          <div class="card-title">How to Win</div>
+        </div>
+        <p>
+          <strong>Reach the U.S. forces</strong> patrolling the edge of the map.
+        </p>
+        <p>
+          You score points for every hex you have mapped by the end of the game. If you win, you also gain
+          a bonus equal to your remaining <strong>Proximity</strong>, <strong>Health</strong>, and
+          <strong>Endurance</strong>.
+        </p>
+      </div>
+
+      <div class="card">
+        <div class="card-header">
+          <div class="card-title">How to Lose</div>
+        </div>
+        <ul>
+          <li><strong>Health = 0</strong> – you die or bleed out.</li>
+          <li><strong>Proximity = 0</strong> – enemy forces capture you.</li>
+          <li><strong>Instant death</strong> from certain Encounter results.</li>
+        </ul>
+      </div>
+    </section>
+
+    <section>
+      <h2>Core Stats</h2>
+      <p>
+        You track three main stats. Each starts at 6 and can never go above 6.
+      </p>
+      <div class="stat-grid">
+        <div class="stat">
+          <div class="stat-name">Health</div>
+          <div class="stat-desc">
+            Your physical condition. If Health reaches 0, you die. Many wounds and “6” results reduce Health.
+          </div>
+        </div>
+        <div class="stat">
+          <div class="stat-name">Proximity</div>
+          <div class="stat-desc">
+            How close enemy militants are to you. If Proximity reaches 0, you are captured.
+          </div>
+        </div>
+        <div class="stat">
+          <div class="stat-name">Endurance</div>
+          <div class="stat-desc">
+            Determines how many dice you can allocate each turn. Low Endurance means fewer choices and
+            lower odds of success.
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section>
+      <h2>Turn Structure</h2>
+      <p>
+        Each turn is played in <strong>five phases</strong>, always in the same order.
+      </p>
+      <div class="phase-list">
+        <div class="card">
+          <div class="card-header">
+            <div class="card-title">Phase 1 – Encounter</div>
+          </div>
+		<p>
+            Encounters can give you items, wounds, terrain changes, forced movement, or even a chance to
+            win via rescue. Different encounters happen depending on how far you've moved. There is no Encounter phase
+	    on the very first turn. 
+          </p>
+        </div>
+
+        <div class="card">
+          <div class="card-header">
+            <div class="card-title">Phase 2 – Dice Allocation</div>
+          </div>
+          <p>
+            You receive a number of dice equal to your current <strong>Endurance</strong>. Allocate them to:
+          </p>
+          <ul>
+            <li><strong>Move</strong> – leaving your current hex.</li>
+            <li><strong>Stealth</strong> – keeping Proximity from dropping.</li>
+            <li><strong>Rest</strong> – recovering Endurance.</li>
+          </ul>
+          <p>
+            Once placed, dice are <strong>locked</strong> until the end of the turn.
+          </p>
+        </div>
+
+        <div class="card">
+          <div class="card-header">
+            <div class="card-title">Phase 3 – Move</div>
+          </div>
+          <p>
+            Roll your allocated Move dice and choose the highest. The terrain you are leaving determines the
+            target number (e.g., it is easier to move out of scrub than hills).
+          </p>
+          <ul>
+            <li><strong>Success</strong> – move into an adjacent hex.</li>
+            <li><strong>Failure</strong> or no dice allocated – stay in the current hex.</li>       
+            <li><strong>Roll a 6</strong> – success, but lose 1 Health.</li>
+            <li><strong>Village</strong> – entering a Village triggers a special event.</li>
+          </ul>
+          <p>
+            If you successfully moved this turn, you may reroll one die in the Stealth phase.
+          </p>
+        </div>
+
+        <div class="card">
+          <div class="card-header">
+            <div class="card-title">Phase 4 – Stealth</div>
+          </div>
+          <p>
+            Roll your allocated Stealth dice and choose the highest. Terrain affects how hard it is to hide
+            (e.g., it is easier to hide in rough terrain than brush).
+          </p>
+          <ul>
+            <li><strong>Success</strong> – Proximity does not change.</li>
+            <li><strong>Failure</strong> or no dice allocated – lose 1 Proximity.</li>
+            <li><strong>Roll a 6</strong> – success, but lose 1 Health.</li>
+          </ul>
+          <p>
+            If you are in a different hex than you started the turn in, you may reroll one die after rolling.
+          </p>
+        </div>
+
+        <div class="card">
+          <div class="card-header">
+            <div class="card-title">Phase 5 – Rest</div>
+          </div>
+          <p>
+            Roll your allocated Rest dice and choose the highest. Terrain modifies how easy it is to recover.
+          </p>
+          <ul>
+            <li><strong>Success</strong> – gain 1 Endurance (up to a max of 6).</li>
+            <li><strong>Failure</strong> or no dice allocated – lose 1 Endurance.</li>
+            <li>If Endurance would drop below 1, lose 1 Health instead.</li>
+            <li><strong>Roll a 6</strong> – success, but lose 1 Health.</li>
+          </ul>
+          <p>
+            You may choose to intentionally fail a roll to avoid taking a 6‑wound if your Health is low.
+          </p>
+        </div>
+    </section>
+
+    <section>
+      <h2>Afflictions</h2>
+      <p>
+        Dangerous encounters and certain rolls can give you Afflictions. You can only have each affliction once (except a Superficial Wound).
+      </p>
+    </section>
+
+    <section>
+      <h2>Inventory</h2>
+      <p>
+        Inventory items are found during Encounters. Each item can only be acquired once and used once. After use, it is considered spent or broken.
+      </p>
+    </section>
+
+    <section>
+      <h2>Survival Tips</h2>
+      <div class="tips-grid">
+        <div class="tip">
+          <strong>Protect your Endurance.</strong><br />
+          More Endurance means more dice to allocate, which means better odds in every phase.
+        </div>
+        <div class="tip">
+          <strong>Health is precious.</strong><br />
+          Rolling 6s is powerful but costly. Only accept a 6‑wound when the payoff is worth it.
+        </div>
+        <div class="tip">
+          <strong>Use terrain smartly.</strong><br />
+          Hills are safer for Stealth; open terrain like scrub is risky but sometimes necessary.
+        </div>
+        <div class="tip">
+          <strong>Items change everything.</strong><br />
+          A Flare Gun, Binoculars, or Motorcycle can completely alter your route and odds of survival.
+        </div>
+      </div>
+    </section>
+
+    <div class="footer-note">
+      Based on the excellent solitaire game “1972: The Lost Phantom”.<br />
+    </div>
+  </div>
+</body>
+</html>

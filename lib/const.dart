@@ -2,9 +2,10 @@ const appTitle = "Lost Falcon";
 const appTitleWWord1 = "Lost";
 const appTitleWWord2 = "Falcon";
 const appSplashGraphic = "assets/images/falcon_jet_splash_logo.jpg";
-const appVersion = "Version 1.0, February 2026";
+const appVersion = "Version 1.0, April 2026";
 const sdsLogo = "assets/images/sds_logo.png";
 const constAppTextFont = "Lemonada";
+const constHelpFileLocation = "assets/pages/lost_falcon_help.html";
 
 // images
 const constAssetsImagesFolder = "assets/images/";
@@ -60,7 +61,7 @@ const constHexImpassableMessage = "You cannot move into an impassable hex.";
 const constDiceAllocationMessage1 = "You have";
 const constDiceAllocationMessage2 =
     "dice to allocate.";
-const constDiceAllocationLocked = "All dice have been allocated for this round.";
+const constDiceAllocationLocked = "All dice allocations are locked for this round.";
 const constGameOverRescued = "You have been rescued!";
 const constGameOverCaptured =
     "Unable to escape your pursuers, you now wait in captivity.";
@@ -70,7 +71,7 @@ const constDiceRollMoveMessage1 =
     "You must get across the map to be rescued. Roll a";
 const constDiceRollMoveMessage2 =
     "(or higher) to get out of the hex you are currently in.";
-const constMoveFailedMessage = "You failed to move from your current hex";
+const constMoveFailedMessage = "You failed to move from the current hex";
 const constNoDiceAllocatedForMoveMessage = "You are unable to move this round.";
 const constMoveSuccessMessage = "You moved to a new hex.";
 const constReRollMessage = " You can re-roll one die during Stealth phase.";

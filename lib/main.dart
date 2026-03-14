@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'const.dart';
 import 'screens/game_screen.dart';
+import 'screens/help_screen.dart';
 
 void main() {
   runApp(const LostFalconApp());
@@ -12,7 +13,7 @@ class LostFalconApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return const MaterialApp(
-      title: appTitle,
+      title: appTitle, 
       debugShowCheckedModeBanner: false,
       home: LostFalconHome(),
     );
@@ -23,10 +24,10 @@ class LostFalconHome extends StatelessWidget {
   const LostFalconHome({super.key});
 
   void _showHelpScreen(context) {
-    //Navigator.push(
-    //context,
-    //MaterialPageRoute(builder: (context) => HelpScreen()),
-    //);
+    Navigator.push(
+      context,
+      MaterialPageRoute(builder: (context) => HelpScreen()),
+    );
   }
 
   void _showGameScreen(context) {

@@ -52,7 +52,7 @@ bool _flareGunForceEncounter = false;
 bool _binocularMapExtraHexes = false; 
 int  _extraHexes = 0; 
 int _rescueHexId = 0; 
-
+List<String> _encounterVisuals = []; 
 EnumVillageReactions _villageReaction = EnumVillageReactions.none;
 
 // extension used to capitalize the first letter of a word
@@ -1201,6 +1201,10 @@ class _ImageCyclerOverlayState extends State<ImageCyclerOverlay>
             // _currentEncounterIndex = EnumEncounter.soldier.index;
             message = _encounterFactory
                 .getEncounterDescription(_currentEncounterIndex);
+            // add this encoutner to the map hex for later (if not a none)
+            if (_currentEncounterIndex != EnumEncounter.none.index) { 
+              _map[_selectedHex].encounter = EnumEncounter.values[_currentEncounterIndex];
+            }
           }
         });
       });
@@ -2588,6 +2592,10 @@ class _GameScreenState extends State<GameScreen> {
     _phase = EnumPhase.allocate;
     _isGameOver = false; 
 
+    // clear encounter visuals then grab
+    _encounterVisuals.clear();
+    _encounterVisuals = EncounterFactory().getEncounterVisuals();
+
   }
 
   // ************************
@@ -3213,13 +3221,18 @@ class _GameScreenState extends State<GameScreen> {
         asset = constImageEncounterHelicopterGrey; 
       }
     }
-    else if (_hexesTributary.contains(id)) {
-      if (_hasPlayerTraveledHere(id)) {
+    else if (_hexesTributary.contains(id)) {  
+      if (_hasPlayerTraveledHere(id)) {      
         asset = EncounterFactory().getEncounterGraphic(EnumEncounter.tributary.index);
       }
       else { 
         asset = constImageEncountersTributaryGrey; 
       }
+    }
+
+    // if we had an encounter here, so that graphic instead of terrain
+    if (_map[id].encounter != EnumEncounter.none) {
+      asset = _encounterVisuals[_map[id].encounter.index];
     }
 
     // final special case, if this is where US forces are, show them instead of regular terrain
@@ -3285,12 +3298,14 @@ class _GameScreenState extends State<GameScreen> {
     if ((_hexesImpassable.isNotEmpty) &
         (_hexesImpassable.contains(_selectedHex))) {
       await _overlayMessage(constHexImpassableMessage, EnumMessageType.fail);
+      _selectedHex = _oldHex;
       return;
     }
 
     // check: can they move anymore? 
     if ((_phase == EnumPhase.move) && (!_moveAllowed)) {
       await _overlayMessage(constAlreadMovedMessage, EnumMessageType.fail);
+      _selectedHex = _oldHex;
       return;
     } 
 
@@ -3304,6 +3319,7 @@ class _GameScreenState extends State<GameScreen> {
 
     // check: if they picked a special background hex that's not obvious, bail right out
     if (_map[_selectedHex].terrain == EnumTerrain.background) {
+      _selectedHex = _oldHex;
       return;
     }
 
@@ -3320,6 +3336,7 @@ class _GameScreenState extends State<GameScreen> {
       // is the hex too far away?
       if (hexDistance > 1) {
         await _overlayMessage(constHexTooFarMessage, EnumMessageType.fail);
+        _selectedHex = _oldHex;        
         return;
       }
 
@@ -3386,6 +3403,7 @@ class _GameScreenState extends State<GameScreen> {
       // is the hex too far away?
       if (hexDistance > 1) {
         // abort
+        _selectedHex = _oldHex;
         return;
       }
 

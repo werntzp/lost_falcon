@@ -19,6 +19,7 @@ class MapHex {
   bool previous = false; // player was here on a previous turn
   bool visible = false; // player can "see" into this hex from where they are
   EnumTerrain terrain = EnumTerrain.unknown; // terrain type
+  EnumEncounter encounter = EnumEncounter.none; // which encounter occured here 
 
   MapHex(this.id, this.col, this.row);
 }
