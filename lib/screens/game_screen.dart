@@ -1198,7 +1198,7 @@ class _ImageCyclerOverlayState extends State<ImageCyclerOverlay>
               }
             }
             // hardcode for testing
-            // _currentEncounterIndex = EnumEncounter.soldier.index;
+            // _currentEncounterIndex = EnumEncounter.gunships.index;
             message = _encounterFactory
                 .getEncounterDescription(_currentEncounterIndex);
             // add this encoutner to the map hex for later (if not a none)
@@ -3021,6 +3021,12 @@ class _GameScreenState extends State<GameScreen> {
       }
       if (_pilot.getProximity() == 0) {
         await _endGameOverlay(EnumGameOver.captured, _totalHexesTraveled(), _totalUpPoints(EnumGameOver.captured));
+      }
+
+      // did we get rescued? 
+      if ((_currentEncounterIndex == EnumEncounter.gunships.index) && (_rescued)) {
+        // show the end game overlay 
+        await _endGameOverlay(EnumGameOver.rescued, _totalHexesTraveled(), _totalUpPoints(EnumGameOver.rescued));
       }
 
       setState(() {
