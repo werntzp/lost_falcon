@@ -113,6 +113,7 @@ const constMotorcyleVillageMessage = "You cannot enter a village while riding th
 const constAboutToEndMovePhase = "You can still move. Do you really want to end the phase?";
 
 // encounters
+const constEncounterTerrainDialogMessage = "You encountered Z in this hex.";
 const constEncountersMessage =
     "Let's see if you had any encounters this round...";
 
@@ -120,9 +121,11 @@ const constDustEncounterMessage =
     "A dust storm kicks up obstructing your view while the strong wind and harsh blowing sand wears you down.";
 const constDustOption1 = "Stumble backward to the previous hex";
 const constDustOption2 = "Lose 2 Endurance pushing through";
+const constDustTerrainDialogText = "a dust storm";
 
 const constChemicalsEncounterMessage =
     "You have to cross through a field full of chemical munitions which burns your exposed skin.";
+const constChemicalsTerrainDialogText = "chemical munitions";
 
 const constThornsEncounterMessage =
     "Your progress has been halted by dense, unpassable heavy brush covered in half-inch thorns.";
@@ -132,24 +135,29 @@ const constThornsOption3 =
     "Cut a path with your machete skipping Stealth and Rest phases";
 const constThornsOption4 =
     "Cut a path with your machete keeping Stealth and Rest phases";
+const constThornsTerrainDialogText = "thorny briars";
 
 const constRockslideEncounterMessage =
     "You fall while climbing over some rocks and suffer a broken foot.";
+const constRockslideTerrainDialogText = "a rockslide";
 
 const constHighgroundEncounterMessage =
     "From this vantage you can see for miles, including a bustling village that may be welcoming.";
+const constHighgroundTerrainDialogText = "high ground";
 
 const constBuildingEncounterMessage =
     "It appears that this building has been abandoned.";
 const constBuildingOption1 =
-    "Scavenge materials to make a bandage and gain 2 Health";
+    "Scavenge materials to make a bandage and gain  2 Health";
 const constBuildingOption2 = "Spend some quiet time here and gain 1 Endurance";
 const constBuildingOption3 = "Find a usable machete";
+const constBuildingTerrainDialogText = "an abandoned building";
 
 const constRoadEncounterMessage =
     "A flat stretch of road provides an easier path for travel.";
 const constRoadOption1 = "Immediately move to an adjacent hex";
 const constRoadOption2 = "Increase your Proximity by 1";
+const constRoadTerrainDialogText = "a paved road";
 
 const constSoldierEncounterMessage =
     "You come across a dead Government soldier.";
@@ -157,6 +165,7 @@ const constSoldierOption1 =
     "Find a working AK-47 with several rounds left in the magazine";
 const constSoldierOption2 =
     "Find a map showing the location of a crashed helicopter";
+const constSoldierTerrainDialogText = "a dead soldier";
 
 const constSnakeEncounterMessage =
     "As you trek across the desert, you disturb a sleeping snake.";
@@ -166,6 +175,7 @@ const constSnakeOption2 =
     "It strikes quickly, and unfortunately the bite brings on a raging fever.";
 const constSnakeOption3 =
     "Before it can bite you, you are able to use your machete and kill it.";
+const constSnakeTerrainDialogText = "a snake";
 
 const constWolfEncounterMessage =
     "A low, menacing growl startles you as a wolf lunges out of the twilight.";
@@ -175,27 +185,32 @@ const constWolfOption2 =
     "It knocks you down and tears into you before running off, resulting in a deep cut.";
 const constWolfOption3 =
     "You are able to strike it with your machete and drive it off, but during the scuffle, your machete snaps at the handle.";
+const constWolfTerrainDialogText = "a wolf";
 
 const constMortarEncounterMessage =
     "A piercing whistle announces the arrival of mortar rounds falling around you.";
 const constMortarOption1 =
     "Move to a new hex, but get wounded and lose 1 Endurance";
 const constMortarOption2 = "Drop into cover, losing 1 Proximity";
+const constMortarTerrainDialogText = "incoming mortar rounds";
 
 const constHelicopterEncounterMessage =
     "You stumble upon a crashed and abandoned Blackhawk helicopter.";
 const constHelicopterOption1 = "Find a working flare gun";
 const constHelicopterOption2 = "Use it as shelter to gain 2 Endurance";
+const constHelicopterTerrainDialogText = "a downed helicopter";
 
 const constApcEncounterMessage =
     "The hulk of an armored personnel carrier sits quietly.";
 const constApcOption1 = "Find a first aid kit";
 const constApcOption2 = "Use it as a shelter to gain 1 Proximity and Endurance";
+const constApcTerrainDialogText = "an abandoned armored vehicle";
 
 const constCaveEncounterMessage =
     "This small cave may have served as a hiding spot for rebel forces before being abandoned.";
 const constCaveOption1 = "Find a map showing a source of water";
 const constCaveOption2 = "Find a pair of powerful binoculars";
+const constCaveTerrainDialogText = "a cave";
 
 const constGunshipsEncounterMessage =
     "Roaring overhead comes a flight of attack helicopters firing rockets which pin down your pursuers.";
@@ -203,30 +218,35 @@ const constGunshipsOption1 = "Use the opportunity to gain 2 Proximity";
 const constGunshipsOption2 = "Rest up to gain 2 Health and 1 Endurance";
 const constGunshipsOption3 =
     "Signal your exact position with the flare gun and be rescued";
+const constGunshipsTerrainDialogText = "a flight of Apaches";
 
 const constMinefieldEncounterMessage =
     "A large, well marked minefield block your way.";
 const constMinefieldOption1 = "Pass through slowly, losing 1 Prximity";
 const constMinefieldOption2 =
     "Return to your last spot and this hex becomes impassable";
+const constMinefieldTerrainDialogText = "a minefield";
 
 const constSniperEncounterMessage =
     "As you work your way across an open area a high powered sniper round strikes you in the shoulder!";
 const constSniperOption1 = "Make a run for it, but take another hit";
 const constSniperOption2 =
     "Fall back into cover and this hex becomes impassable";
+const constSniperTerrainDialogText = "a sniper";
 
 const constMilepostEncounterMessage =
-    "You come to a large intersection. Move again.";
-const constMilepostOption1 = "Terrain ahead will be favorable";
+    "You come to a large intersection. You can move again, and: ";
+const constMilepostOption1 = "Make the terrain ahead favorable";
 const constMilepostOption2 = "Map a nearby village";
 const constMilepostOption3 = "Gain +2 to your next movement roll";
+const constMilepostTerrainDialogText = "a large intersection";
 
 const constTributaryEncounterMessage =
     "You come across a stream that provides needed water and is easy to move along.";
 const constTributaryOption1 = "Follow the stream and move again";
 const constTributaryOption2 =
     "A refreshing rest in the water gains 1 Health and Endurance";
+const constTributaryTerrainDialogText = "a refreshing stream";
 
 const constNoEncounterMessage =
     "Nothing but blue skies and empty desert ahead of you.";

@@ -28,7 +28,6 @@ int _motorcycleMoves = 0;
 EnumPhase _phase = EnumPhase.mapping;
 List<MapHex> _map = [];
 bool _moveAllowed = false;
-Set<int> _hexesImpassable = {};
 Set<int> _hexesCrashedChopper = {};
 Set<int> _hexesTributary = {};
 Set<int> _hexesFriendlyVillage = {};
@@ -51,7 +50,6 @@ bool _isGameOver = false;
 bool _flareGunForceEncounter = false; 
 bool _binocularMapExtraHexes = false; 
 int  _extraHexes = 0; 
-int _rescueHexId = 0; 
 List<String> _encounterVisuals = []; 
 EnumVillageReactions _villageReaction = EnumVillageReactions.none;
 
@@ -661,7 +659,7 @@ class _ImageCyclerOverlayState extends State<ImageCyclerOverlay>
       _map[_oldHex].current = true;
     }
     _map[_selectedHex].current = false;
-    _hexesImpassable.add(_selectedHex);
+    _map[_selectedHex].impassable = true;
     // redraw
     setState() {
       // do nothing
@@ -680,7 +678,8 @@ class _ImageCyclerOverlayState extends State<ImageCyclerOverlay>
       _map[_oldHex].current = true;
     }
     _map[_selectedHex].current = false;
-    _hexesImpassable.add(_selectedHex);
+    _map[_selectedHex].impassable = true;
+
   }
 
   // *********************************************
@@ -740,7 +739,8 @@ class _ImageCyclerOverlayState extends State<ImageCyclerOverlay>
         _map[_oldHex].current = true;
       }
       _map[_selectedHex].current = false;
-      _hexesImpassable.add(_selectedHex);
+      _map[_selectedHex].impassable = true;      
+
     }
   }
 
@@ -2069,7 +2069,7 @@ class _GameScreenState extends State<GameScreen> {
       _villageReaction = EnumVillageReactions.kickedout;
       message = constVillageKickedOut;
       // village now impassable
-      _hexesImpassable.add(_selectedHex);
+      _map[_selectedHex].impassable = true;
       // move them back to old hex (unless old hex was a village, then push them back again)
       if (_map[_oldHex].terrain == EnumTerrain.village) {
         _map[_getLastBeforeVillage()].current = true;
@@ -2570,7 +2570,6 @@ class _GameScreenState extends State<GameScreen> {
   void _newGame() async {
     // clear stuff out
     _map.clear();
-    _hexesImpassable.clear();
     _hexesCrashedChopper.clear();
     _hexesTributary.clear();
     _hexesFriendlyVillage.clear();
@@ -2579,8 +2578,6 @@ class _GameScreenState extends State<GameScreen> {
     _map = MapFactory.initMap();
     // add the starting hex to the list the player traveled
     _map[_getIdFromColRow(constStartCol, constStartRow)].previous = true;
-    // track where US forces start
-    _rescueHexId = _getIdFromColRow(14, 4);
 
     // initial values
     _round = 1;
@@ -2915,11 +2912,13 @@ class _GameScreenState extends State<GameScreen> {
     // loop through the rows and hide each one as we iterate
     for (int i = 1; i < constMapRows; i++) {
       // while we're here, hide them all (unless player is within one)
-      if (MapFactory.getDistanceBetweenHexes(_getCurrentHex(), MapHex(constFakeHex, col, i)) > 1) {
+      if (MapFactory.getDistanceBetweenHexes(_getCurrentHex(), MapHex(constFakeHex, col, i)) != 1) {
          _map[_getIdFromColRow(col, i)].visible = false;
       }
       // see if forces are here
-      if (_getIdFromColRow(col, i) == _rescueHexId) {
+      if (_map[_getIdFromColRow(col, i)].rescue) {
+        // save the row and remove the forces from that spot
+        _map[_getIdFromColRow(col, i)].rescue = false; 
         row = i;
       }
     }
@@ -2939,8 +2938,8 @@ class _GameScreenState extends State<GameScreen> {
       }
     }
 
-    // set the new value 
-    _rescueHexId = _getIdFromColRow(col, row);
+    // set the new location 
+    _map[_getIdFromColRow(col, row)].rescue = true; 
 
     // now update them on the map
     _map[_getIdFromColRow(col, row)].visible = true;
@@ -3242,7 +3241,7 @@ class _GameScreenState extends State<GameScreen> {
     }
 
     // final special case, if this is where US forces are, show them instead of regular terrain
-    if (id == _rescueHexId) {
+    if (_map[id].rescue) {
       asset = constImageRescue;    
     }
 
@@ -3254,7 +3253,7 @@ class _GameScreenState extends State<GameScreen> {
   // ************************
   void _checkRescueConditions() async {
     // special case, if they moved into the rescue hex, then just end the game successfully
-    if (_selectedHex  == _rescueHexId) {
+    if (_map[_selectedHex].rescue) {
       // close any overlay
       _genericCloseOverlay(); 
       // show the end game overlay 
@@ -3301,8 +3300,7 @@ class _GameScreenState extends State<GameScreen> {
     }
 
     // check: if this hex is impassable, bail right out
-    if ((_hexesImpassable.isNotEmpty) &
-        (_hexesImpassable.contains(_selectedHex))) {
+    if (_map[_selectedHex].impassable) {
       await _overlayMessage(constHexImpassableMessage, EnumMessageType.fail);
       _selectedHex = _oldHex;
       return;
@@ -3435,14 +3433,8 @@ class _GameScreenState extends State<GameScreen> {
   // pop up with terrain information
   // ************************
   void _showMapHexInfo(int row, int col) {
-    int id = _getIdFromColRow(col, row);
-    EnumTerrain terrain = _map[id].terrain;
-    // quick check to over ride if this is where US forces are
-    if (id == _rescueHexId) {
-      terrain = EnumTerrain.rescue; 
-    }
+    showTerrainInfoDialog(context, _map[_getIdFromColRow(col, row)], _encounterVisuals);
 
-    showTerrainInfoDialog(context, terrain);
   }
 
   // ************************
@@ -3469,7 +3461,7 @@ class _GameScreenState extends State<GameScreen> {
               child: Image.asset(constImagePlayerLocation, fit: BoxFit.cover)));
     }
     // else if player cannot travel through this hex, show close icon
-    else if ((_hexesImpassable.isNotEmpty) && (_hexesImpassable.contains(id))) {
+    else if (_map[id].impassable) {
       return const Positioned(
           top: 10,
           left: 15,
@@ -3481,7 +3473,7 @@ class _GameScreenState extends State<GameScreen> {
       return const Positioned(
           top: 10,
           left: 15,
-          child: Icon(Icons.directions_walk, color: Colors.black, size: 75));
+          child: Icon(Icons.star_border, color: Colors.black, size: 75));
     }
 
     // else, just an empty container

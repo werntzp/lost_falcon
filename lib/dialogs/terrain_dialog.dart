@@ -1,53 +1,110 @@
 import '../const.dart';
 import 'package:flutter/material.dart';
+import '../models/map_model.dart';
 
-String _displayMessage(EnumTerrain terrain) {
+String _displayMessage(MapHex mapHex) {
   String name = "";
+  EnumTerrain terrain = mapHex.terrain;
+  EnumEncounter encounter = mapHex.encounter;
 
-  // format the type of unit killed nicely
-  if (terrain == EnumTerrain.scrub) {
-    name = constTerrainScrub;
-  } else if (terrain == EnumTerrain.brush) {
-    name = constTerrainBrush;
-  } else if (terrain == EnumTerrain.rough) {
-    name = constTerrainRough;
-  } else if (terrain == EnumTerrain.hills) {
-    name = constTerrainHills;
-  } else if (terrain == EnumTerrain.village) {
-    name = constTerrainVillage;
-  } else if (terrain == EnumTerrain.rescue) {
-    name = constTerrainRescue;    
-  } else {
-    name = constTerrainUnkown;
+  // if they had an encounter here, show that, otherwise use terrain message
+  if (encounter == EnumEncounter.none) {
+    // format the type of unit killed nicely
+    if (terrain == EnumTerrain.scrub) {
+      name = constTerrainScrub;
+    } else if (terrain == EnumTerrain.brush) {
+      name = constTerrainBrush;
+    } else if (terrain == EnumTerrain.rough) {
+      name = constTerrainRough;
+    } else if (terrain == EnumTerrain.hills) {
+      name = constTerrainHills;
+    } else if (terrain == EnumTerrain.village) {
+      name = constTerrainVillage;
+    } else if (terrain == EnumTerrain.rescue) {
+      name = constTerrainRescue;    
+    } else {
+      name = constTerrainUnkown;
+    }
+  }
+  else {
+    // else show them something about the encounter
+    name = constEncounterTerrainDialogMessage;
+    if (encounter == EnumEncounter.apc) {
+      name = name.replaceFirst("Z", constApcTerrainDialogText);
+    } else if (encounter == EnumEncounter.dust) {
+      name = name.replaceFirst("Z", constDustTerrainDialogText);
+    } else if (encounter == EnumEncounter.chemicals) {
+      name = name.replaceFirst("Z", constChemicalsTerrainDialogText);
+    } else if (encounter == EnumEncounter.thorns) {
+      name = name.replaceFirst("Z", constThornsTerrainDialogText);      
+    } else if (encounter == EnumEncounter.rockslide) {
+      name = name.replaceFirst("Z", constRockslideTerrainDialogText);      
+    } else if (encounter == EnumEncounter.highground) {
+      name = name.replaceFirst("Z", constHighgroundTerrainDialogText);      
+    } else if (encounter == EnumEncounter.building) {
+      name = name.replaceFirst("Z", constDustTerrainDialogText);      
+    } else if (encounter == EnumEncounter.road) {
+      name = name.replaceFirst("Z", constRoadTerrainDialogText);      
+    } else if (encounter == EnumEncounter.soldier) {
+      name = name.replaceFirst("Z", constSoldierTerrainDialogText);      
+    } else if (encounter == EnumEncounter.snake) {
+      name = name.replaceFirst("Z", constSnakeTerrainDialogText);      
+    } else if (encounter == EnumEncounter.wolf) {
+      name = name.replaceFirst("Z", constWolfTerrainDialogText);      
+    } else if (encounter == EnumEncounter.mortar) {
+      name = name.replaceFirst("Z", constMortarTerrainDialogText);      
+    } else if (encounter == EnumEncounter.helicopter) {
+      name = name.replaceFirst("Z", constHelicopterTerrainDialogText);      
+    } else if (encounter == EnumEncounter.cave) {
+      name = name.replaceFirst("Z", constCaveTerrainDialogText);      
+    } else if (encounter == EnumEncounter.gunships) {
+      name = name.replaceFirst("Z", constGunshipsTerrainDialogText);      
+    } else if (encounter == EnumEncounter.minefield) {
+      name = name.replaceFirst("Z", constMinefieldTerrainDialogText);      
+    } else if (encounter == EnumEncounter.milepost) {
+      name = name.replaceFirst("Z", constMilepostTerrainDialogText);      
+    } else if (encounter == EnumEncounter.tributary) {
+      name = name.replaceFirst("Z", constTributaryTerrainDialogText);      
+    }
+
   }
 
   return name;
 }
 
-String _displayImage(EnumTerrain terrain) {
+String _displayImage(MapHex mapHex, List<String> visuals) {
   String name = "";
+  EnumTerrain terrain = mapHex.terrain;
+  EnumEncounter encounter = mapHex.encounter;
 
-  // format the type of unit killed nicely
-  if (terrain == EnumTerrain.scrub) {
-    name = constImageScrub;
-  } else if (terrain == EnumTerrain.brush) {
-    name = constImageBrush;
-  } else if (terrain == EnumTerrain.rough) {
-    name = constImageRough;
-  } else if (terrain == EnumTerrain.hills) {
-    name = constImageHills;
-  } else if (terrain == EnumTerrain.village) {
-    name = constImageVillage;
-  } else if (terrain == EnumTerrain.rescue) {
-    name = constImageRescue;    
-  } else {
-    name = constImageUnknown;
+  // if they had an encounter here, show that, otherwise use terrain message
+  if (encounter == EnumEncounter.none) {
+    // format the type of unit killed nicely
+    if (terrain == EnumTerrain.scrub) {
+      name = constImageScrub;
+    } else if (terrain == EnumTerrain.brush) {
+      name = constImageBrush;
+    } else if (terrain == EnumTerrain.rough) {
+      name = constImageRough;
+    } else if (terrain == EnumTerrain.hills) {
+      name = constImageHills;
+    } else if (terrain == EnumTerrain.village) {
+      name = constImageVillage;
+    } else if (terrain == EnumTerrain.rescue) {
+      name = constImageRescue;    
+    } else {
+      name = constImageUnknown;
+    }
+  }
+  else { 
+    name = visuals[encounter.index];
+
   }
 
   return name;
 }
 
-void showTerrainInfoDialog(BuildContext context, EnumTerrain terrain) {
+void showTerrainInfoDialog(BuildContext context, MapHex mapHex, List<String> visuals) {
   showDialog<String>(
     context: context,
     barrierDismissible: false,
@@ -68,7 +125,7 @@ void showTerrainInfoDialog(BuildContext context, EnumTerrain terrain) {
                 width: 1.0, // Set "thin" thickness
               ),
             ),
-            child: Image.asset(_displayImage(terrain), fit: BoxFit.fill),
+            child: Image.asset(_displayImage(mapHex, visuals), fit: BoxFit.fill),
           ),
           // Right column: Text
           Expanded(
@@ -76,7 +133,7 @@ void showTerrainInfoDialog(BuildContext context, EnumTerrain terrain) {
               crossAxisAlignment: CrossAxisAlignment.start,
               mainAxisSize: MainAxisSize.min,
               children: [
-                Text(_displayMessage(terrain),
+                Text(_displayMessage(mapHex),
                     style: const TextStyle(
                         fontFamily: constAppTextFont, fontSize: 18)),
               ],

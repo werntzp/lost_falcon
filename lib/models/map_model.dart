@@ -20,6 +20,8 @@ class MapHex {
   bool visible = false; // player can "see" into this hex from where they are
   EnumTerrain terrain = EnumTerrain.unknown; // terrain type
   EnumEncounter encounter = EnumEncounter.none; // which encounter occured here 
+  bool rescue = false; // are rescue forces in this hex
+  bool impassable = false; // tracks if the hex is impassable (for whatever reason)
 
   MapHex(this.id, this.col, this.row);
 }
@@ -188,6 +190,9 @@ class MapFactory {
     map[_getIdFromColRow(map, 13, 0)].visible = true;
     map[_getIdFromColRow(map, 14, 0)].terrain = EnumTerrain.background;
     map[_getIdFromColRow(map, 14, 0)].visible = true;
+
+    // set where US rescue forces start 
+    map[_getIdFromColRow(map, 14, 4)].rescue = true;
 
     // return the map back out
     return List.from(map);
