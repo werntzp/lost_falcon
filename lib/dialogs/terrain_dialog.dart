@@ -10,7 +10,9 @@ String _displayMessage(MapHex mapHex) {
   // if they had an encounter here, show that, otherwise use terrain message
   if (encounter == EnumEncounter.none) {
     // format the type of unit killed nicely
-    if (terrain == EnumTerrain.scrub) {
+    if (mapHex.rescue) {
+      name = constTerrainRescue;    
+    } else if (terrain == EnumTerrain.scrub) {
       name = constTerrainScrub;
     } else if (terrain == EnumTerrain.brush) {
       name = constTerrainBrush;
@@ -20,8 +22,6 @@ String _displayMessage(MapHex mapHex) {
       name = constTerrainHills;
     } else if (terrain == EnumTerrain.village) {
       name = constTerrainVillage;
-    } else if (terrain == EnumTerrain.rescue) {
-      name = constTerrainRescue;    
     } else {
       name = constTerrainUnkown;
     }
@@ -80,7 +80,9 @@ String _displayImage(MapHex mapHex, List<String> visuals) {
   // if they had an encounter here, show that, otherwise use terrain message
   if (encounter == EnumEncounter.none) {
     // format the type of unit killed nicely
-    if (terrain == EnumTerrain.scrub) {
+    if (mapHex.rescue) {
+      name = constImageRescue;
+    } else if (terrain == EnumTerrain.scrub) {
       name = constImageScrub;
     } else if (terrain == EnumTerrain.brush) {
       name = constImageBrush;
@@ -90,8 +92,6 @@ String _displayImage(MapHex mapHex, List<String> visuals) {
       name = constImageHills;
     } else if (terrain == EnumTerrain.village) {
       name = constImageVillage;
-    } else if (terrain == EnumTerrain.rescue) {
-      name = constImageRescue;    
     } else {
       name = constImageUnknown;
     }

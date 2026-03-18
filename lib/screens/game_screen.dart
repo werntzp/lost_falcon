@@ -954,6 +954,13 @@ class _ImageCyclerOverlayState extends State<ImageCyclerOverlay>
 
         // helicopter
       } else if (encounter == EnumEncounter.helicopter) {
+        // remove from the list
+        try {
+          _hexesCrashedChopper.remove(_selectedHex);
+        }
+        catch (e) {
+          // do nothing
+        }
         // don't show flare gun option if they already have it 
         if (!_pilot.hasAnItem(EnumInventory.flaregun)) {
           return Column(children: [
@@ -1079,6 +1086,13 @@ class _ImageCyclerOverlayState extends State<ImageCyclerOverlay>
 
         // tributary
       } else if (encounter == EnumEncounter.tributary) {
+        // remove from the list
+        try {
+          _hexesTributary.remove(_selectedHex);
+        }
+        catch (e) {
+          // do nothing
+        }
         return Column(children: [
           ActionButton(
               message: constTributaryOption1,
@@ -3327,11 +3341,10 @@ class _GameScreenState extends State<GameScreen> {
       return;
     }
 
-    // check: if they are on a motorcycle trying to enter a village, don't let them
+    // check: if they are trying to enter a village during an encounter move, say no
     if ((_map[_selectedHex].terrain == EnumTerrain.village) && 
-      (_villageReaction == EnumVillageReactions.helpful) && 
-      (_motorcycleMoves <=3)) {
-      await _overlayMessage(constMotorcyleVillageMessage, EnumMessageType.fail);
+      (_villageReaction != EnumVillageReactions.none)) {
+      await _overlayMessage(constEncounterVillageMessage, EnumMessageType.fail);
       return;
     }
 

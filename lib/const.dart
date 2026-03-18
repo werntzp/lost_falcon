@@ -109,7 +109,7 @@ const constRestSixMessage =
 const constGameOverLost = "You scored X points for traveling Z hexes.";
 const constGameOverWon =
     "You scored X points for traveling Z hexes plus remaining Health, Proximity, and Endurance points.";
-const constMotorcyleVillageMessage = "You cannot enter a village while riding the motorcycle.";
+const constEncounterVillageMessage = "You cannot enter a village due to an extra encounter move.";
 const constAboutToEndMovePhase = "You can still move. Do you really want to end the phase?";
 
 // encounters
