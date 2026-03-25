@@ -285,7 +285,7 @@ const constAfflictionBurn = "a painful burn (caps Endurance at 5)";
 const constAfflictionDeepCut = "a deep cut (lost 2 Health)";
 
 // inventory
-const constInventoryMessage = "All usable inventory items are shown below. If you are able to use it, the button will be active. Once you use an item, it is done, and you cannot get the same item multiple times.";
+const constInventoryMessage = "Items you have but cannot use right now show a disabled button. The button will be active if you can use an item. Once you use an item, it is done, and you cannot get the same item multiple times.";
 const constInventoryFlareGunTitle = "Flare Gun";
 const constInventoryFlareGunAction = "force an Encounter in Scrub";
 const constInventoryFirstAidKitTitle =
@@ -321,6 +321,7 @@ const constNoText = "No";
 
 const constDieFaceRed = "assets/images/dice_face_red_";
 const constDieFaceWhite = "assets/images/dice_face_white_";
+const constDieFaceYellow = "assets/images/dice_face_yellow_";
 
 const constMapRows = 5;
 const constMapCols = 15;

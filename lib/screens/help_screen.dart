@@ -29,7 +29,7 @@ class HelpScreenState extends State<HelpScreen> {
   Widget build(BuildContext context) {
     return SafeArea(
         child: Scaffold(
-            backgroundColor:       const Color.fromARGB(255, 129, 128, 108),
+            backgroundColor: const Color.fromARGB(255, 173, 147, 62),
             body: Center(
                 child: Container(
               margin: const EdgeInsets.only(left: 10.0, right: 10.0),

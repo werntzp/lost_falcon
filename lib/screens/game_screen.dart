@@ -71,13 +71,38 @@ class ActionButton extends StatelessWidget {
   final VoidCallback onAction;
   final VoidCallback onCloseRequest;
   final bool isActive; 
+  final bool inInventory; 
 
   const ActionButton(
       {super.key,
       required this.message,
       required this.isActive,
+      required this.inInventory, 
       required this.onAction,
       required this.onCloseRequest});
+
+  Color _getTextColor() { 
+    Color textColor = Colors.black; 
+
+    // if not in inventory, the text font will be grey 
+    if (!inInventory) { textColor = Colors.grey; }
+    return textColor; 
+
+  }
+
+  Color _getBackGroundColor() { 
+    Color backgroundColor = Colors.grey; 
+
+    // if active, show white, if not active, show grey, if not in inventory, show black
+    if (!inInventory) {
+      backgroundColor = Colors.black;
+    }
+    else { 
+      if (isActive) { backgroundColor = Colors.white; }
+    }
+    return backgroundColor; 
+
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -87,8 +112,7 @@ class ActionButton extends StatelessWidget {
         child: OutlinedButton(
           style: OutlinedButton.styleFrom(
             alignment: Alignment.center,
-            foregroundColor: isActive ? Colors.black : Colors.black45, // Text and icon color
-            backgroundColor: isActive? Colors.white : Colors.grey, // Background color
+            backgroundColor: _getBackGroundColor(), // Background color
             overlayColor: Colors.blueAccent.withValues(), // pressed ripple
             side: const BorderSide(
               color:  Colors.black,
@@ -105,9 +129,9 @@ class ActionButton extends StatelessWidget {
               child: Text(
             message,
             textAlign: TextAlign.center,
-            style: const TextStyle(
+            style: TextStyle(
                 fontFamily: constAppTextFont,
-                color: Colors.black,
+                color: _getTextColor(), 
                 fontSize: 12.0),
           )),
         ));
@@ -559,6 +583,7 @@ class _ImageCyclerOverlayState extends State<ImageCyclerOverlay>
       return ActionButton(
           message: constGunshipsOption3,
           isActive: true,
+          inInventory: true,
           onAction: _doGunshipsFlareGun,
           onCloseRequest: widget.onClose);
     }
@@ -599,6 +624,7 @@ class _ImageCyclerOverlayState extends State<ImageCyclerOverlay>
       return ActionButton(
           message: constBuildingOption3,
           isActive: true,
+          inInventory: true,          
           onAction: _doBuildingMachete,
           onCloseRequest: widget.onClose);
     }
@@ -836,11 +862,13 @@ class _ImageCyclerOverlayState extends State<ImageCyclerOverlay>
           ActionButton(
               message: constMortarOption1,
               isActive: true,
+            inInventory: true,              
               onAction: _doMortarRun,
               onCloseRequest: widget.onClose),
           ActionButton(
               message: constMortarOption2,
               isActive: true,
+              inInventory: true,
               onAction: _doMortarDrop,
               onCloseRequest: widget.onClose)
         ]);
@@ -850,11 +878,13 @@ class _ImageCyclerOverlayState extends State<ImageCyclerOverlay>
           ActionButton(
               message: constDustOption1,
               isActive: true,
+              inInventory: true,
               onAction: _doDustBack,
               onCloseRequest: widget.onClose),
           ActionButton(
               message: constDustOption2,
               isActive: true,
+              inInventory: true,
               onAction: _doDustForward,
               onCloseRequest: widget.onClose)
         ]);
@@ -889,11 +919,13 @@ class _ImageCyclerOverlayState extends State<ImageCyclerOverlay>
           ActionButton(
               message: option1,
               isActive: true,
+              inInventory: true,
               onAction: _doThorns1,
               onCloseRequest: widget.onClose),
           ActionButton(
               message: option2,
               isActive: true,
+              inInventory: true,
               onAction: _doThorns2,
               onCloseRequest: widget.onClose)
         ]);
@@ -904,11 +936,13 @@ class _ImageCyclerOverlayState extends State<ImageCyclerOverlay>
           ActionButton(
               message: constBuildingOption1,
               isActive: true,
+              inInventory: true,
               onAction: _doBuildingBandage,
               onCloseRequest: widget.onClose),
           ActionButton(
               message: constBuildingOption2,
               isActive: true,
+              inInventory: true,
               onAction: _doBuildingRest,
               onCloseRequest: widget.onClose),
           _checkBuildingMachete(),
@@ -920,11 +954,13 @@ class _ImageCyclerOverlayState extends State<ImageCyclerOverlay>
           ActionButton(
               message: constRoadOption1,
               isActive: true,
+              inInventory: true,
               onAction: _doRoadMove,
               onCloseRequest: widget.onClose),
           ActionButton(
               message: constRoadOption2,
               isActive: true,
+              inInventory: true,
               onAction: _doRoadProximity,
               onCloseRequest: widget.onClose),
         ]);
@@ -935,11 +971,13 @@ class _ImageCyclerOverlayState extends State<ImageCyclerOverlay>
           ActionButton(
               message: constSoldierOption1,
               isActive: true,
+              inInventory: true,
               onAction: _doSoldierRifle,
               onCloseRequest: widget.onClose),
           ActionButton(
               message: constSoldierOption2,
               isActive: true,
+              inInventory: true,
               onAction: _doSoldierMap,
               onCloseRequest: widget.onClose),
         ]);
@@ -957,6 +995,7 @@ class _ImageCyclerOverlayState extends State<ImageCyclerOverlay>
         // remove from the list
         try {
           _hexesCrashedChopper.remove(_selectedHex);
+          _map[_selectedHex].encounter = EnumEncounter.helicopter;
         }
         catch (e) {
           // do nothing
@@ -967,11 +1006,13 @@ class _ImageCyclerOverlayState extends State<ImageCyclerOverlay>
             ActionButton(
                 message: constHelicopterOption1,
                 isActive: true,
+                inInventory: true,
                 onAction: _doHelicopterFlare,
                 onCloseRequest: widget.onClose),
             ActionButton(
                 message: constHelicopterOption2,
                 isActive: true,
+                inInventory: true,
                 onAction: _doHelicopterRest,
                 onCloseRequest: widget.onClose)
           ]);
@@ -981,6 +1022,7 @@ class _ImageCyclerOverlayState extends State<ImageCyclerOverlay>
             ActionButton(
                 message: constHelicopterOption2,
                 isActive: true,
+                inInventory: true,
                 onAction: _doHelicopterRest,
                 onCloseRequest: widget.onClose)
           ]);     
@@ -991,11 +1033,13 @@ class _ImageCyclerOverlayState extends State<ImageCyclerOverlay>
           ActionButton(
               message: constApcOption1,
               isActive: true,
+              inInventory: true,
               onAction: _doApcKit,
               onCloseRequest: widget.onClose),
           ActionButton(
               message: constApcOption2,
               isActive: true,
+              inInventory: true,
               onAction: _doApcRest,
               onCloseRequest: widget.onClose)
         ]);
@@ -1007,11 +1051,13 @@ class _ImageCyclerOverlayState extends State<ImageCyclerOverlay>
           ActionButton(
               message: constCaveOption1,
               isActive: true,
+              inInventory: true,
               onAction: _doCaveMap,
               onCloseRequest: widget.onClose),
           ActionButton(
               message: constCaveOption2,
               isActive: true,
+              inInventory: true,
               onAction: _doCaveBinos,
               onCloseRequest: widget.onClose)
         ]);
@@ -1022,11 +1068,13 @@ class _ImageCyclerOverlayState extends State<ImageCyclerOverlay>
           ActionButton(
               message: constGunshipsOption1,
               isActive: true,
+              inInventory: true,
               onAction: _doGunshipsProximity,
               onCloseRequest: widget.onClose),
           ActionButton(
               message: constGunshipsOption2,
               isActive: true,
+              inInventory: true,
               onAction: _doGunshipsRest,
               onCloseRequest: widget.onClose),
           _checkGunshipsFlareGun(),
@@ -1038,11 +1086,13 @@ class _ImageCyclerOverlayState extends State<ImageCyclerOverlay>
           ActionButton(
               message: constMinefieldOption1,
               isActive: true,
+              inInventory: true,
               onAction: _doMinefieldMove,
               onCloseRequest: widget.onClose),
           ActionButton(
               message: constMinefieldOption2,
               isActive: true,
+              inInventory: true,
               onAction: _doMinefieldRetreat,
               onCloseRequest: widget.onClose)
         ]);
@@ -1053,11 +1103,13 @@ class _ImageCyclerOverlayState extends State<ImageCyclerOverlay>
           ActionButton(
               message: constSniperOption1,
               isActive: true,
+              inInventory: true,
               onAction: _doSniperRun,
               onCloseRequest: widget.onClose),
           ActionButton(
               message: constSniperOption2,
               isActive: true,
+              inInventory: true,
               onAction: _doSniperRetreat,
               onCloseRequest: widget.onClose)
         ]);
@@ -1070,16 +1122,19 @@ class _ImageCyclerOverlayState extends State<ImageCyclerOverlay>
           ActionButton(
               message: constMilepostOption1,
               isActive: true,
+              inInventory: true,
               onAction: _doMilepostFriendlyTerrain,
               onCloseRequest: widget.onClose),
           ActionButton(
               message: constMilepostOption2,
               isActive: true,
+              inInventory: true,
               onAction: _doMilepostNewVillage,
               onCloseRequest: widget.onClose),
           ActionButton(
               message: constMilepostOption3,
               isActive: true,
+              inInventory: true,
               onAction: _doMilepostMovementBonus,
               onCloseRequest: widget.onClose)
         ]);
@@ -1097,11 +1152,13 @@ class _ImageCyclerOverlayState extends State<ImageCyclerOverlay>
           ActionButton(
               message: constTributaryOption1,
               isActive: true,
+              inInventory: true,
               onAction: _doTributaryMove,
               onCloseRequest: widget.onClose),
           ActionButton(
               message: constTributaryOption2,
               isActive: true,
+              inInventory: true,
               onAction: _doTributaryRest,
               onCloseRequest: widget.onClose)
         ]);
@@ -1744,16 +1801,19 @@ class _GameScreenState extends State<GameScreen> {
   Widget _displayAK() {
     String buttonMessage = constInventoryAKTitle;
     bool buttonIsActive = false; 
+    bool itemInInventory = false; 
 
     // if they don't have the AK, just show title and not action
     if (_pilot.hasAnItem(EnumInventory.ak)) {
       buttonMessage = "$constInventoryAKTitle ($constInventoryAKAction)";
       buttonIsActive = true; 
+      itemInInventory = true; 
     }
     return 
         ActionButton(
           message: buttonMessage,
           isActive: buttonIsActive,
+          inInventory: itemInInventory,
           onAction: _doAK,
           onCloseRequest: _genericCloseOverlay);                          
 
@@ -1765,16 +1825,24 @@ class _GameScreenState extends State<GameScreen> {
   Widget _displayFlareGun() {
     String buttonMessage = constInventoryFlareGunTitle;
     bool buttonIsActive = false; 
+    bool itemInInventory = false;
+
+    // do they have it? 
+    if (_pilot.hasAnItem(EnumInventory.flaregun)) {
+      itemInInventory = true; 
+    }
 
     // flare gun only active in scrub 
     if ((_pilot.hasAnItem(EnumInventory.flaregun) && (_getCurrentHex().terrain == EnumTerrain.scrub))) {
       buttonMessage = "$constInventoryFlareGunTitle ($constInventoryFlareGunAction)";
       buttonIsActive = true; 
+      itemInInventory = true;       
     }
     return 
         ActionButton(
           message: buttonMessage,
           isActive: buttonIsActive,
+          inInventory: itemInInventory,
           onAction: _doFlareGun,
           onCloseRequest: _genericCloseOverlay);                          
 
@@ -1786,16 +1854,19 @@ class _GameScreenState extends State<GameScreen> {
   Widget _displayBinoculars() {
     String buttonMessage = constInventoryScopeTitle;
     bool buttonIsActive = false; 
+    bool itemInInventory = false; 
 
     // if they don't have the AK, just show title and not action
     if (_pilot.hasAnItem(EnumInventory.binoculars)) {
       buttonMessage = "$constInventoryScopeTitle ($constInventoryScopeAction)";
       buttonIsActive = true; 
+      itemInInventory = true; 
     }
     return 
         ActionButton(
           message: buttonMessage,
           isActive: buttonIsActive,
+          inInventory: itemInInventory,
           onAction: _doBinoculars,
           onCloseRequest: _genericCloseOverlay);                          
 
@@ -1807,16 +1878,19 @@ class _GameScreenState extends State<GameScreen> {
   Widget _displayFirstAidKit() {
     String buttonMessage = constInventoryFirstAidKitTitle;
     bool buttonIsActive = false; 
+    bool itemInInventory = false; 
 
-    // if they don't have the AK, just show title and not action
+    // if they don't have the first aid kit, just show title and not action
     if (_pilot.hasAnItem(EnumInventory.firstaidkit)) {
       buttonMessage = "$constInventoryFirstAidKitTitle ($constInventoryFirstAidKitAction)";
       buttonIsActive = true; 
+      itemInInventory = true; 
     }
     return 
         ActionButton(
           message: buttonMessage,
           isActive: buttonIsActive,
+          inInventory: itemInInventory,
           onAction: _doFirstAidKit,
           onCloseRequest: _genericCloseOverlay);                          
 
@@ -2613,56 +2687,63 @@ class _GameScreenState extends State<GameScreen> {
   // which images to show
   // ************************
   AssetImage _healthImage() {
-    String value = _pilot.getHealth().toString();
-    return AssetImage("$constImageStatus$value.png");
+    int value = _pilot.getHealth();
+    String display = value.toString(); 
+    late String die;
+
+    if ((value == 1) || (value == 2)) {
+      die = "$constDieFaceRed$display.jpg";
+    }
+    else if ((value == 3) || (value == 4)) {
+      die = "$constDieFaceYellow$display.jpg";
+    }
+    else {
+      die = "$constDieFaceWhite$display.jpg";
+    }
+
+    return AssetImage(die);
   }
 
   // ************************
   // which images to show
   // ************************
   AssetImage _proximityImage() {
-    String value = _pilot.getProximity().toString();
-    return AssetImage("$constImageStatus$value.png");
+    int value = _pilot.getProximity();
+    String display = value.toString(); 
+    late String die;
+
+    if ((value == 1) || (value == 2)) {
+      die = "$constDieFaceRed$display.jpg";
+    }
+    else if ((value == 3) || (value == 4)) {
+      die = "$constDieFaceYellow$display.jpg";
+    }
+    else {
+      die = "$constDieFaceWhite$display.jpg";
+    }
+
+    return AssetImage(die);
   }
 
   // ************************
   // which image to show
   // ************************
   AssetImage _enduranceImage() {
-    String value = _pilot.getEndurance().toString();
-    // endurance capped at 5 if they have a fever
-    if (_pilot.hasAnAffliction(EnumAffliction.burn)) {
-      value += "_red";
+    int value = _pilot.getEndurance();
+    String display = value.toString(); 
+    late String die;
+
+    if ((value == 1) || (value == 2)) {
+      die = "$constDieFaceRed$display.jpg";
     }
-    return AssetImage("$constImageStatus$value.png");
-  }
-
-  // ************************
-  // decide which image to show for move dice
-  // ************************
-  AssetImage _moveImage() {
-    String value = _moveDice.toString();
-    // if they have broken foot, make sure to use the red ones
-    if (_pilot.hasAnAffliction(EnumAffliction.brokenfoot)) {
-      value += "_red";
+    else if ((value == 3) || (value == 4)) {
+      die = "$constDieFaceYellow$display.jpg";
     }
-    return AssetImage("$constImageDie$value.png");
-  }
+    else {
+      die = "$constDieFaceWhite$display.jpg";
+    }
 
-  // ************************
-  // _stealthImage
-  // ************************
-  AssetImage _stealthImage() {
-    String value = _stealthDice.toString();
-    return AssetImage("$constImageDie$value.png");
-  }
-
-  // ************************
-  // _restImage
-  // ************************
-  AssetImage _restImage() {
-    String value = _restDice.toString();
-    return AssetImage("$constImageDie$value.png");
+    return AssetImage(die);
   }
 
   // ************************
@@ -2782,8 +2863,6 @@ class _GameScreenState extends State<GameScreen> {
       hex3 = EnumTerrain.scrub;
     }
 
-    // hardcode for testing 
-    // hex2 = EnumTerrain.village; 
 
     // start with first hex
     hexToUse = hex1;
@@ -2839,6 +2918,10 @@ class _GameScreenState extends State<GameScreen> {
         } else {
           hexToUse = hex3;
         }
+        // no villages in last column
+        if (((col + 1) == (constMapCols - 1)) && (hexToUse == EnumTerrain.village)) {
+          hexToUse = EnumTerrain.scrub; 
+        }
         _map[_getIdFromColRow(col + 1, row)].terrain = hexToUse;
         _map[_getIdFromColRow(col + 1, row)].visible = true;
         hexCount++;
@@ -2856,6 +2939,10 @@ class _GameScreenState extends State<GameScreen> {
           } else {
             hexToUse = hex3;
           }
+          // no villages in last column
+          if (((col + 1) == (constMapCols - 1)) && (hexToUse == EnumTerrain.village)) {
+            hexToUse = EnumTerrain.scrub; 
+          }          
           _map[_getIdFromColRow(col, row + 1)].terrain = hexToUse;
           _map[_getIdFromColRow(col, row + 1)].visible = true;
           hexCount++;
@@ -3646,66 +3733,75 @@ class _GameScreenState extends State<GameScreen> {
                     ),
                   )),
                   Row(
-                    crossAxisAlignment: CrossAxisAlignment.start,
+                    mainAxisAlignment: MainAxisAlignment.center,
                     children: [
-                      const SizedBox(width: 165), // spacing column
-                      Image(
-                        image: _healthImage(),
-                        width: 80.0,
-                        height: 18.0,
-                        fit: BoxFit.fill,
+                      const Spacer(), 
+                      Column(
+                        children: [
+                          Row(
+                            children: [
+                              Image(
+                                image: _healthImage(),
+                                width: 48.0,
+                                height: 48.0,
+                                fit: BoxFit.fill,
+                              ),
+                              const SizedBox(width: 3),
+                              const Text(constHealthText,
+                                  textAlign: TextAlign.center,
+                                  style: TextStyle(
+                                      fontWeight: FontWeight.bold,
+                                      fontFamily: constAppTextFont,
+                                      fontSize: 12.0)),
+                            ],
+                          ),
+                        ],
                       ),
-                      const SizedBox(width: 5), // spacing column
-                      const Text(constHealthText,
-                          textAlign: TextAlign.center,
-                          style: TextStyle(
-                              fontWeight: FontWeight.bold,
-                              fontFamily: constAppTextFont,
-                              fontSize: 12.0)),
-                    ],
-                  ),
-                  const Padding(
-                    padding: EdgeInsets.all(2.0),
-                  ),
-                  Row(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      const SizedBox(width: 165), // spacing column
-                      Image(
-                        image: _proximityImage(),
-                        width: 80.0,
-                        height: 18.0,
-                        fit: BoxFit.fill,
+                      const Spacer(), 
+                      Column(
+                        children: [
+                          Row(
+                            children: [
+                              Image(
+                                image: _proximityImage(),
+                                width: 48.0,
+                                height: 48.0,
+                                fit: BoxFit.fill,
+                              ),
+                              const SizedBox(width: 3),
+                              const Text(constProximityText,
+                                  textAlign: TextAlign.center,
+                                  style: TextStyle(
+                                      fontWeight: FontWeight.bold,
+                                      fontFamily: constAppTextFont,
+                                      fontSize: 12.0)),
+                            ],
+                          ),
+                        ],
                       ),
-                      const SizedBox(width: 5), // spacing column
-                      const Text(constProximityText,
-                          textAlign: TextAlign.center,
-                          style: TextStyle(
-                              fontWeight: FontWeight.bold,
-                              fontFamily: constAppTextFont,
-                              fontSize: 12.0)),
-                    ],
-                  ),
-                  const Padding(
-                    padding: EdgeInsets.all(2.0),
-                  ),
-                  Row(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      const SizedBox(width: 165), // spacing column
-                      Image(
-                        image: _enduranceImage(),
-                        width: 80.0,
-                        height: 18.0,
-                        fit: BoxFit.fill,
+                      const Spacer(),
+                      Column(
+                        children: [
+                          Row(
+                            children: [
+                              Image(
+                                image: _enduranceImage(),
+                                width: 48.0,
+                                height: 48.0,
+                                fit: BoxFit.fill,
+                              ),
+                              const SizedBox(width: 3),
+                              const Text(constEnduranceText,
+                                  textAlign: TextAlign.center,
+                                  style: TextStyle(
+                                      fontWeight: FontWeight.bold,
+                                      fontFamily: constAppTextFont,
+                                      fontSize: 12.0)),
+                            ],
+                          ),
+                        ],
                       ),
-                      const SizedBox(width: 5), // spacing column
-                      const Text(constEnduranceText,
-                          textAlign: TextAlign.center,
-                          style: TextStyle(
-                              fontWeight: FontWeight.bold,
-                              fontFamily: constAppTextFont,
-                              fontSize: 12.0)),
+                      const Spacer(),                       
                     ],
                   ),
                   const Padding(
