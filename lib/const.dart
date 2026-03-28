@@ -296,6 +296,8 @@ const constInventoryScopeTitle = "Binoculars";
 const constInventoryScopeAction = "map 2 extra hexes within a range of 3";
 const constInventoryAKTitle = "AK-47";
 const constInventoryAKAction = "increase Proximity by 2";
+const constInventoryMacheteTitle = "Machete";
+const constInventoryMacheteAction = "useful at times";
 
 // warnings
 const constCantEndInVillage = "You cannot end Move phase in a village.";
@@ -322,6 +324,7 @@ const constNoText = "No";
 const constDieFaceRed = "assets/images/dice_face_red_";
 const constDieFaceWhite = "assets/images/dice_face_white_";
 const constDieFaceYellow = "assets/images/dice_face_yellow_";
+const constDieFaceGreen = "assets/images/dice_face_green_";
 
 const constMapRows = 5;
 const constMapCols = 15;

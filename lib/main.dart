@@ -15,6 +15,7 @@ class LostFalconApp extends StatelessWidget {
     return const MaterialApp(
       title: appTitle, 
       debugShowCheckedModeBanner: false,
+      restorationScopeId: 'app',
       home: LostFalconHome(),
     );
   }

@@ -42,7 +42,7 @@ String _displayMessage(MapHex mapHex) {
     } else if (encounter == EnumEncounter.highground) {
       name = name.replaceFirst("Z", constHighgroundTerrainDialogText);      
     } else if (encounter == EnumEncounter.building) {
-      name = name.replaceFirst("Z", constDustTerrainDialogText);      
+      name = name.replaceFirst("Z", constBuildingTerrainDialogText);      
     } else if (encounter == EnumEncounter.road) {
       name = name.replaceFirst("Z", constRoadTerrainDialogText);      
     } else if (encounter == EnumEncounter.soldier) {
@@ -135,7 +135,7 @@ void showTerrainInfoDialog(BuildContext context, MapHex mapHex, List<String> vis
               children: [
                 Text(_displayMessage(mapHex),
                     style: const TextStyle(
-                        fontFamily: constAppTextFont, fontSize: 18)),
+                        fontFamily: constAppTextFont, fontSize: 15)),
               ],
             ),
           ),

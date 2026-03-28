@@ -476,13 +476,16 @@ class _ImageCyclerOverlayState extends State<ImageCyclerOverlay>
   //  dust - go back
   // *********************************************
   void _doDustBack() {
+    // no longer where they selected
+    _map[_selectedHex].current = false;
     // move them back to old hex (unless old hex was a village, then push them back again)
     if (_map[_oldHex].terrain == EnumTerrain.village) {
       _map[_getLastBeforeVillage()].current = true;
+      _selectedHex = _getLastBeforeVillage();
     } else {
       _map[_oldHex].current = true;
+      _selectedHex = _oldHex;
     }
-    _map[_selectedHex].current = false;
     setState(() {
       // do nothing
     });
@@ -1269,7 +1272,7 @@ class _ImageCyclerOverlayState extends State<ImageCyclerOverlay>
               }
             }
             // hardcode for testing
-            // _currentEncounterIndex = EnumEncounter.gunships.index;
+            // _currentEncounterIndex = EnumEncounter.dust.index;
             message = _encounterFactory
                 .getEncounterDescription(_currentEncounterIndex);
             // add this encoutner to the map hex for later (if not a none)
@@ -1761,6 +1764,17 @@ class _GameScreenState extends State<GameScreen> {
   }
 
   // *********************************************
+  // machete
+  // *********************************************
+  void _doMachete() {
+
+    // the button will never be active, so this is just
+    // an empty method because I need one 
+
+  }
+
+
+  // *********************************************
   // use the first aid kit
   // *********************************************
   void _doFirstAidKit() {
@@ -1844,6 +1858,30 @@ class _GameScreenState extends State<GameScreen> {
           isActive: buttonIsActive,
           inInventory: itemInInventory,
           onAction: _doFlareGun,
+          onCloseRequest: _genericCloseOverlay);                          
+
+  }
+
+  // *********************************************
+  // we need to show machete even if used only passively
+  // *********************************************
+  Widget _displayMachete() {
+    String buttonMessage = constInventoryMacheteTitle;
+    bool buttonIsActive = false; 
+    bool itemInInventory = false; 
+
+    // if they don't have it, just show title and not action
+    if (_pilot.hasAnItem(EnumInventory.machete)) {
+      buttonMessage = "$constInventoryMacheteTitle ($constInventoryMacheteAction)";
+      buttonIsActive = false; 
+      itemInInventory = true; 
+    }
+    return 
+        ActionButton(
+          message: buttonMessage,
+          isActive: buttonIsActive,
+          inInventory: itemInInventory,
+          onAction: _doMachete,
           onCloseRequest: _genericCloseOverlay);                          
 
   }
@@ -1946,6 +1984,8 @@ class _GameScreenState extends State<GameScreen> {
                           _displayFirstAidKit(),
                           const SizedBox(height: 5),
                           _displayFlareGun(),
+                          const SizedBox(height: 5),
+                          _displayMachete(),                          
                           const SizedBox(height: 10),
                           SizedBox(
                             width: 160.0,
@@ -2698,7 +2738,7 @@ class _GameScreenState extends State<GameScreen> {
       die = "$constDieFaceYellow$display.jpg";
     }
     else {
-      die = "$constDieFaceWhite$display.jpg";
+      die = "$constDieFaceGreen$display.jpg";
     }
 
     return AssetImage(die);
@@ -2719,7 +2759,7 @@ class _GameScreenState extends State<GameScreen> {
       die = "$constDieFaceYellow$display.jpg";
     }
     else {
-      die = "$constDieFaceWhite$display.jpg";
+      die = "$constDieFaceGreen$display.jpg";
     }
 
     return AssetImage(die);
@@ -2740,7 +2780,7 @@ class _GameScreenState extends State<GameScreen> {
       die = "$constDieFaceYellow$display.jpg";
     }
     else {
-      die = "$constDieFaceWhite$display.jpg";
+      die = "$constDieFaceGreen$display.jpg";
     }
 
     return AssetImage(die);
@@ -3693,6 +3733,93 @@ class _GameScreenState extends State<GameScreen> {
                       ),
                     ),
                   ),
+                  const Padding(
+                    padding: EdgeInsets.all(5.0),
+                  ),                  
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      const Spacer(), 
+                      Column(
+                        children: [
+                          const Text(constHealthText,
+                              textAlign: TextAlign.center,
+                              style: TextStyle(
+                                  fontWeight: FontWeight.bold,
+                                  fontFamily: constAppTextFont,
+                                  fontSize: 12.0)
+                          ),
+                          Container(
+                            decoration: BoxDecoration(
+                              border: Border.all(color: Colors.black, width: 2),
+                            ),
+                            clipBehavior: Clip.hardEdge, // ensures border clips cleanly
+                            child:
+                            Image(
+                              image: _healthImage(),
+                              width: 48.0,
+                              height: 48.0,
+                              fit: BoxFit.fill,
+                            ),
+                          ),
+                        ],
+                      ),
+                      const Spacer(), 
+                      Column(
+                        children: [
+                          const Text(constProximityText,
+                              textAlign: TextAlign.center,
+                              style: TextStyle(
+                                  fontWeight: FontWeight.bold,
+                                  fontFamily: constAppTextFont,
+                                  fontSize: 12.0)
+                          ),
+                          Container(
+                            decoration: BoxDecoration(
+                              border: Border.all(color: Colors.black, width: 2),
+                            ),
+                            clipBehavior: Clip.hardEdge, // ensures border clips cleanly
+                            child:
+                            Image(
+                              image: _proximityImage(),
+                              width: 48.0,
+                              height: 48.0,
+                              fit: BoxFit.fill,
+                            ),
+                          ), 
+                        ],
+                      ),
+                      const Spacer(),                       
+                      Column(
+                        children: [
+                          const Text(constEnduranceText,
+                              textAlign: TextAlign.center,
+                              style: TextStyle(
+                                  fontWeight: FontWeight.bold,
+                                  fontFamily: constAppTextFont,
+                                  fontSize: 12.0)
+                          ),
+                          Container(
+                            decoration: BoxDecoration(
+                              border: Border.all(color: Colors.black, width: 2),
+                            ),
+                            clipBehavior: Clip.hardEdge, // ensures border clips cleanly
+                            child:
+                              Image(
+                                image: _enduranceImage(),
+                                width: 48.0,
+                                height: 48.0,
+                                fit: BoxFit.fill,
+                              ),
+                          ), 
+                        ],
+                      ),
+                      const Spacer(),   
+                    ],
+                  ),
+                  const Padding(
+                    padding: EdgeInsets.all(8.0),
+                  ),
                   Expanded(
                       child: SingleChildScrollView(
                     scrollDirection: Axis.horizontal,
@@ -3732,78 +3859,6 @@ class _GameScreenState extends State<GameScreen> {
                       ),
                     ),
                   )),
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      const Spacer(), 
-                      Column(
-                        children: [
-                          Row(
-                            children: [
-                              Image(
-                                image: _healthImage(),
-                                width: 48.0,
-                                height: 48.0,
-                                fit: BoxFit.fill,
-                              ),
-                              const SizedBox(width: 3),
-                              const Text(constHealthText,
-                                  textAlign: TextAlign.center,
-                                  style: TextStyle(
-                                      fontWeight: FontWeight.bold,
-                                      fontFamily: constAppTextFont,
-                                      fontSize: 12.0)),
-                            ],
-                          ),
-                        ],
-                      ),
-                      const Spacer(), 
-                      Column(
-                        children: [
-                          Row(
-                            children: [
-                              Image(
-                                image: _proximityImage(),
-                                width: 48.0,
-                                height: 48.0,
-                                fit: BoxFit.fill,
-                              ),
-                              const SizedBox(width: 3),
-                              const Text(constProximityText,
-                                  textAlign: TextAlign.center,
-                                  style: TextStyle(
-                                      fontWeight: FontWeight.bold,
-                                      fontFamily: constAppTextFont,
-                                      fontSize: 12.0)),
-                            ],
-                          ),
-                        ],
-                      ),
-                      const Spacer(),
-                      Column(
-                        children: [
-                          Row(
-                            children: [
-                              Image(
-                                image: _enduranceImage(),
-                                width: 48.0,
-                                height: 48.0,
-                                fit: BoxFit.fill,
-                              ),
-                              const SizedBox(width: 3),
-                              const Text(constEnduranceText,
-                                  textAlign: TextAlign.center,
-                                  style: TextStyle(
-                                      fontWeight: FontWeight.bold,
-                                      fontFamily: constAppTextFont,
-                                      fontSize: 12.0)),
-                            ],
-                          ),
-                        ],
-                      ),
-                      const Spacer(),                       
-                    ],
-                  ),
                   const Padding(
                     padding: EdgeInsets.all(8.0),
                   ),
