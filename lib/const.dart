@@ -222,7 +222,7 @@ const constGunshipsTerrainDialogText = "a flight of Apaches";
 
 const constMinefieldEncounterMessage =
     "A large, well marked minefield block your way.";
-const constMinefieldOption1 = "Pass through slowly, losing 1 Prximity";
+const constMinefieldOption1 = "Pass through slowly, losing 1 Proximity";
 const constMinefieldOption2 =
     "Return to your last spot and this hex becomes impassable";
 const constMinefieldTerrainDialogText = "a minefield";

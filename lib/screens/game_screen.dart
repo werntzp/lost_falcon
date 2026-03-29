@@ -3056,6 +3056,9 @@ class _GameScreenState extends State<GameScreen> {
       if (MapFactory.getDistanceBetweenHexes(_getCurrentHex(), MapHex(constFakeHex, col, i)) != 1) {
          _map[_getIdFromColRow(col, i)].visible = false;
       }
+      else {
+         _map[_getIdFromColRow(col, i)].visible = true;        
+      }
       // see if forces are here
       if (_map[_getIdFromColRow(col, i)].rescue) {
         // save the row and remove the forces from that spot
@@ -3468,7 +3471,7 @@ class _GameScreenState extends State<GameScreen> {
       return;
     }
 
-    // check: if they are trying to enter a village during an encounter move, say no
+    // check: if they are trying to enter a village during a village encounter move, say no
     if ((_map[_selectedHex].terrain == EnumTerrain.village) && 
       (_villageReaction != EnumVillageReactions.none)) {
       await _overlayMessage(constEncounterVillageMessage, EnumMessageType.fail);
@@ -3551,6 +3554,12 @@ class _GameScreenState extends State<GameScreen> {
         return;
       }
 
+      // check: if they are trying to enter a village during an encounter move, say no
+      if (_map[_selectedHex].terrain == EnumTerrain.village) {
+        await _overlayMessage(constEncounterVillageMessage, EnumMessageType.fail);
+        return;
+      }
+
       // ok to move
       _map[_oldHex].current = false;
       _map[_selectedHex].current = true;
@@ -3587,8 +3596,8 @@ class _GameScreenState extends State<GameScreen> {
     // if player in current hex, show american flag
     if (isCurrentPlayerLocation) {
       return Positioned(
-          top: 27,
-          left: 30,
+          top: 24,
+          left: 26,
           child: Container(
               height: 40,
               width: 50,
@@ -3603,16 +3612,16 @@ class _GameScreenState extends State<GameScreen> {
     // else if player cannot travel through this hex, show close icon
     else if (_map[id].impassable) {
       return const Positioned(
-          top: 10,
-          left: 15,
+          top: 6,
+          left: 11,
           child: Icon(Icons.block, color: Colors.red, size: 75));
     }
 
     // else if player traveled through hex, show person icon
     else if (_hasPlayerTraveledHere(id)) {
       return const Positioned(
-          top: 10,
-          left: 15,
+          top: 6,
+          left: 11,
           child: Icon(Icons.star_border, color: Colors.black, size: 75));
     }
 
