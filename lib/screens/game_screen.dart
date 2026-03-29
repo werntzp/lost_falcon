@@ -2731,7 +2731,8 @@ class _GameScreenState extends State<GameScreen> {
     String display = value.toString(); 
     late String die;
 
-    if ((value == 1) || (value == 2)) {
+
+    if ((value == 0) || (value == 1) || (value == 2)) {
       die = "$constDieFaceRed$display.jpg";
     }
     else if ((value == 3) || (value == 4)) {
@@ -2752,7 +2753,7 @@ class _GameScreenState extends State<GameScreen> {
     String display = value.toString(); 
     late String die;
 
-    if ((value == 1) || (value == 2)) {
+    if ((value == 0) || (value == 1) || (value == 2)) {
       die = "$constDieFaceRed$display.jpg";
     }
     else if ((value == 3) || (value == 4)) {
@@ -2773,7 +2774,7 @@ class _GameScreenState extends State<GameScreen> {
     String display = value.toString(); 
     late String die;
 
-    if ((value == 1) || (value == 2)) {
+    if ((value == 0) || (value == 1) || (value == 2)) {
       die = "$constDieFaceRed$display.jpg";
     }
     else if ((value == 3) || (value == 4)) {
@@ -2903,6 +2904,8 @@ class _GameScreenState extends State<GameScreen> {
       hex3 = EnumTerrain.scrub;
     }
 
+    // hardcode for testing
+    // hex2 = EnumTerrain.village; 
 
     // start with first hex
     hexToUse = hex1;
