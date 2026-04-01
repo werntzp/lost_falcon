@@ -22,8 +22,6 @@ int _moveDice = constNoDice;
 int _stealthDice = constNoDice;
 int _restDice = constNoDice;
 int _totalDice = _pilot.getEndurance();
-int _oldHex = 0;
-int _selectedHex = 0;
 int _motorcycleMoves = 0;
 EnumPhase _phase = EnumPhase.mapping;
 List<MapHex> _map = [];
@@ -52,6 +50,8 @@ bool _binocularMapExtraHexes = false;
 int  _extraHexes = 0; 
 List<String> _encounterVisuals = []; 
 EnumVillageReactions _villageReaction = EnumVillageReactions.none;
+List<int> _movementHistory = [];
+int _plannedMoveHexId = 0; 
 
 // extension used to capitalize the first letter of a word
 extension StringExtension on String {
@@ -300,15 +300,16 @@ class _ImageCyclerOverlayState extends State<ImageCyclerOverlay>
   }
 
   // *********************************************
-  // which was last place they were before the village
-  // *********************************************
+  // which was last place they were before the village 
+  // ********************************************* 
   int _getLastBeforeVillage() {
     int id = 0;
 
-    for (MapHex mh in _map.reversed) {
-      if (mh.lastBeforeVillage == true) {
-        id = mh.id;
-        break;
+    // work backward through the movement history (starting one before where they are now)
+    for (int i = _movementHistory.length - 2; i > 0; i--) {
+      if (_map[_movementHistory[i]].terrain != EnumTerrain.village) {
+        id = _movementHistory[i]; 
+        break; 
       }
     }
 
@@ -408,7 +409,7 @@ class _ImageCyclerOverlayState extends State<ImageCyclerOverlay>
     // decide on what message to put up
     if (_pilot.hasAnItem(EnumInventory.machete)) {
       message = constSnakeOption3;
-    } else if (_map[_selectedHex].terrain == EnumTerrain.scrub) {
+    } else if (_map[_movementHistory.last].terrain == EnumTerrain.scrub) {
       message = constSnakeOption1;
       _pilot.setHealth(EnumDirection.decrement);
     } else {
@@ -437,22 +438,20 @@ class _ImageCyclerOverlayState extends State<ImageCyclerOverlay>
   //  mortar - run to next hex
   // *********************************************
   void _doMortarRun() {
-    int newId =
-        _getIdFromColRow(_map[_selectedHex].col + 1, _map[_selectedHex].row);
+    int newId = 
+        _getIdFromColRow(_map[_movementHistory.last].col + 1, _map[_movementHistory.last].row); // one column over
 
     // change all the values so we update where we're at 
-    _map[_oldHex].current = false;
-    _map[_selectedHex].current = false;
+    _map[_movementHistory[_movementHistory.length - 2]].current = false;
+    _map[_movementHistory.last].current = false;
     _map[newId].current = true;
-    _map[_selectedHex].previous = true;
+    _map[_movementHistory.last].previous = true;
     _map[newId].previous = true;
-    _oldHex = _selectedHex; 
-    _selectedHex = newId; 
+    _movementHistory.add(newId);
     _pilot.setEndurance(EnumDirection.decrement);
     _pilot.setAffliction(EnumAffliction.gunshotwound);
-
     // since we ran into a new hex, auto make that scrub 
-    _map[_selectedHex].terrain = EnumTerrain.scrub; 
+    _map[newId].terrain = EnumTerrain.scrub; 
 
   }
 
@@ -476,16 +475,14 @@ class _ImageCyclerOverlayState extends State<ImageCyclerOverlay>
   //  dust - go back
   // *********************************************
   void _doDustBack() {
+    int newId = _getLastBeforeVillage();
+
     // no longer where they selected
-    _map[_selectedHex].current = false;
+    _map[_movementHistory.last].current = false;
     // move them back to old hex (unless old hex was a village, then push them back again)
-    if (_map[_oldHex].terrain == EnumTerrain.village) {
-      _map[_getLastBeforeVillage()].current = true;
-      _selectedHex = _getLastBeforeVillage();
-    } else {
-      _map[_oldHex].current = true;
-      _selectedHex = _oldHex;
-    }
+    _map[newId].current = true;
+    _movementHistory.add(newId);
+
     setState(() {
       // do nothing
     });
@@ -508,7 +505,7 @@ class _ImageCyclerOverlayState extends State<ImageCyclerOverlay>
 
     // add a village 4 spaces away and surround it with brush or scrub
     newHex = MapFactory.moveRandomSteps(
-        _map[_selectedHex].row, _map[_selectedHex].col, 3);
+        _map[_movementHistory.last].row, _map[_movementHistory.last].col, 3);
     id = _getIdFromColRow(newHex.col, newHex.row);
     _map[id].terrain = EnumTerrain.brush;
     _map[id].visible = true;
@@ -537,7 +534,7 @@ class _ImageCyclerOverlayState extends State<ImageCyclerOverlay>
 
     // add a village 4 spaces away and surround it with brush or scrub
     newHex = MapFactory.moveRandomSteps(
-        _map[_selectedHex].row, _map[_selectedHex].col, 3);
+        _map[_movementHistory.last].row, _map[_movementHistory.last].col, 3);
     id = _getIdFromColRow(newHex.col, newHex.row);
     _map[id].terrain = EnumTerrain.brush;
     _map[id].visible = true;
@@ -679,16 +676,18 @@ class _ImageCyclerOverlayState extends State<ImageCyclerOverlay>
   //  sniper - retreat
   // *********************************************
   void _doSniperRetreat() {
+    int newId = _getLastBeforeVillage(); 
+
+    // suffer lots of damage
     _pilot.setAffliction(EnumAffliction.gunshotwound);
     _pilot.setAffliction(EnumAffliction.deepcut);
+
     // move them back to old hex (unless old hex was a village, then push them back again)
-    if (_map[_oldHex].terrain == EnumTerrain.village) {
-      _map[_getLastBeforeVillage()].current = true;
-    } else {
-      _map[_oldHex].current = true;
-    }
-    _map[_selectedHex].current = false;
-    _map[_selectedHex].impassable = true;
+    _map[_movementHistory.last].current = false;
+    _map[_movementHistory.last].impassable = true;
+    _map[newId].current = true;
+    _movementHistory.add(newId);
+
     // redraw
     setState() {
       // do nothing
@@ -700,14 +699,13 @@ class _ImageCyclerOverlayState extends State<ImageCyclerOverlay>
   //  minefield - retreat
   // *********************************************
   void _doMinefieldRetreat() {
+    int newId = _getLastBeforeVillage(); 
+
     // move them back to old hex (unless old hex was a village, then push them back again)
-    if (_map[_oldHex].terrain == EnumTerrain.village) {
-      _map[_getLastBeforeVillage()].current = true;
-    } else {
-      _map[_oldHex].current = true;
-    }
-    _map[_selectedHex].current = false;
-    _map[_selectedHex].impassable = true;
+    _map[_movementHistory.last].current = false;
+    _map[_movementHistory.last].impassable = true;
+    _map[newId].current = true;
+    _movementHistory.add(newId);
 
   }
 
@@ -733,7 +731,7 @@ class _ImageCyclerOverlayState extends State<ImageCyclerOverlay>
     int id = 0;
 
     newHex = MapFactory.moveRandomSteps(
-        _map[_selectedHex].row, _map[_selectedHex].col, 2);
+        _map[_movementHistory.last].row, _map[_movementHistory.last].col, 2);
     // make that a village
     id = _getIdFromColRow(newHex.col, newHex.row);
     _map[id].terrain = EnumTerrain.village;
@@ -755,20 +753,19 @@ class _ImageCyclerOverlayState extends State<ImageCyclerOverlay>
   //  thorns -- either go back, or chop/skip
   // *********************************************
   void _doThorns1() {
+    int newId = _getLastBeforeVillage(); 
+
     // if machete,
     if (_pilot.hasAnItem(EnumInventory.machete)) {
       // set flags to skip stealth and rest
       _skipStealh = true;
       _skipRest = true;
     } else {
-      // move them back to old hex (unless old hex was a village, then push them back again)
-      if (_map[_oldHex].terrain == EnumTerrain.village) {
-        _map[_getLastBeforeVillage()].current = true;
-      } else {
-        _map[_oldHex].current = true;
-      }
-      _map[_selectedHex].current = false;
-      _map[_selectedHex].impassable = true;      
+        // move them back to old hex (unless old hex was a village, then push them back again)
+        _map[_movementHistory.last].current = false;
+        _map[_movementHistory.last].impassable = true;
+        _map[newId].current = true;
+        _movementHistory.add(newId);
 
     }
   }
@@ -841,7 +838,7 @@ class _ImageCyclerOverlayState extends State<ImageCyclerOverlay>
       else if (encounter == EnumEncounter.highground) {
         // add a village 4 spaces away and surround it with brush or scrub
         newHex = MapFactory.moveRandomSteps(
-            _map[_selectedHex].row, _map[_selectedHex].col, 4);
+            _map[_movementHistory.last].row, _map[_movementHistory.last].col, 4);
         // make that a village
         id = _getIdFromColRow(newHex.col, newHex.row);
         _map[id].terrain = EnumTerrain.village;
@@ -997,8 +994,8 @@ class _ImageCyclerOverlayState extends State<ImageCyclerOverlay>
       } else if (encounter == EnumEncounter.helicopter) {
         // remove from the list
         try {
-          _hexesCrashedChopper.remove(_selectedHex);
-          _map[_selectedHex].encounter = EnumEncounter.helicopter;
+          _hexesCrashedChopper.remove(_movementHistory.last);
+          _map[_movementHistory.last].encounter = EnumEncounter.helicopter;
         }
         catch (e) {
           // do nothing
@@ -1146,7 +1143,7 @@ class _ImageCyclerOverlayState extends State<ImageCyclerOverlay>
       } else if (encounter == EnumEncounter.tributary) {
         // remove from the list
         try {
-          _hexesTributary.remove(_selectedHex);
+          _hexesTributary.remove(_movementHistory.last);
         }
         catch (e) {
           // do nothing
@@ -1183,8 +1180,8 @@ class _ImageCyclerOverlayState extends State<ImageCyclerOverlay>
 
     // set a flag here in case we're in a hex which a preset encounter
     // is going to happen in
-    if ((_hexesCrashedChopper.contains(_selectedHex)) ||
-        (_hexesTributary.contains(_selectedHex))) {
+    if ((_hexesCrashedChopper.contains(_movementHistory.last)) ||
+        (_hexesTributary.contains(_movementHistory.last))) {
       skipDueToEncounter = true;
     }
 
@@ -1216,7 +1213,7 @@ class _ImageCyclerOverlayState extends State<ImageCyclerOverlay>
           _currentEncounterIndex = _random.nextInt(_encounterImages.length);
         } else {
           // are we finding a crashed helicopter or a tributary?
-          _currentEncounterIndex = _hexesCrashedChopper.contains(_selectedHex)
+          _currentEncounterIndex = _hexesCrashedChopper.contains(_movementHistory.last)
               ? EnumEncounter.helicopter.index
               : EnumEncounter.tributary.index;
           message =
@@ -1249,35 +1246,35 @@ class _ImageCyclerOverlayState extends State<ImageCyclerOverlay>
             // encounters is smaller
             if (_flareGunForceEncounter) {
               _currentEncounterIndex =
-                  _encounterFactory.getForcedEncounter(_map[_selectedHex]);
+                  _encounterFactory.getForcedEncounter(_map[_movementHistory.last]);
             }
             else {
               _currentEncounterIndex =
-                  _encounterFactory.getRandomEncounter(_map[_selectedHex]);
+                  _encounterFactory.getRandomEncounter(_map[_movementHistory.last]);
             }
             // if we find a cave, it can't be in scrub or brush, so just flip to no encounter
             if (EnumEncounter.values[_currentEncounterIndex] ==
                 EnumEncounter.cave) {
-              if ((_map[_selectedHex].terrain == EnumTerrain.scrub) ||
-                  (_map[_selectedHex].terrain == EnumTerrain.brush)) {
+              if ((_map[_movementHistory.last].terrain == EnumTerrain.scrub) ||
+                  (_map[_movementHistory.last].terrain == EnumTerrain.brush)) {
                 _currentEncounterIndex = EnumEncounter.none.index;
               }
             }
             // if we have a rockslide, can only be in rough or hills, so may need to flip to no encounter
             if (EnumEncounter.values[_currentEncounterIndex] ==
                 EnumEncounter.rockslide) {
-              if ((_map[_selectedHex].terrain == EnumTerrain.scrub) ||
-                  (_map[_selectedHex].terrain == EnumTerrain.brush)) {
+              if ((_map[_movementHistory.last].terrain == EnumTerrain.scrub) ||
+                  (_map[_movementHistory.last].terrain == EnumTerrain.brush)) {
                 _currentEncounterIndex = EnumEncounter.none.index;
               }
             }
             // hardcode for testing
-            // _currentEncounterIndex = EnumEncounter.dust.index;
+             _currentEncounterIndex = EnumEncounter.dust.index;
             message = _encounterFactory
                 .getEncounterDescription(_currentEncounterIndex);
             // add this encoutner to the map hex for later (if not a none)
             if (_currentEncounterIndex != EnumEncounter.none.index) { 
-              _map[_selectedHex].encounter = EnumEncounter.values[_currentEncounterIndex];
+              _map[_movementHistory.last].encounter = EnumEncounter.values[_currentEncounterIndex];
             }
           }
         });
@@ -2161,11 +2158,12 @@ class _GameScreenState extends State<GameScreen> {
     int result = 0;
     String message = "";
     String title = ""; 
+    int newId = _getLastBeforeVillage(); 
 
     result = _random.nextInt(11) + 2;
 
     // if this may be friendly as a result of the highground encounter, add bonus
-    if (_hexesFriendlyVillage.contains(_selectedHex)) {
+    if (_hexesFriendlyVillage.contains(_movementHistory.last)) {
       result++;
     }
 
@@ -2197,15 +2195,12 @@ class _GameScreenState extends State<GameScreen> {
       _villageReaction = EnumVillageReactions.kickedout;
       message = constVillageKickedOut;
       // village now impassable
-      _map[_selectedHex].impassable = true;
+      _map[_movementHistory.last].impassable = true;
       // move them back to old hex (unless old hex was a village, then push them back again)
-      if (_map[_oldHex].terrain == EnumTerrain.village) {
-        _map[_getLastBeforeVillage()].current = true;
-      } else {
-        _map[_oldHex].current = true;
-      }
-      _map[_selectedHex].current = false;
-      _selectedHex = _oldHex; 
+      _map[_movementHistory.last].current = false;
+      _map[_movementHistory.last].impassable = true;
+      _map[newId].current = true;
+      _movementHistory.add(newId);
       // can't move
       _moveAllowed = false;
     } else if ((result == 6) || (result == 7) || (result == 8)) {
@@ -2261,6 +2256,7 @@ class _GameScreenState extends State<GameScreen> {
   void _tapDice(EnumPhase phase, int value, int target) async {
     String moveMessage = constMoveSuccessMessage;
     String restMessage = constRestSuccessMessage;
+    final secondToLast = _movementHistory.length >= 2 ? _movementHistory[_movementHistory.length - 2] : null;
 
     // get rid of the overlay (either way)
     _genericCloseOverlay();
@@ -2273,18 +2269,18 @@ class _GameScreenState extends State<GameScreen> {
           hex.current = false;
         }
         // set this one assuming it isn't same as the old and add it to the list traveled
-        if (_selectedHex != _oldHex) {
-          _map[_selectedHex].current = true;
-          _map[_selectedHex].previous = true;
+        if (_plannedMoveHexId != secondToLast) {
+          _map[_plannedMoveHexId].current = true;
+          _map[_plannedMoveHexId].previous = true;
+          _movementHistory.add(_plannedMoveHexId); 
           _allowedToReRoll = true;
+          _doMappingPhase(); 
         }
 
         // special case, if they moved into the rescue hex, then just end the game successfully
         _checkRescueConditions();
-        // map out next hexes
-        _doMappingPhase();
-        // for now, assume they can't move again
-        // did they choose a six?
+        
+        // if they picked a six, show dialog
         if (value == 6) {
           _pilot.setHealth(EnumDirection.decrement);
           await _overlayMessage(constMoveSixMessage, EnumMessageType.fail);
@@ -2295,17 +2291,14 @@ class _GameScreenState extends State<GameScreen> {
           }
           await _overlayMessage(moveMessage, EnumMessageType.success);
         }
+
         // did they enter a village? that brings a whole new thing to check
-        if (_map[_selectedHex].terrain == EnumTerrain.village) {
-          // save where they were
-          _map[_oldHex].lastBeforeVillage = true;
+        if (_map[_movementHistory.last].terrain == EnumTerrain.village) {
           _handleVillage();
         }
       } else {
         _allowedToReRoll = false;
         await _overlayMessage(constMoveFailedMessage, EnumMessageType.fail);
-        // reset where they were
-        _selectedHex = _oldHex; 
       }
     } else if (phase == EnumPhase.stealth) {
       // for stealth phase, see if they chose a six
@@ -2706,6 +2699,7 @@ class _GameScreenState extends State<GameScreen> {
     _map = MapFactory.initMap();
     // add the starting hex to the list the player traveled
     _map[_getIdFromColRow(constStartCol, constStartRow)].previous = true;
+    _movementHistory.add(_getIdFromColRow(constStartCol, constStartRow));
 
     // initial values
     _round = 1;
@@ -2767,7 +2761,7 @@ class _GameScreenState extends State<GameScreen> {
   }
 
   // ************************
-  // which image to show
+  // which image to s how
   // ************************
   AssetImage _enduranceImage() {
     int value = _pilot.getEndurance();
@@ -3092,7 +3086,7 @@ class _GameScreenState extends State<GameScreen> {
     _map[_getIdFromColRow(col, row)].visible = true;
 
     // if the us forces moved to where the player is, they win!
-    if (_selectedHex == _getIdFromColRow(col, row)) {
+    if (_movementHistory.last == _getIdFromColRow(col, row)) {
       await _endGameOverlay(EnumGameOver.rescued, _totalHexesTraveled(), _totalUpPoints(EnumGameOver.rescued));
     }
 
@@ -3113,7 +3107,7 @@ class _GameScreenState extends State<GameScreen> {
     }
 
     // special check, if this is a move phase, and they are in a village, don't let them try to end here
-    if ((_phase == EnumPhase.move) && (_map[_selectedHex].terrain == EnumTerrain.village)) {
+    if ((_phase == EnumPhase.move) && (_map[_movementHistory.last].terrain == EnumTerrain.village)) {
         await _overlayMessage(constCantEndInVillage, EnumMessageType.fail);
         return; 
     }
@@ -3277,10 +3271,11 @@ class _GameScreenState extends State<GameScreen> {
   int _getLastBeforeVillage() {
     int id = 0;
 
-    for (MapHex mh in _map.reversed) {
-      if (mh.lastBeforeVillage == true) {
-        id = mh.id;
-        break;
+    // work backward through the movement history (starting one before where they are now)
+    for (int i = _movementHistory.length - 2; i > 0; i--) {
+      if (_map[_movementHistory[i]].terrain != EnumTerrain.village) {
+        id = _movementHistory[i]; 
+        break; 
       }
     }
 
@@ -3400,7 +3395,7 @@ class _GameScreenState extends State<GameScreen> {
   // ************************
   void _checkRescueConditions() async {
     // special case, if they moved into the rescue hex, then just end the game successfully
-    if (_map[_selectedHex].rescue) {
+    if (_map[_movementHistory.last].rescue) {
       // close any overlay
       _genericCloseOverlay(); 
       // show the end game overlay 
@@ -3414,25 +3409,21 @@ class _GameScreenState extends State<GameScreen> {
   void _selectMapHex(int row, int col) async {
     int moveCost = 0;
     int hexDistance = 0;
+    int currentHexId = _movementHistory.last; // where they should be right now 
+    int selectedHexId = _getIdFromColRow(col, row); // where they clicked onto the map 
 
-    // get current hex
-    MapHex h = _getCurrentHex();
-    // save that for the moment
-    _oldHex = h.id;
-    // get the id of the hex they selected
-    _selectedHex = _getIdFromColRow(col, row);
     // get distance between hexes
     hexDistance =
-        MapFactory.getDistanceBetweenHexes(_map[_oldHex], _map[_selectedHex]);
+        MapFactory.getDistanceBetweenHexes(_map[currentHexId], _map[selectedHexId]);
 
     // check: if they are using the binoculars, they are mapping extra hexes 
     if ((_binocularMapExtraHexes) && (_extraHexes <= 2) && (hexDistance <= 3)) {
       // map it (if unknown)
-      if ((_map[_selectedHex].terrain == EnumTerrain.unknown) &&
-        (_map[_selectedHex].visible == false)) {
+      if ((_map[selectedHexId].terrain == EnumTerrain.unknown) &&
+        (_map[selectedHexId].visible == false)) {
           // pick a random terrain
-          _map[_selectedHex].terrain = EnumTerrain.values[_random.nextInt(5)];
-          _map[_selectedHex].visible = true;
+          _map[selectedHexId].terrain = EnumTerrain.values[_random.nextInt(5)];
+          _map[selectedHexId].visible = true;
           setState(() {
             // do nothing 
           });
@@ -3447,35 +3438,30 @@ class _GameScreenState extends State<GameScreen> {
     }
 
     // check: if this hex is impassable, bail right out
-    if (_map[_selectedHex].impassable) {
+    if (_map[selectedHexId].impassable) {
       await _overlayMessage(constHexImpassableMessage, EnumMessageType.fail);
-      _selectedHex = _oldHex;
       return;
     }
 
     // check: can they move anymore? 
     if ((_phase == EnumPhase.move) && (!_moveAllowed)) {
       await _overlayMessage(constAlreadMovedMessage, EnumMessageType.fail);
-      _selectedHex = _oldHex;
       return;
     } 
 
     // check: if move phase and they picked same hex, bail right out
-    if ((_phase == EnumPhase.move) && (_oldHex == _selectedHex)) {
-      // move selected hex back to where they were
-      _selectedHex = _oldHex; 
+    if ((_phase == EnumPhase.move) && (currentHexId == selectedHexId)) {
       await _overlayMessage(constSameHexPickedMessage, EnumMessageType.fail);
       return;
     }
 
-    // check: if they picked a special background hex that's not obvious, bail right out
-    if (_map[_selectedHex].terrain == EnumTerrain.background) {
-      _selectedHex = _oldHex;
+    // check: if they picked a special background hex, bail right out
+    if (_map[selectedHexId].terrain == EnumTerrain.background) {
       return;
     }
 
     // check: if they are trying to enter a village during a village encounter move, say no
-    if ((_map[_selectedHex].terrain == EnumTerrain.village) && 
+    if ((_map[selectedHexId].terrain == EnumTerrain.village) && 
       (_villageReaction != EnumVillageReactions.none)) {
       await _overlayMessage(constEncounterVillageMessage, EnumMessageType.fail);
       return;
@@ -3486,17 +3472,17 @@ class _GameScreenState extends State<GameScreen> {
       // is the hex too far away?
       if (hexDistance > 1) {
         await _overlayMessage(constHexTooFarMessage, EnumMessageType.fail);
-        _selectedHex = _oldHex;        
         return;
       }
 
       // special case -- crashed helicopter due to encounter
-      if (_hexesCrashedChopper.contains(_selectedHex)) {
+      if (_hexesCrashedChopper.contains(selectedHexId)) {
         // they just move, no roll or anything
-        _map[_oldHex].current = false;
-        _map[_selectedHex].current = true;
-        _map[_oldHex].previous = true;
-        _map[_selectedHex].previous = true;
+        _map[currentHexId].current = false;
+        _map[selectedHexId].current = true;
+        _map[currentHexId].previous = true;
+        _map[selectedHexId].previous = true;
+        _movementHistory.add(selectedHexId);
         // no more move this turn
         _moveAllowed = false; 
         // and since move was successful, they can do a re-roll in stealth phase
@@ -3508,9 +3494,11 @@ class _GameScreenState extends State<GameScreen> {
       // regular move
       else if (_villageReaction == EnumVillageReactions.none) {
         // what is the move cost?
-        moveCost = MapFactory.getMoveCost(h.terrain);
+        moveCost = MapFactory.getMoveCost(_map[currentHexId].terrain);
         // if they have dice assigned to move, bring up the overlay to pick from the die roll
         if (_moveDice > 0) {
+          // store this for use in the overlay 
+          _plannedMoveHexId = selectedHexId; 
           // bring up overlay
           _rollingDice =
               List.generate(_moveDice, (_) => _random.nextInt(6) + 1);
@@ -3523,12 +3511,13 @@ class _GameScreenState extends State<GameScreen> {
         // other village moves
       } else {
         // ok to move
-        _map[_oldHex].current = false;
-        _map[_selectedHex].current = true;
-        _map[_oldHex].previous = true;
-        _map[_selectedHex].previous = true;
+        _map[currentHexId].current = false;
+        _map[selectedHexId].current = true;
+        _map[currentHexId].previous = true;
+        _map[selectedHexId].previous = true;
+        _movementHistory.add(selectedHexId);
         // check if they moved into another village (rare but it happens)
-        if (_map[_selectedHex].terrain == EnumTerrain.village) {
+        if (_map[selectedHexId].terrain == EnumTerrain.village) {
           _handleVillage();
         }
         // special case, check if game over in case they moved into rescue hex
@@ -3549,25 +3538,21 @@ class _GameScreenState extends State<GameScreen> {
         }
       }
     } else if ((_phase == EnumPhase.encounter) && (_moveAllowed)) {
-      // there are some encounters where they can also move
       // is the hex too far away?
-      if (hexDistance > 1) {
-        // abort
-        _selectedHex = _oldHex;
-        return;
-      }
+      if (hexDistance > 1) { return; }
 
       // check: if they are trying to enter a village during an encounter move, say no
-      if (_map[_selectedHex].terrain == EnumTerrain.village) {
+      if (_map[selectedHexId].terrain == EnumTerrain.village) {
         await _overlayMessage(constEncounterVillageMessage, EnumMessageType.fail);
         return;
       }
 
       // ok to move
-      _map[_oldHex].current = false;
-      _map[_selectedHex].current = true;
-      _map[_oldHex].previous = true;
-      _map[_selectedHex].previous = true;
+      _map[currentHexId].current = false;
+      _map[selectedHexId].current = true;
+      _map[currentHexId].previous = true;
+      _map[selectedHexId].previous = true;
+      _movementHistory.add(selectedHexId);
       // no more move allowed 
       _moveAllowed = false; 
       // special case, check if game over in case they moved into rescue hex

@@ -13,8 +13,6 @@ class MapHex {
   final int id;
   final int col; // col
   final int row; // row
-  bool lastBeforeVillage =
-      false; // save where they were before they entered village
   bool current = false; // player is here currently
   bool previous = false; // player was here on a previous turn
   bool visible = false; // player can "see" into this hex from where they are
