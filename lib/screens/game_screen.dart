@@ -1269,7 +1269,7 @@ class _ImageCyclerOverlayState extends State<ImageCyclerOverlay>
               }
             }
             // hardcode for testing
-             _currentEncounterIndex = EnumEncounter.dust.index;
+            // _currentEncounterIndex = EnumEncounter.dust.index;
             message = _encounterFactory
                 .getEncounterDescription(_currentEncounterIndex);
             // add this encoutner to the map hex for later (if not a none)
@@ -2256,7 +2256,7 @@ class _GameScreenState extends State<GameScreen> {
   void _tapDice(EnumPhase phase, int value, int target) async {
     String moveMessage = constMoveSuccessMessage;
     String restMessage = constRestSuccessMessage;
-    final secondToLast = _movementHistory.length >= 2 ? _movementHistory[_movementHistory.length - 2] : null;
+    final currentHexId = _movementHistory.length >= 2 ? _movementHistory.last : null;
 
     // get rid of the overlay (either way)
     _genericCloseOverlay();
@@ -2269,7 +2269,7 @@ class _GameScreenState extends State<GameScreen> {
           hex.current = false;
         }
         // set this one assuming it isn't same as the old and add it to the list traveled
-        if (_plannedMoveHexId != secondToLast) {
+        if (_plannedMoveHexId != currentHexId) {
           _map[_plannedMoveHexId].current = true;
           _map[_plannedMoveHexId].previous = true;
           _movementHistory.add(_plannedMoveHexId); 
@@ -3050,7 +3050,7 @@ class _GameScreenState extends State<GameScreen> {
     // loop through the rows and hide each one as we iterate
     for (int i = 1; i < constMapRows; i++) {
       // while we're here, hide them all (unless player is within one)
-      if (MapFactory.getDistanceBetweenHexes(_getCurrentHex(), MapHex(constFakeHex, col, i)) != 1) {
+      if (MapFactory.getDistanceBetweenHexes(_getCurrentHex(), MapHex(constFakeHex, col, i)) > 1) {
          _map[_getIdFromColRow(col, i)].visible = false;
       }
       else {
@@ -3313,50 +3313,59 @@ class _GameScreenState extends State<GameScreen> {
   // decide which graphics to display on the map 
   // ************************
   String _getMapHexGraphic(int row, int col) {
-    EnumTerrain enumTerrain = _map[_getIdFromColRow(col, row)].terrain;
-    String asset;
     int id = _getIdFromColRow(col, row);
+    EnumTerrain enumTerrain = _map[id].terrain;
+    String asset;
 
-    if (enumTerrain == EnumTerrain.scrub) {
-      // decide whether they've been here before (color vs b&w)
-      if (_hasPlayerTraveledHere(id)) {
-        asset = constImageScrub;
-      } else {
-        asset = constImageScrubGrey;
-      }
-    } else if (enumTerrain == EnumTerrain.brush) {
-      // decide whether they've been here before (color vs b&w)
-      if (_hasPlayerTraveledHere(id)) {
-        asset = constImageBrush;
-      } else {
-        asset = constImageBrushGrey;
-      }
-    } else if (enumTerrain == EnumTerrain.hills) {
-      // decide whether they've been here before (color vs b&w)
-      if (_hasPlayerTraveledHere(id)) {
-        asset = constImageHills;
-      } else {
-        asset = constImageHillsGrey;
-      }
-    } else if (enumTerrain == EnumTerrain.rough) {
-      // decide whether they've been here before (color vs b&w)
-      if (_hasPlayerTraveledHere(id)) {
-        asset = constImageRough;
-      } else {
-        asset = constImageRoughGrey;
-      }
-    } else if (enumTerrain == EnumTerrain.village) {
-      // decide whether they've been here before (color vs b&w)
-      if (_hasPlayerTraveledHere(id)) {
-        asset = constImageVillage;
-      } else {
-        asset = constImageVillageGrey;
-      }
-    } else if (enumTerrain == EnumTerrain.background) {
-      asset = constImageBackground;
-    } else {
+
+    // additional check, if not visible, just show unknown
+    if ((_map[id].visible == false) && (enumTerrain != EnumTerrain.background))  {
       asset = constImageUnknown;
     }
+    else {
+
+      if (enumTerrain == EnumTerrain.scrub) {
+        // decide whether they've been here before (color vs b&w)
+        if (_hasPlayerTraveledHere(id)) {
+          asset = constImageScrub;
+        } else {
+          asset = constImageScrubGrey;
+        }
+      } else if (enumTerrain == EnumTerrain.brush) {
+        // decide whether they've been here before (color vs b&w)
+        if (_hasPlayerTraveledHere(id)) {
+          asset = constImageBrush;
+        } else {
+          asset = constImageBrushGrey;
+        }
+      } else if (enumTerrain == EnumTerrain.hills) {
+        // decide whether they've been here before (color vs b&w)
+        if (_hasPlayerTraveledHere(id)) {
+          asset = constImageHills;
+        } else {
+          asset = constImageHillsGrey;
+        }
+      } else if (enumTerrain == EnumTerrain.rough) {
+        // decide whether they've been here before (color vs b&w)
+        if (_hasPlayerTraveledHere(id)) {
+          asset = constImageRough;
+        } else {
+          asset = constImageRoughGrey;
+        }
+      } else if (enumTerrain == EnumTerrain.village) {
+        // decide whether they've been here before (color vs b&w)
+        if (_hasPlayerTraveledHere(id)) {
+          asset = constImageVillage;
+        } else {
+          asset = constImageVillageGrey;
+        }
+      } else if (enumTerrain == EnumTerrain.background) {
+        asset = constImageBackground;
+      } else {
+        asset = constImageUnknown;
+      }
+
+    } 
 
     // special cases, if this terrain is the crashed helicopter or water source, show them
     // instead 
@@ -3450,7 +3459,7 @@ class _GameScreenState extends State<GameScreen> {
     } 
 
     // check: if move phase and they picked same hex, bail right out
-    if ((_phase == EnumPhase.move) && (currentHexId == selectedHexId)) {
+    if (((_phase == EnumPhase.move) || (_phase == EnumPhase.encounter)) && (currentHexId == selectedHexId)) {
       await _overlayMessage(constSameHexPickedMessage, EnumMessageType.fail);
       return;
     }
