@@ -3077,7 +3077,7 @@ class _GameScreenState extends State<GameScreen> {
         _forcesPatrollingUp = true;
         row = 3;
       }
-    }
+    }  
 
     // set the new location 
     _map[_getIdFromColRow(col, row)].rescue = true; 
