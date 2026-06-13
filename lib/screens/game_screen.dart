@@ -3636,11 +3636,14 @@ class _GameScreenState extends State<GameScreen> {
   }
 
   // ************************
-  // if they have afflictions, display dialog
+  // throw up dialog with affliction information 
   // ************************
   void _handleAfflictionsTap() {
     if (_pilot.hasAnyAfflictions()) {
       showInfoDialog(context, _pilot.describeAfflictions());
+    }
+    else { 
+      showInfoDialog(context, constNoAfflictions);
     }
   }
 
